@@ -32,7 +32,7 @@ type
  WChar = System.WideChar;
 
  PLChar = System.PAnsiChar;
- PWChar = System.PWideChar; 
+ PWChar = System.PWideChar;
 
  PInt64Rec = ^TInt64Rec;
  TInt64Rec = packed record
@@ -56,6 +56,7 @@ type
 
  LStr = System.AnsiString;
  WStr = System.WideString;
+ UStr = System.UnicodeString;
 
  Boolean = System.Boolean;
  PBoolean = ^Boolean;
@@ -308,7 +309,7 @@ end;
 
 function IntToHex(Value: Pointer): LStr;
 begin
-Result := IntToHex(UInt(Value));
+Result := SysUtils.IntToHex(UInt(Value));
 end;
 
 function Swap16(Value: Int16): Int16;
@@ -463,26 +464,25 @@ var
 begin
 S := '';
 for I := Low(Data) to High(Data) do
+begin
  with Data[I] do
   case VType of
    vtInteger: S := S + IntToStr(VInteger, Buf, SizeOf(Buf));
    vtBoolean: S := S + LookupTable[VBoolean];
    vtChar: S := S + VChar;
-   vtExtended: S := S + SysUtils.FloatToStr(VExtended^);
+   vtExtended: S := S + LStr(SysUtils.FloatToStr(VExtended^));
    vtString: S := S + VString^;
    vtPointer: S := S + IntToHex(VPointer);
    vtPChar: S := S + VPChar;
-// vtObject: S := S + VObject.ClassName;
-// vtClass: S := S + VClass.ClassName;
-// vtWideChar: S := S + LChar(VWideChar);
-// vtPWideChar: S := S + PLChar(VPWideChar);
+   vtWideChar: S := S + LChar(VWideChar);
+   vtPWideChar: S := S + PLChar(LStr(VPWideChar));
    vtAnsiString: S := S + LStr(VAnsiString);
-// vtCurrency: S := S + CurrToStr(VCurrency^);
-// vtWideString: S := S + LStr(WStr(VWideString));
    vtInt64: S := S + IntToStr(VInt64^);
+   vtUnicodeString: S := S + LStr(UStr(VUnicodeString));
   else
    S := S + ' <unknown or unsupported type> ';
   end;
+end;
 end;
 
 function StringFromVarRec(const Data: array of const): LStr;
@@ -1705,7 +1705,7 @@ else
      'd', 'i': Append(IntToStr(PInt32(Extract)^, Dst^, RemBuf));
      'u': Append(UIntToStr(PUInt32(Extract)^, Dst^, RemBuf));
      'f', 'F', 'e', 'E', 'g', 'G', 'a', 'A': Append(PLChar(FloatToStr(PSingle(Extract)^)));
-     'x', 'X': Append(PLChar(IntToHex(PUInt32(Extract)^)));
+     'x', 'X': Append(PLChar(Default.IntToHex(PUInt32(Extract)^)));
      'c':
       begin
        TmpBuf[1] := PLChar(Extract)^;

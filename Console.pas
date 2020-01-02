@@ -221,7 +221,7 @@ var
 begin
 C := CVar_FindVar(Name);
 if (C <> nil) and (C.Data <> nil) then
- Result := StrToFloatDef(C.Data, 0)
+ Result := StrToFloatDef(LStr(C.Data), 0)
 else
  Result := 0;
 end;

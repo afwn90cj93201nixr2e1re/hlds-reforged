@@ -1,27 +1,67 @@
 program HLDS;
 
+{$DEFINE DEBUG}
+
 {$APPTYPE CONSOLE}
 
 {$I *.inc}
 
 uses
-  FastMM4,
-  {$IFDEF WINDOWS} Windows, Winsock, UCWinAPI,{$ENDIF}
-  {$IFDEF LINUX}KernelDefs in 'unix/kerneldefs.pas', KernelIoctl in 'unix/kernelioctl.pas', Libc in 'unix/libc.pas',{$ENDIF}
-
-  // RTL
+  //FastMM4,
+  {$IFDEF WINDOWS}
+  Windows,
+  {$ENDIF }
+  {$IFDEF LINUX}
+  kerneldefs in 'unix\kerneldefs.pas',
+  {$ENDIF }
   SysUtils,
-
-  // Common utils + header unit
-  Default, SDK,
+  Default,
+  SDK,
   Main,
-
-  BZip2, Common, Console, CoreUI, Decal, Delta, Edict, Encode, FileSys, FilterIP,
-  GameLib, Host, HostCmds, HostSave, HPAK, Info, MathLib, Memory, Model,
-  MsgBuf, Network, ParseLib, PMove, Renderer, Resource, StdUI,
-  SVAuth, SVClient, SVCmds, SVDelta, SVEdict, SVEvent, SVExport, SVMain,
-  SVMove, SVPacket, SVPhys, SVRcon, SVSend, SVWorld, SysArgs, SysClock,
-  SysMain, Texture;
+  BZip2,
+  Common,
+  Console,
+  CoreUI,
+  Decal,
+  Delta,
+  Edict,
+  Encode,
+  FileSys,
+  FilterIP,
+  GameLib,
+  Host,
+  HostCmds,
+  HostSave,
+  HPAK,
+  Info,
+  MathLib,
+  Memory,
+  Model,
+  MsgBuf,
+  Network,
+  ParseLib,
+  PMove,
+  Renderer,
+  Resource,
+  StdUI,
+  SVAuth,
+  SVClient,
+  SVCmds,
+  SVDelta,
+  SVEdict,
+  SVEvent,
+  SVExport,
+  SVMain,
+  SVMove,
+  SVPacket,
+  SVPhys,
+  SVRcon,
+  SVSend,
+  SVWorld,
+  SysArgs,
+  SysClock,
+  SysMain,
+  Texture;
 
 // stuff to do
 
@@ -55,7 +95,7 @@ uses
 // Netchan_CreateFileFragments check
 
 begin
-DecimalSeparator := '.';
+FormatSettings.DecimalSeparator := '.';
 
 Start;
 while Frame do

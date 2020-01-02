@@ -953,7 +953,7 @@ var
  D: PDelta;
  F: PDeltaField; 
  I: Int;
- S: PChar;
+ S: PLChar;
  L: UInt;
 begin
 if Cmd_Argc = 2 then

@@ -331,7 +331,7 @@ S.sin_family := AF_INET;
 MemSet(S.sin_zero, SizeOf(S.sin_zero), 0);
 
 StrLCopy(@Buf, Name, SizeOf(Buf) - 1);
-S2 := StrPos(@Buf, ':');
+S2 := StrPos(PLChar(@Buf), ':');
 if S2 <> nil then
  begin
   S2^ := #0;

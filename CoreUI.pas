@@ -6,7 +6,7 @@ interface
 
 uses SysUtils, {$IFDEF MSWINDOWS}Windows, {$ELSE}Libc, {$ENDIF} Default, SDK;
 
-procedure UI_Print(S: PChar);
+procedure UI_Print(S: PLChar);
 procedure UI_Frame(Time: Double);
 procedure UI_EngineReady(const Engine: TEngineFuncs);
 procedure UI_Shutdown;

@@ -837,7 +837,7 @@ end;
 procedure COM_ListMaps(SubStr: PLChar);
 var
  I, L: UInt;
- S, S2: PChar;
+ S, S2: PLChar;
  F: TFile;
  DH: TDHeader;
  Buf: array[1..MAX_PATH_W] of LChar;

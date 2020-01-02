@@ -2203,6 +2203,8 @@ type
 const
  MAX_USERINFO_STRING = 256; // client-side dependent
 
+ DEFAULT_CDKEY_LENGTH = 32;
+
  MAX_PLAYER_NAME = 32; // client-side dependent
  MAX_WEAPON_DATA = 64; // writeclientdatatomessage
 

@@ -89,7 +89,7 @@ else
 
   S2 := Msg;
   repeat
-   S3 := PChar(UInt(S) + 2);
+   S3 := PLChar(UInt(S) + 2);
    I := TransformColorCode(S3);
    if I >= 0 then
     begin

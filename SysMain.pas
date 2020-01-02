@@ -206,7 +206,8 @@ else
 
   LPrint(['FATAL ERROR (shutting down): ', Text, #10]);
   {$IFDEF MSWINDOWS}
-   MessageBoxA(0, PLChar('FATAL ERROR (shutting down): ' + Text), 'Error', MB_OK or MB_ICONERROR or MB_SYSTEMMODAL);
+   MessageBoxA(HWND_DESKTOP, PLChar(LStr('FATAL ERROR (shutting down): ' + Text)),
+    'Error', MB_OK or MB_ICONERROR or MB_SYSTEMMODAL);
   {$ELSE}
    Writeln('FATAL ERROR (shutting down): ' + Text);
   {$ENDIF}

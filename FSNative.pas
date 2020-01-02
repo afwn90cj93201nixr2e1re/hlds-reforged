@@ -1204,7 +1204,7 @@ else
     if FindFirst(FullName, faAnyFile, P.SR) = 0 then
      begin
       P.Res := FS_MemAlloc(Length(P.SR.Name) + 1);
-      StrCopy(P.Res, PChar(P.SR.Name));
+      StrCopy(P.Res, PLChar(P.SR.Name));
      end
     else
      P.Res := nil;
@@ -1227,7 +1227,7 @@ else
   if FindNext(P.SR) = 0 then
    begin
     P.Res := FS_MemAlloc(Length(P.SR.Name) + 1);
-    StrCopy(P.Res, PChar(P.SR.Name));
+    StrCopy(P.Res, PLChar(P.SR.Name));
    end
   else
    P.Res := nil;

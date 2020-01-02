@@ -4,7 +4,7 @@ unit Server;
 
 interface
 
-uses Default, SDK, SVExport;
+uses Default, SDK, SVExport, Edict;
 
 procedure SV_ServerDeactivate;
 procedure SV_ActivateServer(NewUnit: Boolean);

@@ -143,12 +143,12 @@ var
  F: TFile;
  FileSize: Int64;
  P, P2: Pointer;
- Key: array[1..64] of LChar;
- Value: array[1..256] of LChar;
- ExtBuf: array[1..32] of LChar;
+ Key: array[0..63] of LChar;
+ Value: array[0..255] of LChar;
+ ExtBuf: array[0..31] of LChar;
  S: PLChar;
- {$IFNDEF MSWINDOWS}S2: PLChar;{$ENDIF} 
- NameBuf, FullNameBuf: array[1..MAX_PATH_W] of LChar;
+ {$IFNDEF MSWINDOWS}S2: PLChar;{$ENDIF}
+ NameBuf, FullNameBuf: array[0..MAX_PATH_W - 1] of LChar;
  GetEntityAPI: function(var FunctionTable: TDLLFunctions; InterfaceVersion: Int32): Int32; cdecl;
  GetEntityAPI2: function(var FunctionTable: TDLLFunctions; var InterfaceVersion: Int32): Int32; cdecl;
  GetNewDLLFunctions: function(var FunctionTable: TNewDLLFunctions; var InterfaceVersion: Int32): Int32; cdecl;
@@ -160,7 +160,7 @@ MemSet(ExtDLL, SizeOf(ExtDLL), 0);
 if StrIComp(GameDir, DEFAULT_GAME) <> 0 then
  ModInfo.CustomGame := True;
 
-FullNameBuf[1] := #0;
+FullNameBuf[0] := #0;
 if FS_Open(F, 'liblist.gam', 'r') then
  begin
   FileSize := FS_Size(F);
@@ -176,27 +176,27 @@ if FS_Open(F, 'liblist.gam', 'r') then
    
   PLChar(UInt(P) + FileSize)^ := #0;
   COM_IgnoreColons := True;
-  P2 := P;  
+  P2 := P;
   while True do
    begin
     P := COM_Parse(P);
     if COM_Token[Low(COM_Token)] = #0 then
      Break;
-    StrLCopy(@Key, @COM_Token, SizeOf(Key) - 1);
+    StrLCopy(Key, @COM_Token[1], SizeOf(Key) - 1);
     P := COM_Parse(P);
-    StrLCopy(@Value, @COM_Token, SizeOf(Value) - 1);
+    StrLCopy(Value, @COM_Token[1], SizeOf(Value) - 1);
 
-    if StrIComp(@Key, {$IFDEF MSWINDOWS}'gamedll'{$ELSE}'gamedll_linux'{$ENDIF}) <> 0 then
-     DLL_SetModKey(ModInfo, @Key, @Value)
+    if StrIComp(Key, {$IFDEF MSWINDOWS}'gamedll'{$ELSE}'gamedll_linux'{$ENDIF}) <> 0 then
+     DLL_SetModKey(ModInfo, Key, Value)
     else
      begin
       S := COM_ParmValueByName('-dll');
       if (S = nil) or (S^ = #0) then
-       S := StrLCopy(@NameBuf, @Value, SizeOf(NameBuf) - 1)
+       S := StrLCopy(NameBuf, Value, SizeOf(NameBuf) - 1)
       else
-       S := StrLCopy(@NameBuf, S, SizeOf(NameBuf) - 1);
+       S := StrLCopy(NameBuf, S, SizeOf(NameBuf) - 1);
 
-      COM_FixSlashes(@NameBuf);
+      COM_FixSlashes(NameBuf);
 
       {$IFNDEF MSWINDOWS}
       S2 := StrScan(S, '_');
@@ -208,25 +208,25 @@ if FS_Open(F, 'liblist.gam', 'r') then
       {$ENDIF}
 
       {$IFDEF MSWINDOWS}
-       FormatBuf(FullNameBuf, SizeOf(FullNameBuf) - 1, '%s\%s\%s%s', Length('%s\%s\%s%s'), [BaseDir, GameDir, S, #0]);
-       COM_FileExtension(@FullNameBuf, @ExtBuf, SizeOf(ExtBuf));
-       if StrIComp(@ExtBuf, 'dll') = 0 then
+       StrFmt(FullNameBuf, '%s\%s\%s', [BaseDir, GameDir, S]);
+       COM_FileExtension(FullNameBuf, ExtBuf, SizeOf(ExtBuf));
+       if StrIComp(ExtBuf, 'dll') = 0 then
         begin
          DPrint(['Adding DLL: ', GameDir, '\', S, '.']);
-         LoadThisDLL(@FullNameBuf);
+         LoadThisDLL(FullNameBuf);
         end
        else
-        DPrint(['Skipping non-dll: ', PLChar(@FullNameBuf), '.']);
+        DPrint(['Skipping non-dll: ', FullNameBuf, '.']);
       {$ELSE}
-       FormatBuf(FullNameBuf, SizeOf(FullNameBuf) - 1, '%s/%s/%s%s', Length('%s/%s/%s%s'), [BaseDir, GameDir, S, #0]);
-       COM_FileExtension(@FullNameBuf, @ExtBuf, SizeOf(ExtBuf));
-       if StrIComp(@ExtBuf, 'so') = 0 then
+       StrFmt(FullNameBuf, '%s/%s/%s', [BaseDir, GameDir, S]);
+       COM_FileExtension(FullNameBuf, ExtBuf, SizeOf(ExtBuf));
+       if StrIComp(ExtBuf, 'so') = 0 then
         begin
          DPrint(['Adding shared library: ', GameDir, '/', S, '.']);
-         LoadThisDLL(@FullNameBuf);
+         LoadThisDLL(FullNameBuf);
         end
        else
-        DPrint(['Skipping non-shared library: ', PLChar(@FullNameBuf), '.']);
+        DPrint(['Skipping non-shared library: ', FullNameBuf, '.']);
       {$ENDIF}
      end;
    end;
@@ -241,9 +241,9 @@ else
   while (S <> nil) and (S^ > #0) do
    begin
     {$IFDEF MSWINDOWS}
-     FormatBuf(FullNameBuf, SizeOf(FullNameBuf) - 1, '%s\%s\%s%s', Length('%s\%s\%s%s'), [BaseDir, DEFAULT_GAME + '\dlls', S, #0]);
+     StrFmt(FullNameBuf, '%s\%s\%s', [BaseDir, DEFAULT_GAME + '\dlls', S]);
     {$ELSE}
-     FormatBuf(FullNameBuf, SizeOf(FullNameBuf) - 1, '%s/%s/%s%s', Length('%s/%s/%s%s'), [BaseDir, DEFAULT_GAME + '/dlls', S, #0]);
+     StrFmt(FullNameBuf, '%s/%s/%s', [BaseDir, DEFAULT_GAME + '/dlls', S]);
     {$ENDIF}
     LoadThisDLL(@FullNameBuf);
     S := Sys_FindNext(nil);
@@ -251,7 +251,7 @@ else
   Sys_FindClose;   
  end;
 
-if (FullNameBuf[1] = #0) or (NumExtDLL = 0) then
+if (FullNameBuf[0] = #0) or (NumExtDLL = 0) then
  begin
   Host_Error('No game DLL provided to the engine, exiting.');
   Exit;
@@ -287,7 +287,7 @@ else
   GetEntityAPI := GetDispatch('GetEntityAPI');
   if @GetEntityAPI = nil then
    begin
-    Host_Error(['Couldn''t get DLL API from ', PLChar(@FullNameBuf), '.']);
+    Host_Error(['Couldn''t get DLL API from ', FullNameBuf, '.']);
     Exit;
    end;
   Version := DLL_INTERFACE_VERSION;
