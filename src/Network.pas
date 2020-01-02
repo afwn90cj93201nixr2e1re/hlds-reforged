@@ -18,9 +18,6 @@ procedure NET_Config(EnableNetworking: Boolean);
 
 procedure NET_SendPacket(Source: TNetSrc; Size: UInt; Buffer: Pointer; const Dest: TNetAdr);
 
-procedure NET_ThreadLock;
-procedure NET_ThreadUnlock;
-
 function NET_AllocMsg(Size: UInt): PNetQueue;
 
 function NET_GetPacket(Source: TNetSrc): Boolean;
@@ -104,14 +101,6 @@ var
  fakelag: TCVar = (Name: 'fakelag'; Data: '0');
  fakeloss: TCVar = (Name: 'fakeloss'; Data: '0');
 
- // threading
- UseThread: Boolean = False;
- NetSleepForever: Boolean = True;
- ThreadInit: Boolean = False;
- ThreadCS: TCriticalSection;
- ThreadHandle: UInt;
- ThreadID: UInt32;
-
  NormalQueue: PNetQueue = nil;
  NetMessages: array[TNetSrc] of PNetQueue;
 
@@ -148,18 +137,6 @@ Result := WSAGetLastError;
 {$ELSE}
 Result := errno; // h_errno
 {$ENDIF}
-end;
-
-procedure NET_ThreadLock;
-begin
-if UseThread and ThreadInit then
- Sys_EnterCS(ThreadCS);
-end;
-
-procedure NET_ThreadUnlock;
-begin
-if UseThread and ThreadInit then
- Sys_LeaveCS(ThreadCS);
 end;
 
 function ntohs(I: UInt16): UInt16;
@@ -494,7 +471,6 @@ var
  P: PLoopBack;
  I: Int;
 begin
-NET_ThreadLock;
 P := @Loopbacks[A[Source]];
 I := P.Send and (MAX_LOOPBACK - 1);
 Inc(P.Send);
@@ -507,7 +483,6 @@ if Size > MAX_PACKETLEN then
 P.Msgs[I].Size := Size;
 if Size > 0 then
  Move(Buffer^, P.Msgs[I].Data, Size);
-NET_ThreadUnlock;
 end;
 
 procedure NET_RemoveFromPacketList(P: PLagPacket);
@@ -883,112 +858,6 @@ if S > 0 then
 Result := NET_LagPacket(False, Source, nil, nil);
 end;
 
-function NET_Sleep: Int;
-var
- I: TNetSrc;
- FDSet: TFDSet;
- Num, S: TSocket;
- A: TTimeVal;
- P: PTimeVal;
-begin
-Num := 0;
-FD_ZERO(FDSet);
-
-for I := Low(I) to High(I) do
- begin
-  S := IPSockets[I];
-  if S > 0 then
-   begin
-    FD_SET(S, FDSet);
-    if S > Num then
-     Num := S;
-   end;
- end;
-
-if NetSleepForever then
- P := nil
-else
- begin
-  A.tv_sec := 0;
-  A.tv_usec := 20000;
-  P := @A;
- end;
-
-Result := select(Num + 1, @FDSet, nil, nil, P);
-end;
-
-function ThreadProc(Parameter: Pointer): Int32;
-var
- B: Boolean;
- I: TNetSrc;
- NewMsg, P: PNetQueue;
-begin
-while True do
- begin
-  while NET_Sleep > 0 do
-   begin
-    B := True;
-    for I := Low(I) to High(I) do
-     begin
-      NET_ThreadLock;
-      if NET_QueuePacket(I) then
-       begin
-        B := False;
-        NewMsg := NET_AllocMsg(InMessage.CurrentSize);
-        Move(InMessage.Data^, NewMsg.Data^, InMessage.CurrentSize);
-        Move(InFrom, NewMsg.Addr, SizeOf(NewMsg.Addr));
-        NewMsg.Prev := nil;
-        P := NetMessages[I];
-        if P <> nil then
-         begin
-          while P.Prev <> nil do
-           P := P.Prev;
-          P.Prev := NewMsg;
-         end
-        else
-         NetMessages[I] := NewMsg;
-       end;
-      NET_ThreadUnlock;
-     end;
-    
-    if not B then
-     Break;
-   end;
-
-  Sys_Sleep(0);
- end;
-
-Result := 0;
-EndThread(0);
-end;
-
-procedure NET_StartThread;
-begin
-if UseThread and not ThreadInit then
- begin
-  Sys_InitCS(ThreadCS);
-  ThreadHandle := BeginThread(nil, 0, @ThreadProc, nil, 0, ThreadID);
-  if ThreadHandle = 0 then
-   begin
-    Sys_DeleteCS(ThreadCS);
-    UseThread := False;
-    Sys_Error('Couldn''t initialize network thread - run without -netthread.');
-   end
-  else
-   ThreadInit := True;
- end;
-end;
-
-procedure NET_StopThread;
-begin
-if UseThread and ThreadInit then
- begin
-  {$IFDEF MSWINDOWS}TerminateThread(ThreadHandle, 0){$ELSE}pthread_cancel(UInt(ThreadHandle)){$ENDIF};
-  Sys_DeleteCS(ThreadCS);
-  ThreadInit := False;
- end;
-end;
- 
 function NET_AllocMsg(Size: UInt): PNetQueue;
 var
  P: PNetQueue;
@@ -1038,8 +907,6 @@ for I := 1 to MAX_NET_QUEUES do
   P.Data := Mem_ZeroAlloc(NET_QUEUESIZE);
   NormalQueue := P;
  end;
-
-NET_StartThread;
 end;
 
 procedure NET_FlushQueues;
@@ -1047,8 +914,6 @@ var
  I: TNetSrc;
  P, P2: PNetQueue;
 begin
-NET_StopThread;
-
 for I := Low(I) to High(I) do
  begin
   P := NetMessages[I];
@@ -1079,11 +944,10 @@ var
  P: PNetQueue;
 begin
 NET_AdjustLag;
-NET_ThreadLock;
 if NET_GetLoopPacket(Source, InFrom, InMessage) then
  B := NET_LagPacket(True, Source, @InFrom, @InMessage)
 else
- if UseThread or not NET_QueuePacket(Source) then
+ if not NET_QueuePacket(Source) then
   B := NET_LagPacket(False, Source, nil, nil)
  else
   B := True;
@@ -1110,8 +974,6 @@ else
   else
    Result := False;
  end;
-
-NET_ThreadUnlock;
 end;
 
 var
@@ -1285,7 +1147,6 @@ procedure NET_OpenIP;
 var
  P: Single;
 begin
-NET_ThreadLock;
 if IPSockets[NS_SERVER] = 0 then
  begin
   P := ip_hostport.Value;
@@ -1306,7 +1167,6 @@ if IPSockets[NS_SERVER] = 0 then
    Sys_Error(['Couldn''t allocate dedicated server IP on port ', Trunc(P), '.' + sLineBreak +
               'Try using a different port by specifying either -port X or +hostport X in the commandline parameters.']);
  end;
-NET_ThreadUnlock;
 end;
 
 procedure NET_GetLocalAddress;
@@ -1377,8 +1237,6 @@ if OldConfig <> EnableNetworking then
    end
   else
    begin
-    NET_ThreadLock;
-
     for I := Low(TNetSrc) to High(TNetSrc) do
      begin
       S := IPSockets[I];
@@ -1389,8 +1247,6 @@ if OldConfig <> EnableNetworking then
         IPSockets[I] := 0;
        end;
      end;
-
-    NET_ThreadUnlock;
     NetInit := False;
    end;
  end;
@@ -1411,8 +1267,6 @@ CVar_RegisterVariable(defport);
 CVar_RegisterVariable(fakelag);
 CVar_RegisterVariable(fakeloss);
 
-UseThread := COM_CheckParm('-netthread') > 0;
-NetSleepForever := COM_CheckParm('-netsleep') = 0;
 NoIP := COM_CheckParm('-noip') > 0;
 
 I := COM_CheckParm('-port');
@@ -1449,7 +1303,6 @@ end;
 
 procedure NET_ClearLagData(Client, Server: Boolean);
 begin
-NET_ThreadLock;
 if Client then
  begin
   NET_ClearLaggedList(@LagData[NS_CLIENT]);
@@ -1457,7 +1310,6 @@ if Client then
  end;
 if Server then
  NET_ClearLaggedList(@LagData[NS_SERVER]);
-NET_ThreadUnlock;
 end;
 
 procedure NET_Shutdown;
