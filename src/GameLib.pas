@@ -269,7 +269,7 @@ if @GetEntityAPI2 <> nil then
   Version := DLL_INTERFACE_VERSION;
   if GetEntityAPI2(DLLFunctions, Version) = 0 then
    begin
-    Print(['==================' + LineBreak + 'Game DLL version mismatch.' + LineBreak +
+    Print(['==================' + sLineBreak + 'Game DLL version mismatch.' + sLineBreak +
            'DLL version is ', Version, ', engine version is ', DLL_INTERFACE_VERSION, '.']);
     if Version <= DLL_INTERFACE_VERSION then
      Print(['The game DLL for ', GameDir, ' appears to be outdated, check for updates.'])
@@ -291,7 +291,7 @@ else
   Version := DLL_INTERFACE_VERSION;
   if GetEntityAPI(DLLFunctions, Version) = 0 then
    begin
-    Print(['==================' + LineBreak + 'Game DLL version mismatch.']);
+    Print(['==================' + sLineBreak + 'Game DLL version mismatch.']);
     Print(['The game DLL for ', GameDir, ' appears to be outdated, check for updates.']);
     Print('==================');
     Host_Error('Game DLL version mismatch.');

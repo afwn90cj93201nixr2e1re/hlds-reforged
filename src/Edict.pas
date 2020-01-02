@@ -199,7 +199,7 @@ while P <> nil do
     KVD.Handled := 0;
     DLLFunctions.KeyValue(E, @KVD);
     if KVD.Handled = 0 then
-     Sys_Error('ExtractClassname: Parsing error.' + LineBreak +
+     Sys_Error('ExtractClassname: Parsing error.' + sLineBreak +
                'The game DLL seems to be incorrectly handling the KeyValue calls.');
     Exit;
    end
@@ -385,13 +385,13 @@ for I := 0 to SV.NumEdicts - 1 do
    Inc(Free);
  end;
 
-Print(['Edicts:' + LineBreak +
-       '- Total: ', SV.NumEdicts, ';' + LineBreak +
-       '- Alloc: ', Active, ';' + LineBreak +
-       '- Free: ', Free, ';' + LineBreak +
-       '- View: ', View, ';' + LineBreak +
-       '- Touch: ', Touch, ';' + LineBreak +
-       '- Step: ', Step, ';' + LineBreak +
+Print(['Edicts:' + sLineBreak +
+       '- Total: ', SV.NumEdicts, ';' + sLineBreak +
+       '- Alloc: ', Active, ';' + sLineBreak +
+       '- Free: ', Free, ';' + sLineBreak +
+       '- View: ', View, ';' + sLineBreak +
+       '- Touch: ', Touch, ';' + sLineBreak +
+       '- Step: ', Step, ';' + sLineBreak +
        '- Push: ', Push, '.']);
 end;
 

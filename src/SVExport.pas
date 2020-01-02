@@ -448,7 +448,7 @@ else
       end;
 
    if SV.State = SS_LOADING then
-    Host_Error(['PF_PrecacheModel: Model "', Name, '" failed to precache because the item count is over the MAX_MODELS (', MAX_MODELS, ') limit.' + LineBreak +
+    Host_Error(['PF_PrecacheModel: Model "', Name, '" failed to precache because the item count is over the MAX_MODELS (', MAX_MODELS, ') limit.' + sLineBreak +
                 'Reduce the number of brush models and/or regular models in the map to correct this.'])
    else
     Host_Error(['PF_PrecacheModel: "', Name, '": Precache can only be done in spawn functions, or when the server is loading.']);
@@ -490,7 +490,7 @@ else
        end;
 
     if SV.State = SS_LOADING then
-     Host_Error(['PF_PrecacheSound: Sound "', Name, '" failed to precache because the item count is over the MAX_SOUNDS (', MAX_SOUNDS, ') limit.' + LineBreak +
+     Host_Error(['PF_PrecacheSound: Sound "', Name, '" failed to precache because the item count is over the MAX_SOUNDS (', MAX_SOUNDS, ') limit.' + sLineBreak +
                  'Reduce the number of sound entities and ambient sounds in the map to correct this.'])
     else
      Host_Error(['PF_PrecacheSound: "', Name, '": Precache can only be done in spawn functions, or when the server is loading.']);
@@ -3091,10 +3091,10 @@ end;
 
 function PF_Reserved: Pointer; cdecl;
 begin
-Sys_Error(['PF_Reserved: One of the reserved engine functions was called.' + LineBreak +
-           'This usually means that there''s some discrepancy between engine and game library interface definitions,' + LineBreak +
-           'or the engine pointer in the game library is mismatched.' + LineBreak +
-           'A memory corruption or subtle errors in the code can also be an issue.' + LineBreak +
+Sys_Error(['PF_Reserved: One of the reserved engine functions was called.' + sLineBreak +
+           'This usually means that there''s some discrepancy between engine and game library interface definitions,' + sLineBreak +
+           'or the engine pointer in the game library is mismatched.' + sLineBreak +
+           'A memory corruption or subtle errors in the code can also be an issue.' + sLineBreak +
            'Engine interface version: ', DLL_INTERFACE_VERSION, '; TEngineFuncs structure size: ', SizeOf(TEngineFuncs), ' bytes' +
            ', number of functions in this structure: ', SizeOf(TEngineFuncs) div SizeOf(Pointer),
            ' (including ', ((UInt(@@TEngineFuncs(nil^).ReservedEnd) - UInt(@@TEngineFuncs(nil^).ReservedStart)) div SizeOf(Pointer)) + 1,

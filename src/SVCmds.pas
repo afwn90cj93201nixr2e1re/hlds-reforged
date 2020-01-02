@@ -337,7 +337,7 @@ if CmdSource = csServer then
   begin
    K := Cmd_Argc;
    if (K < 2) or (K > 3) then
-    Print('Usage: user <username or #userid> ["physinfo"]' + LineBreak +
+    Print('Usage: user <username or #userid> ["physinfo"]' + sLineBreak +
           'The userid should be prefixed with a "#".')
    else
     begin

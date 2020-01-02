@@ -598,7 +598,7 @@ else
   Print(['Listing contents for "', Name, '".']);
   if HPAK_ParseHeaders(Name, F, Header, DH) then
    begin
-    Print(['| Number of entries: ', DH.NumEntries, '/', HPAK_MAX_ENTRIES, LineBreak +
+    Print(['| Number of entries: ', DH.NumEntries, '/', HPAK_MAX_ENTRIES, sLineBreak +
            '| Type Size FileName : MD5 Hash']);
     for I := 0 to DH.NumEntries - 1 do
      begin
@@ -732,7 +732,7 @@ else
   Print(['Validating "', Name, '".']);
   if HPAK_ParseHeaders(Name, F, Header, DH) then
    begin
-    Print(['| Entries: ', DH.NumEntries, '/', HPAK_MAX_ENTRIES, LineBreak + '| Type Size FileName']);
+    Print(['| Entries: ', DH.NumEntries, '/', HPAK_MAX_ENTRIES, sLineBreak + '| Type Size FileName']);
     for I := 0 to DH.NumEntries - 1 do
      begin
       E := @DH.Entries[I];
@@ -819,7 +819,7 @@ else
 
   if HPAK_ParseHeaders(Name, F, Header, DH) then
    begin
-    Print(['| Entries: ', DH.NumEntries, '/', HPAK_MAX_ENTRIES, LineBreak + '| Type Size FileName']);
+    Print(['| Entries: ', DH.NumEntries, '/', HPAK_MAX_ENTRIES, sLineBreak + '| Type Size FileName']);
     for I := 0 to DH.NumEntries - 1 do
      if (Index = -1) or (I = Index) then
       begin

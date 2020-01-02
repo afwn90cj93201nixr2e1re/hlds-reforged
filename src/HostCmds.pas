@@ -379,7 +379,7 @@ end;
 procedure Host_Version_F; cdecl;
 begin
 if CmdSource = csServer then
- Print(['Protocol version: 47/48 (multi-protocol).', LineBreak,
+ Print(['Protocol version: 47/48 (multi-protocol).', sLineBreak,
         'Server build: ', BuildNumber, '; server version ', ProjectVersion, '.']);
 end;
 

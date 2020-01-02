@@ -147,7 +147,6 @@ const
  MaxNativeUInt = High(NativeUInt);
 
  EmptyString: PLChar = '';
- LineBreak = {$IFDEF MSWINDOWS}#$D#$A{$ELSE}#$A{$ENDIF};
 
  PathSeparator = {$IFDEF MSWINDOWS}'\'{$ELSE}'/'{$ENDIF};
  PathSeparator2 = {$IFDEF MSWINDOWS}'/'{$ELSE}'\'{$ENDIF};

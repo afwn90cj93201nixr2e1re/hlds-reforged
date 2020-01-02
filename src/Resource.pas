@@ -967,7 +967,7 @@ if P <> nil then
  begin
   P2 := P;
 
-  DPrint([LineBreak + 'Precaching from resource file "', PLChar(@Buf), '".' + LineBreak +
+  DPrint([sLineBreak + 'Precaching from resource file "', PLChar(@Buf), '".' + sLineBreak +
           '----------------------------------']);
   SV.NumResGeneric := 0;
   I := 0;
@@ -997,8 +997,8 @@ if P <> nil then
      end;
    end;
 
-  DPrint(['----------------------------------' + LineBreak,
-          'Total: ', SV.NumResGeneric, ' resources out of ', I, '.' + LineBreak]);
+  DPrint(['----------------------------------' + sLineBreak,
+          'Total: ', SV.NumResGeneric, ' resources out of ', I, '.' + sLineBreak]);
   COM_FreeFile(P2);
  end
 else

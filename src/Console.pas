@@ -527,8 +527,8 @@ if Cmd_Argc >= 2 then
   S := Cmd_Argv(1);
   if (S = nil) or (StrComp(S, '?') = 0) then
    begin
-    Print('cvarlist: List all cvars;' + LineBreak +
-          'cvarlist [Partial]: List cvars starting with "Partial";' + LineBreak +
+    Print('cvarlist: List all cvars;' + sLineBreak +
+          'cvarlist [Partial]: List cvars starting with "Partial";' + sLineBreak +
           'cvarlist log [Partial]: Logs cvars to file "cvarlist.txt" in the gamedir.');
     Exit;
    end
@@ -585,7 +585,7 @@ if Cmd_Argc >= 2 then
 else
  S := EmptyString;
 
-Print('CVar List:' + LineBreak + '--------------');
+Print('CVar List:' + sLineBreak + '--------------');
 
 C := CVarBase;
 Count := 0;
@@ -607,9 +607,9 @@ while C <> nil do
  end;
 
 if LogPartial then
- Print(['--------------' + LineBreak, Count, ' CVars for [', S, ']'])
+ Print(['--------------' + sLineBreak, Count, ' CVars for [', S, ']'])
 else
- Print(['--------------' + LineBreak, Count, ' Total CVars']);
+ Print(['--------------' + sLineBreak, Count, ' Total CVars']);
 
 if LogFile then
  begin
@@ -1143,7 +1143,7 @@ if Cmd_Argc >= 2 then
 else
  S := EmptyString;
 
-Print('Command List:' + LineBreak + '--------------');
+Print('Command List:' + sLineBreak + '--------------');
 
 C := CmdBase;
 Count := 0;
@@ -1162,9 +1162,9 @@ while C <> nil do
  end;
 
 if LogPartial then
- Print(['--------------' + LineBreak, Count, ' Commands for [', S, ']'])
+ Print(['--------------' + sLineBreak, Count, ' Commands for [', S, ']'])
 else
- Print(['--------------' + LineBreak, Count, ' Total Commands']);
+ Print(['--------------' + sLineBreak, Count, ' Total Commands']);
 
 if LogFile then
  begin
@@ -1792,7 +1792,7 @@ if SVS.LogEnabled and ((sv_log_onefile.Value = 0) or (SVS.LogFile = nil)) then
       begin
        if not FS_Open(SVS.LogFile, @Buf, 'wo') then
         begin
-         Print(['Can''t open logfile "', PLChar(@Buf), '" for writing.' + LineBreak + 'Logging disabled.']);
+         Print(['Can''t open logfile "', PLChar(@Buf), '" for writing.' + sLineBreak + 'Logging disabled.']);
          SVS.LogEnabled := False;
          Exit;
         end;
@@ -1803,7 +1803,7 @@ if SVS.LogEnabled and ((sv_log_onefile.Value = 0) or (SVS.LogFile = nil)) then
       end;
     end;
 
-   Print(['Unable to create logfile - too many existing files, the limit is ', MAX_LOG_FILES, '.' + LineBreak +
+   Print(['Unable to create logfile - too many existing files, the limit is ', MAX_LOG_FILES, '.' + sLineBreak +
           'Logging disabled.']);
    SVS.LogEnabled := False;
   end;

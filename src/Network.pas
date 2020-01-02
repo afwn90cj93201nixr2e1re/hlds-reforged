@@ -1299,7 +1299,7 @@ if IPSockets[NS_SERVER] = 0 then
 
   IPSockets[NS_SERVER] := NET_IPSocket(ipname.Data, Trunc(P), False);
   if IPSockets[NS_SERVER] = 0 then
-   Sys_Error(['Couldn''t allocate dedicated server IP on port ', Trunc(P), '.' + LineBreak +
+   Sys_Error(['Couldn''t allocate dedicated server IP on port ', Trunc(P), '.' + sLineBreak +
               'Try using a different port by specifying either -port X or +hostport X in the commandline parameters.']);
  end;
 NET_ThreadUnlock;
@@ -1327,7 +1327,7 @@ if not NoIP then
   if getsockname(IPSockets[NS_SERVER], S, NL) <> 0 then
    begin
     NoIP := True;
-    Print(['Couldn''t get TCP/IP address, TCP/IP disabled.' + LineBreak +
+    Print(['Couldn''t get TCP/IP address, TCP/IP disabled.' + sLineBreak +
            'Reason: ', NET_ErrorString(NET_LastError), '.']);
    end
   else

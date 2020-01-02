@@ -791,8 +791,8 @@ while True do
 
      F := COM_Parse(F);
      if COM_Token[Low(COM_Token)] = #0 then
-      Sys_Error('Delta_ParseDescription: Unknown encoder. Valid values are:' + LineBreak +
-                'none,' + LineBreak + 'gamedll funcname,' + LineBreak + 'clientdll funcname')
+      Sys_Error('Delta_ParseDescription: Unknown encoder. Valid values are:' + sLineBreak +
+                'none,' + sLineBreak + 'gamedll funcname,' + sLineBreak + 'clientdll funcname')
      else
       if StrIComp(@COM_Token, 'none') <> 0 then
        begin

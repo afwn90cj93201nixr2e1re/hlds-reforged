@@ -331,7 +331,7 @@ if not SkipNotify then
    DLLFunctions.ClientDisconnect(C.Entity^);
 
   if Msg^ > #0 then
-   Print(['Dropped "', PLChar(@C.NetName), '" from server.' + LineBreak + 'Reason: ', Msg])
+   Print(['Dropped "', PLChar(@C.NetName), '" from server.' + sLineBreak + 'Reason: ', Msg])
   else
    Print(['Dropped "', PLChar(@C.NetName), '" from server.']);
   
