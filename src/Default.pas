@@ -244,115 +244,36 @@ implementation
 uses SysUtils {$IFDEF MSWINDOWS}, Windows{$ENDIF};
 
 function Swap16(Value: Int16): Int16;
-{$IFDEF ASM32} {$IFDEF FPC} assembler; {$ENDIF}
- asm
-  xchg al, ah
- end;
-{$ELSE}
- begin
+begin
   Result := (Value shl 8) or (Value shr 8);
- end;
-{$ENDIF}
-
-procedure _Swap32; {$IFDEF FPC} assembler; {$ENDIF}
-asm
- mov ecx, eax
-
- shl ecx, 24
-
- mov edx, eax
- and edx, $FF00
- shl edx, 8
-
- or ecx, edx
-
- mov edx, eax
- and edx, $FF0000
- shr edx, 8
- 
- shr eax, 24
-
- or eax, ecx
- or eax, edx
 end;
 
 function Swap32(Value: Int32): Int32;
-{$IFDEF ASM32} {$IFDEF FPC} assembler; {$ENDIF}
- asm
-  {$IFNDEF I386COMPAT}
-   bswap eax
-  {$ELSE}
-   call _Swap32
-  {$ENDIF}
- end;
-{$ELSE}
- begin
+begin
   Result := (Value shl 24) or (Value shr 24) or ((Value shl 8) and $FF0000) or
-            ((Value shr 8) and $FF00);
- end;
-{$ENDIF}
+          ((Value shr 8) and $FF00);
+end;
 
 function Swap64(Value: Int64): Int64;
-{$IFDEF CPUASM} {$IFDEF FPC} assembler; {$ENDIF}
- asm
-  {$IFNDEF I386COMPAT}
-   mov eax, dword ptr [Value].TInt64Rec.Hi
-   bswap eax
-   mov edx, dword ptr [Value].TInt64Rec.Lo
-   bswap edx
-  {$ELSE}
-   mov eax, dword ptr [Value].TInt64Rec.Hi
-   call _Swap32
-   push eax
-
-   mov eax, dword ptr [Value].TInt64Rec.Lo
-   call _Swap32
-
-   mov edx, eax
-   pop eax
-  {$ENDIF}
- end;
-{$ELSE}
- begin
+begin
   Result := Swap32(TInt64Rec(Value).High) + (Int64(Swap32(TInt64Rec(Value).Low)) shl 32);
- end;
-{$ENDIF}
+end;
 
 function Min32(X1, X2: Int32): Int32;
-{$IFDEF ASM32} {$IFDEF FPC} assembler; {$ENDIF}
- asm
-  cmp eax, edx
-  jle @Return
-  mov eax, edx
-
- @Return:
- end;
-{$ELSE}
- begin
-  if X1 < X2 then
-   Result := X1
-  else
-   Result := X2;
- end;
-{$ENDIF}
+begin
+if X1 < X2 then
+ Result := X1
+else
+ Result := X2;
+end;
 
 function Max32(X1, X2: Int32): Int32;
-{$IFDEF ASM32} {$IFDEF FPC} assembler; {$ENDIF}
- asm
-  cmp eax, edx
-  jge @Return
-  mov eax, edx
-
- @Return:
- end;
-{$ELSE}
  begin
   if X1 > X2 then
    Result := X1
   else
    Result := X2;
  end;
-{$ENDIF}
 
 function Min64(X1, X2: Int64): Int64;
 begin
@@ -488,34 +409,6 @@ Result := 0;
 end;
 
 function IntPower(X: Double; Exp: UInt32): Double;
-{$IFDEF ASM32} {$IFDEF FPC} assembler; {$ENDIF}
- asm
-  fld1
-
-  test eax, eax
-  je @Return
-
-  fld X
-
- @1: // inner loop
-  test al, 1
-  jne @2
-
-  shr eax, 1
-  fmul st, st
-  jmp @1
-
- @2:
-  fmul st(1), st
-
-  dec eax
-  jne @1
-
-  fstp st
-
- @Return:
- end;
-{$ELSE}
  var
   I: UInt32;
  begin
@@ -526,308 +419,36 @@ function IntPower(X: Double; Exp: UInt32): Double;
   else
    Result := 1;
  end;
-{$ENDIF}
 
 function StrLen(S: PLChar): UInt;
-{$IFDEF ASM32} {$IFDEF FPC} assembler; {$ENDIF}
-asm
- cmp byte ptr [eax], 0
- je @1
 
- cmp byte ptr [eax + 1], 0
- je @2
-
- cmp byte ptr [eax + 2], 0
- je @3
-
- cmp byte ptr [eax + 3], 0
- je @4
-
- push eax
- and ax, Int16(-4)
-
-@5:
- add eax, 4
- mov edx, dword ptr [eax]
-
- lea ecx, dword ptr [edx - $1010101]
- not edx
- and edx, ecx
- and edx, $80808080
- je @5
-
- pop ecx
- bsf edx, edx
- shr edx, 3
- add eax, edx
- sub eax, ecx
- ret
- nop
-
-@1:
- xor eax, eax
- ret
-
-@2:
- mov eax, 1
- ret
-
-@3:
- mov eax, 2
- ret
-
-@4:
- mov eax, 3
-{$ELSE}
 begin
 Result := SysUtils.StrLen(S);
-{$ENDIF}
 end;
 
 function StrCopy(Dest, Source: PLChar): PLChar;
-{$IFDEF ASM32} {$IFDEF FPC} assembler; {$ENDIF}
-asm
- push eax
- mov ecx, edx
- sub ecx, eax
- cmp ecx, 4
- jb @1
-
- movzx ecx, byte ptr [edx]
- mov byte ptr [eax], cl
- test cl, cl
- je @2
-
- movzx ecx, byte ptr [edx + 1]
- mov byte ptr [eax + 1], cl
- test cl, cl
- je @2
-
- movzx ecx, byte ptr [edx + 2]
- mov byte ptr [eax + 2], cl
- test cl, cl
- je @2
-
- movzx ecx, byte ptr [edx + 3]
- mov byte ptr [eax + 3], cl
- test cl, cl
- je @2
-
- mov ecx, edx
- and edx, -4
- sub ecx, edx
- sub eax, ecx
- push ebx
-
-@3:
- add edx, 4
- add eax, 4
- mov ecx, dword ptr [edx]
-
- lea ebx, dword ptr [ecx - $1010101]
- not ecx
- and ecx, ebx
- test ecx, $80808080
- jne @4
-
- mov ecx, dword ptr [edx]
- mov dword ptr [eax], ecx
- jmp @3
- 
-@4:
- pop ebx
-
-@1:
- movzx ecx, byte ptr [edx]
- mov byte ptr [eax], cl
- test cl, cl
- je @2
-
- movzx ecx, byte ptr [edx + 1]
- mov byte ptr [eax + 1], cl
- test cl, cl
- je @2
-
- movzx ecx, byte ptr [edx + 2]
- mov byte ptr [eax + 2], cl
- test cl, cl
- je @2
-
- movzx ecx, byte ptr [edx + 3]
- mov byte ptr [eax + 3], cl
- test cl, cl
- je @2
-
- add eax, 4
- add edx, 4
- jmp @1
-
-@2:
- pop eax
-{$ELSE}
 begin
-Result := SysUtils.StrCopy(Dest, Source);
-{$ENDIF}
+  Result := SysUtils.StrCopy(Dest, Source);
 end;
 
 function StrComp(S1, S2: PLChar): Int;
-{$IFDEF ASM32} {$IFDEF FPC} assembler; {$ENDIF}
-asm
- sub eax, edx
- je @1
-
-@3:
- movzx ecx, byte ptr [eax + edx]
- cmp cl, byte ptr [edx]
- jne @2
- inc edx
- test cl, cl
- jne @3
- xor eax, eax
- ret
-
-@2:
- sbb eax, eax
- or al, 1
-
-@1:
-{$ELSE}
 begin
-Result := SysUtils.StrComp(S1, S2);
-{$ENDIF}
+  Result := SysUtils.StrComp(S1, S2);
 end;
 
 function StrIComp(S1, S2: PLChar): Int;
-{$IFDEF ASM32} {$IFDEF FPC} assembler; {$ENDIF}
-asm
- push ebx
- sub eax, edx
- mov ecx, eax
-
-@2:
- test eax, eax
- je @1
-
-@5:
- movzx eax, byte ptr [ecx + edx]
- movzx ebx, byte ptr [edx]
- inc edx
- cmp eax, ebx
- je @2
-
- add eax, $9F
- add ebx, $9F
- cmp al, $1A
- jnb @3
- sub eax, $20
-
-@3:
- cmp bl, $1A
- jnb @4
- sub ebx, $20
-
-@4:
- sub eax, ebx
- je @5
-
-@1:
- pop ebx
-{$ELSE}
 begin
-Result := SysUtils.StrIComp(S1, S2);
-{$ENDIF}
+  Result := SysUtils.StrIComp(S1, S2);
 end;
 
 function StrLComp(S1, S2: PLChar; L: UInt): Int;
-{$IFDEF ASM32} {$IFDEF FPC} assembler; {$ENDIF}
-asm
- sub eax, edx
- je @1
- add ecx, edx
- push ebx
- nop
-
-@4:
- cmp ecx, edx
- je @2
- movzx ebx, byte ptr [eax + edx]
- cmp bl, byte ptr [edx]
- jne @3
- inc edx
- test bl, bl
- jne @4
-
-@2:
- xor eax, eax
- pop ebx
- ret
-
-@3:
- sbb eax, eax
- or al, 1
- pop ebx
-
-@1:
-{$ELSE}
 begin
-Result := SysUtils.StrLComp(S1, S2, L);
-{$ENDIF}
+  Result := SysUtils.StrLComp(S1, S2, L);
 end;
 
 function StrLIComp(S1, S2: PLChar; L: UInt): Int;
-{$IFDEF ASM32} {$IFDEF FPC} assembler; {$ENDIF}
-asm
- sub eax, edx
- je @1
- add ecx, edx
- push ebx
- nop
-
-@7:
- cmp ecx, edx
- je @2
- movzx ebx, byte ptr [eax + edx]
- cmp bl, byte ptr [edx]
- je @3
-
- add bl, $9F
- cmp bl, $1A
- jnb @4
- sub bl, $20
-
-@4:
- sub bl, $9F
- mov bh, byte ptr [edx]
- add bh, $9F
- cmp bh, $1A
- jnb @5
- sub bh, $20
-
-@5:
- sub bh, $9F
- cmp bl, bh
- jne @6
-
-@3:
- add edx, 1
- test bl, bl
- jne @7
-
-@2:
- xor eax, eax
- pop ebx
- ret
-
-@6:
- sbb eax, eax
- or al, 1
- pop ebx
-
-@1:
-{$ELSE}
 begin
-Result := SysUtils.StrLIComp(S1, S2, L);
-{$ENDIF}
+  Result := SysUtils.StrLIComp(S1, S2, L);
 end;
 
 function StrLScan(S: PLChar; C: LChar; MaxLen: UInt): PLChar;
@@ -902,60 +523,20 @@ else
 end;
 
 function LowerC(C: LChar): LChar;
-{$IFDEF CPUASM} {$IFDEF FPC} assembler; {$ENDIF}
- asm
- {$IFDEF CPU64}
-  cmp cl, 'A'
-  jb @Exit
-  cmp cl, 'Z'
-  ja @Exit
-  or cl, $20
- @Exit:
- {$ELSE}
-  cmp al, 'A'
-  jb @Exit
-  cmp al, 'Z'
-  ja @Exit
-  or al, $20
- @Exit:
- {$ENDIF}
- end;
-{$ELSE}
  begin
   if C in ['A'..'Z'] then
    Result := LChar(Ord(C) or $20)
   else
    Result := C;
  end;
-{$ENDIF}
 
 function UpperC(C: LChar): LChar;
-{$IFDEF CPUASM} {$IFDEF FPC} assembler; {$ENDIF}
- asm
- {$IFDEF CPU64}
-  cmp cl, 'a'
-  jb @Exit
-  cmp cl, 'z'
-  ja @Exit
-  and cl, $DF
- @Exit:
- {$ELSE}
-  cmp al, 'a'
-  jb @Exit
-  cmp al, 'z'
-  ja @Exit
-  and al, $DF
- @Exit:
- {$ENDIF}
- end;
-{$ELSE}
  begin
   if C in ['a'..'z'] then
    Result := LChar(Ord(C) and $DF)
   else
    Result := C;
  end;
-{$ENDIF}
 
 procedure LowerCase(S: PLChar);
 begin
@@ -1045,13 +626,6 @@ else
 end;
 
 function ArcTan2(const Y, X: Double): Double;
-{$IFDEF ASM32} {$IFDEF FPC} assembler; {$ENDIF}
-asm
- fld y
- fld x               
- fpatan
- fwait
-{$ELSE}
 var
  I: Double;
 begin
@@ -1075,7 +649,6 @@ else
    else
     Result := 270 - I;
  end;
-{$ENDIF}
 end;
 
 function ArcCos(const X: Double): Double;
@@ -1121,16 +694,8 @@ for I := 1 to 2 do
 end;
 
 function Log10(const X: Double): Double;
-{$IFDEF ASM32} {$IFDEF FPC} assembler; {$ENDIF}
-asm
- fldlg2
- fld X                          
- fyl2x
- fwait
-{$ELSE}
 begin
-Result := Ln(X) / Ln(10);
-{$ENDIF}
+  Result := Ln(X) / Ln(10);
 end;
 
 function IntToStr(X: Int; out Buf; L: UInt): PLChar;
@@ -1272,104 +837,13 @@ PLChar(UInt(S) + SizeOf(UInt16))^ := #0;
 end;
 
 procedure MemSet(out Dest; Size: UInt; Value: Byte);
-{$IFDEF ASM32} {$IFDEF FPC} assembler; {$ENDIF}
-asm
- cmp edx, 32
- mov ch, cl
- jl @Small
- mov [eax], cx
- mov [eax+2], cx
- mov [eax+4], cx
- mov [eax+6], cx
- sub edx, 16
- fld qword ptr [eax]
- fst qword ptr [eax+edx]
- fst qword ptr [eax+edx+8]
- mov ecx, eax
- and ecx, 7
- sub ecx, 8
- sub eax, ecx
- add edx, ecx
- add eax, edx
- neg edx
-@Loop:
- fst qword ptr [eax+edx]
- fst qword ptr [eax+edx+8]
- add edx, 16
- jl @Loop
- ffree st(0)
- ret
- nop
- nop
- nop
-@Small:
- test edx, edx
- jle @Done
- mov [eax+edx-1], cl
- and edx, -2
- neg edx
- lea edx, [@SmallFill + 60 + edx * 2]
- jmp edx
- nop
- nop
-@SmallFill:
- mov [eax+28], cx
- mov [eax+26], cx
- mov [eax+24], cx
- mov [eax+22], cx
- mov [eax+20], cx
- mov [eax+18], cx
- mov [eax+16], cx
- mov [eax+14], cx
- mov [eax+12], cx
- mov [eax+10], cx
- mov [eax+8], cx
- mov [eax+6], cx
- mov [eax+4], cx
- mov [eax+2], cx
- mov [eax], cx
- ret
-@Done:
-{$ELSE}
 begin
-FillChar(Dest, Size, Value);
-{$ENDIF}
+  FillChar(Dest, Size, Value);
 end;
 
 
 // Experimental
 function StrLCopy(Dest, Source: PLChar; MaxLen: UInt): PLChar;
-{$IFDEF ASM32} {$IFDEF FPC} assembler; {$ENDIF}
-asm
-        PUSH    EDI
-        PUSH    ESI
-        PUSH    EBX
-        MOV     ESI,EAX
-        MOV     EDI,EDX
-        MOV     EBX,ECX
-        XOR     AL,AL
-        TEST    ECX,ECX
-        JZ      @@1
-        REPNE   SCASB
-        JNE     @@1
-        INC     ECX
-@@1:    SUB     EBX,ECX
-        MOV     EDI,ESI
-        MOV     ESI,EDX
-        MOV     EDX,EDI
-        MOV     ECX,EBX
-        SHR     ECX,2
-        REP     MOVSD
-        MOV     ECX,EBX
-        AND     ECX,3
-        REP     MOVSB
-        STOSB
-        MOV     EAX,EDX
-        POP     EBX
-        POP     ESI
-        POP     EDI
-end;
-{$ELSE}
 begin
 Result := Dest;
 while (Source^ > #0) and (MaxLen > 0) do
@@ -1381,40 +855,8 @@ while (Source^ > #0) and (MaxLen > 0) do
  end;
 Dest^ := #0;
 end;
-{$ENDIF}
 
 function StrLECopy(Dest, Source: PLChar; MaxLen: UInt): PLChar;
-{$IFDEF ASM32} {$IFDEF FPC} assembler; {$ENDIF}
-asm
-        PUSH    EDI
-        PUSH    ESI
-        PUSH    EBX
-        MOV     ESI,EAX
-        MOV     EDI,EDX
-        MOV     EBX,ECX
-        XOR     AL,AL
-        TEST    ECX,ECX
-        JZ      @@1
-        REPNE   SCASB
-        JNE     @@1
-        INC     ECX
-@@1:    SUB     EBX,ECX
-        MOV     EDI,ESI
-        MOV     ESI,EDX
-        MOV     EDX,EDI
-        MOV     ECX,EBX
-        SHR     ECX,2
-        REP     MOVSD
-        MOV     ECX,EBX
-        AND     ECX,3
-        REP     MOVSB
-        STOSB
-        LEA     EAX, [EDI - 1]
-        POP     EBX
-        POP     ESI
-        POP     EDI
-end;
-{$ELSE}
 begin
 while (Source^ > #0) and (MaxLen > 0) do
  begin
@@ -1426,32 +868,8 @@ while (Source^ > #0) and (MaxLen > 0) do
 Dest^ := #0;
 Result := Dest;
 end;
-{$ENDIF}
 
 function StrECopy(Dest, Source: PLChar): PLChar;
-{$IFDEF ASM32} {$IFDEF FPC} assembler; {$ENDIF}
-asm
-        PUSH    EDI
-        PUSH    ESI
-        MOV     ESI,EAX
-        MOV     EDI,EDX
-        MOV     ECX,0FFFFFFFFH
-        XOR     AL,AL
-        REPNE   SCASB
-        NOT     ECX
-        MOV     EDI,ESI
-        MOV     ESI,EDX
-        MOV     EDX,ECX
-        SHR     ECX,2
-        REP     MOVSD
-        MOV     ECX,EDX
-        AND     ECX,3
-        REP     MOVSB
-        LEA     EAX,[EDI-1]
-        POP     ESI
-        POP     EDI
-end;
-{$ELSE}
 begin
 while Source^ > #0 do
  begin
@@ -1462,7 +880,6 @@ while Source^ > #0 do
 Dest^ := #0;
 Result := Dest;
 end;
-{$ENDIF}
 
 function StrEnd(S: PLChar): PLChar;
 begin
