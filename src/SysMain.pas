@@ -2,7 +2,7 @@ unit SysMain;
 
 interface
 
-uses {$IFDEF MSWINDOWS} Windows, {$ELSE} Libc, {$ENDIF} SysUtils, Default, SDK;
+uses System.Classes, {$IFDEF MSWINDOWS} Windows, {$ELSE} Libc, {$ENDIF} SysUtils, Default, SDK;
 
 function Sys_GetProcAddress(Module: THandle; Name: PLChar): Pointer;
 function Sys_LoadModule(Name: PLChar): THandle;
@@ -166,11 +166,7 @@ end;
 
 procedure Sys_Sleep(MS: UInt);
 begin
-{$IFDEF MSWINDOWS}
- Windows.Sleep(MS);
-{$ELSE}
- usleep(1000 * MS);
-{$ENDIF}
+  TThread.Sleep(MS);
 end;
 
 procedure Sys_DebugOutStraight(S: PLChar);
