@@ -486,7 +486,7 @@ begin
 if C = nil then
  Exit;
 
-StrLCopy(@Buf, C.Name, SizeOf(Buf) - 1);
+ StrLCopy(@Buf, C.Name, SizeOf(Buf) - 1);
 StrLCat(@Buf, ': ', SizeOf(Buf) - 1);
 
 if Frac(C.Value) = 0 then
