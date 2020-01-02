@@ -3,16 +3,6 @@ unit Default;
 interface
 
 type
- Int8 = System.Shortint;
- Int16 = System.Smallint;
- Int32 = System.Longint;
- Int64 = System.Int64;
-
- UInt8 = System.Byte;
- UInt16 = System.Word;
- UInt32 = System.LongWord;
- UInt64 = System.UInt64;
-
  PInt8 = ^Int8;
  PInt16 = ^Int16;
  PInt32 = ^Int32;
@@ -22,9 +12,6 @@ type
  PUInt16 = ^UInt16;
  PUInt32 = ^UInt32;
  PUInt64 = ^UInt64;
-
- Byte = UInt8;
- PByte = ^Byte;
 
  LChar = System.AnsiChar;
  WChar = System.WideChar;
@@ -46,12 +33,6 @@ type
    True: (Low, High: UInt32);
  end;
 
- Single = System.Single;
- Double = System.Double;
-
- PSingle = ^Single;
- PDouble = ^Double;
-
  LStr = System.AnsiString;
  WStr = System.WideString;
  UStr = System.UnicodeString;
@@ -63,9 +44,6 @@ type
  Bool16 = System.WordBool;
  Bool32 = System.LongBool;
 
- Pointer = System.Pointer;
- PPointer = ^Pointer;
-
  NativeInt = {$IFDEF CPU64} Int64 {$ELSE} Int32 {$ENDIF};
  NativeUInt = {$IFDEF CPU64} UInt64 {$ELSE} UInt32 {$ENDIF};
  
@@ -73,11 +51,6 @@ type
  UInt = NativeUInt;
  PInt = ^Int;
  PUInt = ^UInt;
-
- TProcedure = procedure;
- TCProcedure = procedure; cdecl;
-
- THandle = {$IFDEF MSWINDOWS}UInt{$ELSE}Pointer{$ENDIF};
 
  BoolArray = packed array[0..0] of Boolean;
  PBoolArray = ^BoolArray;
@@ -146,10 +119,7 @@ type
  LCharSet = set of LChar;
 
 const
- MinInt8 = Low(Int8);
- MaxInt8 = High(Int8);
- MinUInt8 = Low(UInt8);
- MaxUInt8 = High(UInt8);
+
 
  MinInt16 = Low(Int16);
  MaxInt16 = High(Int16);
@@ -178,16 +148,13 @@ const
 
  EmptyString: PLChar = '';
  LineBreak = {$IFDEF MSWINDOWS}#$D#$A{$ELSE}#$A{$ENDIF};
- 
+
  PathSeparator = {$IFDEF MSWINDOWS}'\'{$ELSE}'/'{$ENDIF};
  PathSeparator2 = {$IFDEF MSWINDOWS}'/'{$ELSE}'\'{$ENDIF};
  DriveSeparator = ':' + PathSeparator;
  DriveSeparator2 = ':' + PathSeparator2;
 
  HexLookupTable: packed array[0..15] of LChar = '0123456789ABCDEF';
-
-function IntToHex(Value: UInt; Length: UInt = SizeOf(UInt) shl 1): LStr; overload;
-function IntToHex(Value: Pointer): LStr; overload;
 
 function Swap16(Value: Int16): Int16;
 function Swap32(Value: Int32): Int32;
@@ -275,40 +242,6 @@ function VarArgsToString(S: PLChar; SP: Pointer; out Buf; BufSize: UInt): PLChar
 implementation
 
 uses SysUtils {$IFDEF MSWINDOWS}, Windows{$ENDIF};
-
-function IntToHex(Value: UInt; Length: UInt = SizeOf(UInt) shl 1): LStr;
-const
- MaxLength = SizeOf(Value) shl 1;
-var
- I, J, K: UInt;
-begin
-if Length > 0 then
- begin
-  SetLength(Result, Length);
-
-  if Length > MaxLength then
-   begin
-    I := Length - MaxLength;
-    MemSet(Pointer(Result)^, I, Byte(HexLookupTable[Low(HexLookupTable)]));
-   end
-  else
-   I := 0;
-
-  K := 0;
-  for J := Length - 1 downto I do
-   begin
-    PLChar(UInt(Result) + J)^ := HexLookupTable[(Value shr K) and High(HexLookupTable)];
-    Inc(K, (High(HexLookupTable) + 1) shr 2);
-   end;
- end
-else
- Result := '';
-end;
-
-function IntToHex(Value: Pointer): LStr;
-begin
-Result := SysUtils.IntToHex(UInt(Value));
-end;
 
 function Swap16(Value: Int16): Int16;
 {$IFDEF ASM32} {$IFDEF FPC} assembler; {$ENDIF}
@@ -470,7 +403,7 @@ begin
    vtChar: S := S + VChar;
    vtExtended: S := S + LStr(SysUtils.FloatToStr(VExtended^));
    vtString: S := S + VString^;
-   vtPointer: S := S + IntToHex(VPointer);
+   vtPointer: S := S + IntToHex(NativeUInt(VPointer));
    vtPChar: S := S + VPChar;
    vtWideChar: S := S + LChar(VWideChar);
    vtPWideChar: S := S + PLChar(LStr(VPWideChar));
@@ -1703,7 +1636,7 @@ else
      'd', 'i': Append(IntToStr(PInt32(Extract)^, Dst^, RemBuf));
      'u': Append(UIntToStr(PUInt32(Extract)^, Dst^, RemBuf));
      'f', 'F', 'e', 'E', 'g', 'G', 'a', 'A': Append(PLChar(FloatToStr(PSingle(Extract)^)));
-     'x', 'X': Append(PLChar(Default.IntToHex(PUInt32(Extract)^)));
+     'x', 'X': Append(PLChar(IntToHex(PUInt32(Extract)^)));
      'c':
       begin
        TmpBuf[1] := PLChar(Extract)^;
