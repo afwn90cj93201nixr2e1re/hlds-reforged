@@ -75,7 +75,8 @@ var
 
 implementation
 
-uses BZip2, Common, Console, FileSys, Memory, MsgBuf, Host, HostCmds, Resource, SVClient, SVMain, SysArgs, SysMain;
+uses BZip2, Common, Console, FileSys, Memory, MsgBuf, HostMain, HostCmds,
+  Resource, SVClient, SVMain, SysArgs, SysMain;
 
 const
  IPTOS_LOWDELAY = 16;

@@ -14,7 +14,7 @@ var
 
 implementation
 
-uses Console, Delta, Host, Memory, MsgBuf, SysMain;
+uses Console, Delta, HostMain, Memory, MsgBuf, SysMain;
 
 const
  MetaDeltaDescription: array[1..7] of TDeltaField =

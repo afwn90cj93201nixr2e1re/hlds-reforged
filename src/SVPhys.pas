@@ -58,7 +58,8 @@ var
  
 implementation
 
-uses Common, Console, Edict, GameLib, Host, MathLib, Model, SVMain, SVMove, SVSend, SVWorld, SysMain;
+uses Common, Console, Edict, GameLib, HostMain, MathLib, Model, SVMain, SVMove,
+  SVSend, SVWorld, SysMain;
 
 procedure SV_CheckVelocity(var E: TEdict);
 const

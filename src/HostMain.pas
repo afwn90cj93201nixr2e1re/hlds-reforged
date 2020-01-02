@@ -1,4 +1,4 @@
-unit Host;
+unit HostMain;
 
 // hostcmds for commands
 
@@ -7,7 +7,7 @@ interface
 uses SysUtils, Default, SDK;
 
 type
-  THost = class
+  Host = class
   public
     class procedure Init;
     class procedure Shutdown;
@@ -88,30 +88,33 @@ var
 
 implementation
 
-uses Common, Console, CoreUI, Decal, Delta, Edict, Encode, GameLib, HostCmds, HostSave, HPAK, Memory, Model, MsgBuf, Network, Renderer, Resource, SVClient, SVEdict, SVEvent, SVExport, SVMain, SVPacket, SVPhys, SVRcon, SVSend, SVWorld, SysMain, SysArgs, SysClock, Texture;
+uses Common, Console, CoreUI, Decal, Delta, Edict, Encode, GameLib, HostCmds,
+  HostSave, HPAK, Memory, Model, MsgBuf, Network, Renderer, Resource, SVClient,
+  SVEdict, SVEvent, SVExport, SVMain, SVPacket, SVPhys, SVRcon, SVSend, SVWorld,
+  SysMain, SysArgs, SysClock, Texture;
 
-class function THost.SaveGameDirectory: PLChar;
+class function Host.SaveGameDirectory: PLChar;
 begin
 Result := 'SAVE' + CorrectSlash;
 end;
 
-class procedure THost.ClearSaveDirectory;
+class procedure Host.ClearSaveDirectory;
 begin
 
 end;
 
-class procedure THost.ClearGameState;
+class procedure Host.ClearGameState;
 begin
-THost.ClearSaveDirectory;
+Host.ClearSaveDirectory;
 DLLFunctions.ResetGlobalState;
 end;
 
-class function THost.IsSinglePlayerGame: Boolean;
+class function Host.IsSinglePlayerGame: Boolean;
 begin
 Result := SV.Active and (SVS.MaxClients = 1);
 end;
 
-class procedure THost.EndSection(Name: PLChar);
+class procedure Host.EndSection(Name: PLChar);
 begin
 HostActive := 2;
 HostSubState := 1;
@@ -134,7 +137,7 @@ else
 CBuf_AddText(#10'disconnect'#10);
 end;
 
-class procedure THost.ClearMemory;
+class procedure Host.ClearMemory;
 begin
 DPrint('Clearing memory.');
 
@@ -152,7 +155,7 @@ SV_ClearClientStates;
 MemSet(SV, SizeOf(SV), 0);
 end;
 
-class procedure THost.Error(Msg: PLChar);
+class procedure Host.Error(Msg: PLChar);
 begin
 if InHostError then
  Sys_Error('Host_Error: Recursively entered.')
@@ -161,18 +164,18 @@ else
   InHostError := True;
   Print(['Host_Error: ', Msg]);
   if SV.Active then
-   THost.ShutdownServer(False);
+   Host.ShutdownServer(False);
 
   Sys_Error(['Host_Error: ', Msg]);
  end;
 end;
 
-class procedure THost.Error(const Msg: array of const);
+class procedure Host.Error(const Msg: array of const);
 begin
-THost.Error(PLChar(StringFromVarRec(Msg)));
+Host.Error(PLChar(StringFromVarRec(Msg)));
 end;
 
-class procedure THost.ShutdownServer(SkipNotify: Boolean);
+class procedure Host.ShutdownServer(SkipNotify: Boolean);
 var
  I: Int;
  C: PClient;
@@ -190,7 +193,7 @@ if SV.Active then
   SV.Active := False;
 
   HPAK_FlushHostQueue;
-  THost.ClearMemory;
+  Host.ClearMemory;
 
   SV_ClearClients;
   MemSet(SVS.Clients^, SizeOf(TClient) * SVS.MaxClientsLimit, 0);
@@ -207,7 +210,7 @@ Host_InitCommands;
 Host_InitCVars;
 end;
 
-class procedure THost.Say(Team: Boolean);
+class procedure Host.Say(Team: Boolean);
 var
  Buf: array[1..192] of LChar;
  S, S2: PLChar;
@@ -261,12 +264,12 @@ if CmdSource = csServer then
   end;
 end;
 
-class procedure THost.Map(Name: PLChar; Save: Boolean);
+class procedure Host.Map(Name: PLChar; Save: Boolean);
 begin
-THost.ShutdownServer(False);
+Host.ShutdownServer(False);
 if not Save then
  begin
-  THost.ClearGameState;
+  Host.ClearGameState;
   SVS.ServerFlags := 0;
  end;
 
@@ -401,7 +404,7 @@ if Host_FilterTime(Time) then
  end;
 end;
 
-class function THost.Frame: Boolean;
+class function Host.Frame: Boolean;
 var
  TimeStart, TimeEnd: Double;
  Profile: Boolean;
@@ -456,7 +459,7 @@ else
  end;
 end;
 
-class procedure THost.Init;
+class procedure Host.Init;
 var
  Buf: array[1..256] of LChar;
  IntBuf: array[1..32] of LChar;
@@ -468,7 +471,7 @@ CBuf_Init;
 Cmd_Init;
 CVar_Init;       
 Host_InitLocal;
-THost.ClearSaveDirectory;
+Host.ClearSaveDirectory;
 Con_Init;
 HPAK_Init;
 
@@ -501,7 +504,7 @@ HostTimes.Prev := Sys_FloatTime;
 HostInit := True;
 end;
 
-class procedure THost.Shutdown;
+class procedure Host.Shutdown;
 begin
 if InHostShutdown then
  Sys_DebugOutStraight('Host_Shutdown: Recursive shutdown.')

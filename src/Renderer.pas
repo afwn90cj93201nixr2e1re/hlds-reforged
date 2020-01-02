@@ -52,7 +52,7 @@ var
 
 implementation
 
-uses Common, Console, FileSys, Host, MathLib, Memory, Model, SVMain, SVWorld;
+uses Common, Console, FileSys, HostMain, MathLib, Memory, Model, SVMain, SVWorld;
 
 var
  VisFrameCount: Int = 0;

@@ -30,7 +30,7 @@ var
 
 implementation
 
-uses Common, Console, Host, Memory, MsgBuf, Network, SVClient, SVMain, SVPacket;
+uses Common, Console, HostMain, Memory, MsgBuf, Network, SVClient, SVMain, SVPacket;
 
 const
  MAX_RCON_FAILURE_TIMES = 20;

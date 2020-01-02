@@ -41,8 +41,8 @@ var
 
 implementation
 
-uses Common, Console, CoreUI, FileSys, GameLib, Host, Main, Memory, Network,
-     SVExport, SVMain, SysArgs, SysClock;
+uses Common, Console, CoreUI, FileSys, GameLib, HostMain, Main, Memory, Network,
+  SVExport, SVMain, SysArgs, SysClock;
 
 var
  FindHandle: TFileFindHandle = INVALID_FIND_HANDLE;
@@ -308,7 +308,7 @@ Sys_SetStartTime;
 
 Memory_Init;
 FileSystem_Init;
-THost.Init;
+Host.Init;
 
 if HostInit then
  begin
@@ -320,7 +320,7 @@ end;
 
 procedure Sys_Shutdown;
 begin
-THost.Shutdown;
+Host.Shutdown;
 FileSystem_Shutdown;
 Memory_Shutdown;
 Sys_ShutdownClock;

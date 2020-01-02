@@ -162,7 +162,9 @@ var
 
 implementation
 
-uses Common, Console, Edict, Encode, GameLib, Host, HPAK, Memory, Model, Network, PMove, Resource, SVClient, SVCmds, SVDelta, SVEdict, SVEvent, SVMove, SVPacket, SVPhys, SVRcon, SVSend, SVWorld, SysArgs, SysClock;
+uses Common, Console, Edict, Encode, GameLib, HostMain, HPAK, Memory, Model,
+  Network, PMove, Resource, SVClient, SVCmds, SVDelta, SVEdict, SVEvent,
+  SVMove, SVPacket, SVPhys, SVRcon, SVSend, SVWorld, SysArgs, SysClock;
 
 var
  VoiceCodec: array[1..128] of LChar;
@@ -453,7 +455,7 @@ Log_PrintServerVars;
 StrCopy(@PrevMap, @SV.Map);
 HPAK_CheckSize('custom');
 
-THost.ClearMemory;
+Host.ClearMemory;
 
 if hostname.Data^ = #0 then
  begin

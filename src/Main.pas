@@ -10,7 +10,7 @@ procedure Shutdown;
 
 implementation
 
-uses Common, Console, CoreUI, Host, StdUI, SysMain;
+uses Common, Console, CoreUI, HostMain, StdUI, SysMain;
 
 var
  ShutdownCalled: Boolean;
@@ -24,7 +24,7 @@ end;
 
 function Frame: Boolean;
 begin
-Result := THost.Frame;
+Result := Host.Frame;
 end;
 
 procedure Shutdown;

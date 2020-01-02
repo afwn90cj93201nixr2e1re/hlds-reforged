@@ -53,7 +53,8 @@ var
 
 implementation
 
-uses Common, Console, Edict, Encode, Host, GameLib, MathLib, Model, MsgBuf, Network, PMove, SVClient, SVEdict, SVEvent, SVMain, SVPhys, SVSend, SVWorld;
+uses Common, Console, Edict, Encode, HostMain, GameLib, MathLib, Model, MsgBuf,
+  Network, PMove, SVClient, SVEdict, SVEvent, SVMain, SVPhys, SVSend, SVWorld;
 
 var
  TruePositions: array[0..MAX_PLAYERS - 1] of TCachedMove;

@@ -24,7 +24,7 @@ procedure ExtractClassname(P: Pointer; var E: TEdict);
 
 implementation
 
-uses Common, Console, GameLib, Host, MathLib, Memory, SVMain, SysMain, SVWorld;
+uses Common, Console, GameLib, HostMain, MathLib, Memory, SVMain, SysMain, SVWorld;
 
 function PvAllocEntPrivateData(var E: TEdict; Size: Int): Pointer;
 begin

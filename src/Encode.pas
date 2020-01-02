@@ -24,7 +24,7 @@ function COM_BlockSequenceCRCByte(Input: Pointer; Size: UInt; Sequence: UInt32):
 
 implementation
 
-uses Common, Console, FileSys, Host, SysMain;
+uses Common, Console, FileSys, HostMain, SysMain;
 
 procedure MD5Transform(Buffer: PMD5Hash; Input: PMD5Array16); forward;
 

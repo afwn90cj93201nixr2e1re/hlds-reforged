@@ -32,7 +32,8 @@ var
 
 implementation
 
-uses Common, Console, Decal, Encode, FileSys, Host, MathLib, Memory, Renderer, SVMain, SysArgs, SysClock, SysMain, Texture;
+uses Common, Console, Decal, Encode, FileSys, HostMain, MathLib, Memory,
+  Renderer, SVMain, SysArgs, SysClock, SysMain, Texture;
 
 const
  NL_PRESENT = 0;

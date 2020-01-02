@@ -33,7 +33,7 @@ var
 
 implementation
 
-uses Common, Console, GameLib, Host, MathLib, Renderer, SVMain, SysMain, SVMove;
+uses Common, Console, GameLib, HostMain, MathLib, Renderer, SVMain, SysMain, SVMove;
 
 var
  TouchLinkSemaphore: Boolean = False;

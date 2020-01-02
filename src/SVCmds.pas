@@ -31,7 +31,8 @@ var
 
 implementation
 
-uses Common, Console, FileSys, GameLib, Info, Memory, MsgBuf, Host, Network, SVAuth, SVClient, SVDelta, SVMain, SVRcon, SVSend;
+uses Common, Console, FileSys, GameLib, Info, Memory, MsgBuf, HostMain,
+  Network, SVAuth, SVClient, SVDelta, SVMain, SVRcon, SVSend;
 
 procedure SV_FreeLogNodes;
 var

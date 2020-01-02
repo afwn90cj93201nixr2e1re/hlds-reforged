@@ -38,7 +38,7 @@ var
 
 implementation
 
-uses Common, Console, Edict, FilterIP, GameLib, Host, Info, Memory, MsgBuf,
+uses Common, Console, Edict, FilterIP, GameLib, HostMain, Info, Memory, MsgBuf,
   Network, Resource, SVAuth, SVClient, SVDelta, SVEvent, SVMain, SVRcon, SVSend;
 
 const

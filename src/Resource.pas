@@ -34,7 +34,8 @@ var
  
 implementation
 
-uses Common, Console, Decal, Encode, FileSys, GameLib, Host, MathLib, Memory, MsgBuf, Network, HPAK, Renderer, SVClient, SVExport, SVMain, SysMain;
+uses Common, Console, Decal, Encode, FileSys, GameLib, HostMain, MathLib,
+  Memory, MsgBuf, Network, HPAK, Renderer, SVClient, SVExport, SVMain, SysMain;
 
 procedure SV_AddToResourceList(var Res, List: TResource);
 begin

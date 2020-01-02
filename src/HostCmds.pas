@@ -9,7 +9,8 @@ procedure Host_InitCVars;
 
 implementation
 
-uses Common, Console, FileSys, GameLib, Host, Info, MathLib, MsgBuf, Network, SVAuth, SVClient, SVEdict, SVExport, SVMain, SVWorld;
+uses Common, Console, FileSys, GameLib, HostMain, Info, MathLib, MsgBuf,
+  Network, SVAuth, SVClient, SVEdict, SVExport, SVMain, SVWorld;
 
 procedure Host_KillServer_F; cdecl;
 begin
@@ -17,7 +18,7 @@ if CmdSource = csServer then
  if SV.Active then
   begin
    Print('Shutting down the server.');
-   THost.ShutdownServer(False);
+   Host.ShutdownServer(False);
   end
  else
   Print('The server is not active, can''t shutdown.');
@@ -29,7 +30,7 @@ var
 begin
 if (CmdSource = csServer) and SV.Active then
  begin
-  THost.ClearGameState;
+  Host.ClearGameState;
   SV_InactivateClients;
   StrCopy(@Map, @SV.Map);
   SV_ServerDeactivate;
@@ -249,7 +250,7 @@ if CmdSource = csServer then
   begin
    HostActive := 3;
    QuitCommandIssued := True;
-   THost.ShutdownServer(False);
+   Host.ShutdownServer(False);
   end
  else
   begin
@@ -291,7 +292,7 @@ else
     if not SVS.InitGameDLL then
      Host_InitializeGameDLL;
     FS_LogLevelLoadStarted(@MapName);
-    THost.Map(@MapName, False);
+    Host.Map(@MapName, False);
    end;
 end;
 
@@ -318,7 +319,7 @@ procedure Host_Reload_F; cdecl;
 begin
 if CmdSource = csServer then
  begin
-  THost.ClearGameState;
+  Host.ClearGameState;
   SV_InactivateClients;
   SV_ServerDeactivate;
   SV_SpawnServer(hostmap.Data, nil);
@@ -386,19 +387,19 @@ end;
 procedure Host_Say_F; cdecl;
 begin
 if CmdSource = csServer then
- THost.Say(False);
+ Host.Say(False);
 end;
 
 procedure Host_Say_Team_F; cdecl;
 begin
 if CmdSource = csServer then
- THost.Say(True);
+ Host.Say(True);
 end;
 
 procedure Host_Tell_F; cdecl;
 begin
 if CmdSource = csServer then
- THost.Say(False);
+ Host.Say(False);
 end;
 
 procedure Host_Kill_F; cdecl;

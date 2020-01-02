@@ -29,7 +29,7 @@ function FindInIPFilter(var F: TIPFilter; IP: UInt32; Timeout: Double): PIPFilte
 
 implementation
 
-uses Host;
+uses HostMain;
 
 procedure FlushIPFilter(var F: TIPFilter);
 begin
