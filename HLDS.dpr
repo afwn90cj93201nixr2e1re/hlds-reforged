@@ -3,7 +3,6 @@ program HLDS;
 {$APPTYPE CONSOLE}
 
 uses
-  //FastMM4,
   {$IFDEF WINDOWS}
   Windows,
   {$ENDIF }
