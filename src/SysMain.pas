@@ -24,14 +24,6 @@ function Sys_LastModuleErr: UInt;
 function Sys_LastModuleErr: PLChar;
 {$ENDIF}
 
-type
- TCriticalSection = {$IFDEF MSWINDOWS}TRTLCriticalSection{$ELSE}pthread_mutex_t{$ENDIF};
-
-procedure Sys_InitCS(var CS: TCriticalSection);
-procedure Sys_EnterCS(var CS: TCriticalSection);
-procedure Sys_LeaveCS(var CS: TCriticalSection);
-procedure Sys_DeleteCS(var CS: TCriticalSection);
-
 function Sys_FindFirst(S, Base: PLChar): PLChar;
 function Sys_FindNext(Base: PLChar): PLChar;
 procedure Sys_FindClose;
@@ -217,50 +209,6 @@ end;
 procedure Sys_Error(const Text: array of const);
 begin
 Sys_Error(PLChar(StringFromVarRec(Text)));
-end;
-
-procedure Sys_InitCS(var CS: TCriticalSection);
-{$IFDEF MSWINDOWS}
-begin
-InitializeCriticalSection(CS);
-{$ELSE}
-var
- Attr: pthread_mutexattr_t;                    
-begin
-if pthread_mutexattr_init(Attr) = 0 then
- begin
-  pthread_mutexattr_settype(Attr, PTHREAD_MUTEX_RECURSIVE_NP);
-  pthread_mutex_init(CS, Attr);
-  pthread_mutexattr_destroy(Attr);
- end;
-{$ENDIF}
-end;
-
-procedure Sys_EnterCS(var CS: TCriticalSection);
-begin
-{$IFDEF MSWINDOWS}
-EnterCriticalSection(CS);
-{$ELSE}
-pthread_mutex_lock(CS);
-{$ENDIF}
-end;
-
-procedure Sys_LeaveCS(var CS: TCriticalSection);
-begin
-{$IFDEF MSWINDOWS}
-LeaveCriticalSection(CS);
-{$ELSE}
-pthread_mutex_unlock(CS);
-{$ENDIF}
-end;
-
-procedure Sys_DeleteCS(var CS: TCriticalSection);
-begin
-{$IFDEF MSWINDOWS}
-DeleteCriticalSection(CS);
-{$ELSE}
-pthread_mutex_destroy(CS);
-{$ENDIF}
 end;
 
 procedure Sys_CheckOSVersion;

@@ -19,8 +19,6 @@ uses SysArgs;
 var
  Init: Boolean = False;
 
- CriticalSection: TCriticalSection;
-
  TimeSampleShift: Int32;
  ClockFrequency: Double;
 
@@ -36,7 +34,6 @@ var
 begin
 if not Init then
  begin
-  Sys_InitCS(CriticalSection);
   Init := True;
  end;
 
@@ -90,8 +87,6 @@ if not Init then
   Exit;
  end;
 
-Sys_EnterCS(CriticalSection);
-
 QueryPerformanceCounter(Int64(PerformanceCount));
 if TimeSampleShift >= 1 then
  T1 := (PerformanceCount.Low shr TimeSampleShift) or
@@ -124,7 +119,6 @@ else
    LastCurrentTime := CurrentTime;
   end;
 
-Sys_LeaveCS(CriticalSection);
 Result := CurrentTime;
 end;
 
@@ -135,7 +129,6 @@ CurrentTime := 0;
 
 if Init then
  begin
-  Sys_DeleteCS(CriticalSection);
   Init := False;
  end;
 end;
