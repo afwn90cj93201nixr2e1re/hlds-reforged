@@ -1,7 +1,5 @@
 unit SVExport;
 
-{$I HLDS.inc}
-
 interface
 
 uses {$IFDEF LINUX}Libc, {$ENDIF} Default, SDK;

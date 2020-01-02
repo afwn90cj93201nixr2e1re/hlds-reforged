@@ -1,7 +1,5 @@
 unit SVWorld;
 
-{$I HLDS.inc}
-
 interface
 
 uses Default, SDK;

@@ -1,7 +1,5 @@
 unit SVPhys;
 
-{$I HLDS.inc}
-
 interface
 
 uses Default, SDK;

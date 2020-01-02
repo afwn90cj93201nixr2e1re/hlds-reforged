@@ -1,7 +1,5 @@
 unit MsgBuf;
 
-{$I HLDS.inc}
-
 // - possible buffer overrun in MSG_WriteBits
 
 interface

@@ -1,7 +1,5 @@
 unit Main;
 
-{$I HLDS.inc}
-
 interface
 
 uses Default, SDK;

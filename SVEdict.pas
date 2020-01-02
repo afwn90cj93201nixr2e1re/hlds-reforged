@@ -1,7 +1,5 @@
 unit SVEdict;
 
-{$I HLDS.inc}
-
 interface
 
 uses Default, SDK;

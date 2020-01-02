@@ -1,7 +1,5 @@
 unit UCWinAPI;
 
-{$I HLDS.inc}
-
 interface
 
 {$IFDEF MSWINDOWS}

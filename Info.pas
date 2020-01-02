@@ -1,7 +1,5 @@
 unit Info;
 
-{$I HLDS.inc}
-
 interface
 
 uses SysUtils, Default;

@@ -1,7 +1,5 @@
 unit SVMain;
 
-{$I HLDS.inc}
-
 interface
 
 uses Default, SDK, FilterIP, SVExport;

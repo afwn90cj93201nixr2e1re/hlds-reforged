@@ -1,7 +1,5 @@
 unit BZip2;
 
-{$I HLDS.inc}
-
 interface
 
 uses Default;

@@ -1,7 +1,5 @@
 unit PMove;
 
-{$I HLDS.inc}
-
 interface
 
 uses Default, SDK;

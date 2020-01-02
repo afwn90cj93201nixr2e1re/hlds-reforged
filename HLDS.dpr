@@ -1,10 +1,6 @@
 program HLDS;
 
-{$DEFINE DEBUG}
-
 {$APPTYPE CONSOLE}
-
-{$I *.inc}
 
 uses
   //FastMM4,

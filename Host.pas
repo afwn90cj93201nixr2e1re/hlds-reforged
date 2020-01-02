@@ -2,8 +2,6 @@ unit Host;
 
 // hostcmds for commands
 
-{$I HLDS.inc}
-
 interface
 
 uses SysUtils, Default, SDK;

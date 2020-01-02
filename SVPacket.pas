@@ -1,7 +1,5 @@
 unit SVPacket;
 
-{$I HLDS.inc}
-
 interface
 
 uses SysUtils, Default, SDK;

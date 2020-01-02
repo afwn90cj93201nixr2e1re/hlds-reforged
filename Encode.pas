@@ -1,7 +1,5 @@
 unit Encode;
 
-{$I HLDS.inc}
-
 interface
 
 uses Default, SDK;

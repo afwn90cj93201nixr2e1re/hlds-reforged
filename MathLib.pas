@@ -1,7 +1,5 @@
 unit MathLib;
 
-{$I HLDS.inc}
-
 interface
 
 uses Default, SDK;

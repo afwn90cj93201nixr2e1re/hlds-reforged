@@ -1,7 +1,5 @@
 unit SysArgs;
 
-{$I HLDS.inc}
-
 interface
 
 uses {$IFDEF MSWINDOWS} Windows, {$ENDIF} Default;

@@ -1,7 +1,5 @@
 unit Resource;    // rename to SVRes
 
-{$I HLDS.inc}
-
 interface
 
 uses SysUtils, Default, SDK;

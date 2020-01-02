@@ -1,7 +1,5 @@
 unit Default;
 
-{$I HLDS.inc}
-
 interface
 
 type

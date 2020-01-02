@@ -1,7 +1,5 @@
 unit FSNative;
 
-{$I HLDS.inc}
-
 interface
 
 uses {$IFDEF MSWINDOWS} Windows, {$ELSE} Libc, {$ENDIF} SysUtils, Default, SDK;

@@ -1,7 +1,5 @@
 unit Decal;
 
-{$I HLDS.inc}
-
 interface
 
 uses SysUtils, Default, SDK;

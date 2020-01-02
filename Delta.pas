@@ -1,7 +1,5 @@
 unit Delta;
 
-{$I HLDS.inc}
-
 interface
 
 uses SysUtils, Default, SDK;

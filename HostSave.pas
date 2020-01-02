@@ -1,7 +1,5 @@
 unit HostSave;
 
-{$I HLDS.inc}
-
 interface
 
 uses Default, SDK;

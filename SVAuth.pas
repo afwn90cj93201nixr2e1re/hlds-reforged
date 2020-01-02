@@ -1,7 +1,5 @@
 unit SVAuth;
 
-{$I HLDS.inc}
-
 interface
 
 uses Default, SDK;

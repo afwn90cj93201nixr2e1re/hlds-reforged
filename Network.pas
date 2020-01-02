@@ -1,7 +1,5 @@
 unit Network;
 
-{$I HLDS.inc}
-
 interface
 
 uses SysUtils, {$IFDEF MSWINDOWS} Windows, Winsock, {$ELSE} Libc, KernelIoctl, {$ENDIF} Default, SDK;

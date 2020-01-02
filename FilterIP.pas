@@ -1,7 +1,5 @@
 unit FilterIP;
 
-{$I HLDS.inc}
-
 interface
 
 uses Default, SDK;

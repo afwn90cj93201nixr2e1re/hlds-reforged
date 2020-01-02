@@ -1,7 +1,5 @@
 unit SVSend;
 
-{$I HLDS.inc}
-
 interface
 
 uses Default, SDK;

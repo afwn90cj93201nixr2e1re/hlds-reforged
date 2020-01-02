@@ -1,7 +1,5 @@
 unit SysClock;
 
-{$I HLDS.inc}
-
 interface
 
 uses SysUtils, {$IFDEF MSWINDOWS} Windows, SysMain, {$ELSE} Libc, {$ENDIF} Default;

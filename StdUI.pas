@@ -1,7 +1,5 @@
 unit StdUI;
 
-{$I HLDS.inc}
-
 interface
 
 uses SysUtils, {$IFDEF MSWINDOWS}Windows, {$ELSE}Libc, {$ENDIF} Default, SDK;

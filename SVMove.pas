@@ -1,7 +1,5 @@
 unit SVMove;
 
-{$I HLDS.inc}
-
 interface
 
 uses Default, SDK;
