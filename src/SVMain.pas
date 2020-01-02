@@ -453,7 +453,7 @@ Log_PrintServerVars;
 StrCopy(@PrevMap, @SV.Map);
 HPAK_CheckSize('custom');
 
-Host_ClearMemory;
+THost.ClearMemory;
 
 if hostname.Data^ = #0 then
  begin

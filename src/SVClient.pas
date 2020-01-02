@@ -903,7 +903,7 @@ if not C.HLTV then
     DLLFunctions.ParmsChangeLevel;
     MSG_WriteByte(SB, SVC_RESTORE);
 
-    StrLCopy(@Buf, Host_SaveGameDirectory, SizeOf(Buf) - 1);
+    StrLCopy(@Buf, THost.SaveGameDirectory, SizeOf(Buf) - 1);
     StrLCat(PLChar(@Buf), @SV.Map, SizeOf(Buf) - 1);
     StrLCat(PLChar(@Buf), '.HL2', SizeOf(Buf) - 1);
     COM_FixSlashes(@Buf);

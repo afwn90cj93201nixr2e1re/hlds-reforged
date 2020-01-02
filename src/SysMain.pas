@@ -308,7 +308,7 @@ Sys_SetStartTime;
 
 Memory_Init;
 FileSystem_Init;
-Host_Init;
+THost.Init;
 
 if HostInit then
  begin
@@ -320,7 +320,7 @@ end;
 
 procedure Sys_Shutdown;
 begin
-Host_Shutdown;
+THost.Shutdown;
 FileSystem_Shutdown;
 Memory_Shutdown;
 Sys_ShutdownClock;

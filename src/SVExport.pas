@@ -414,10 +414,10 @@ var
  I: Int;
 begin
 if Name = nil then
- Host_Error('PF_PrecacheModel: NULL pointer.')
+ THost.Error('PF_PrecacheModel: NULL pointer.')
 else
  if Name^ <= ' ' then
-  Host_Error(['PF_PrecacheModel: Bad string "', Name, '".'])
+  THost.Error(['PF_PrecacheModel: Bad string "', Name, '".'])
  else
   begin
    B := Name^ = '!';
@@ -448,10 +448,10 @@ else
       end;
 
    if SV.State = SS_LOADING then
-    Host_Error(['PF_PrecacheModel: Model "', Name, '" failed to precache because the item count is over the MAX_MODELS (', MAX_MODELS, ') limit.' + sLineBreak +
+    THost.Error(['PF_PrecacheModel: Model "', Name, '" failed to precache because the item count is over the MAX_MODELS (', MAX_MODELS, ') limit.' + sLineBreak +
                 'Reduce the number of brush models and/or regular models in the map to correct this.'])
    else
-    Host_Error(['PF_PrecacheModel: "', Name, '": Precache can only be done in spawn functions, or when the server is loading.']);
+    THost.Error(['PF_PrecacheModel: "', Name, '": Precache can only be done in spawn functions, or when the server is loading.']);
   end;
 
 Result := 0;
@@ -462,13 +462,13 @@ var
  I: Int;
 begin
 if Name = nil then
- Host_Error('PF_PrecacheSound: NULL pointer.')
+ THost.Error('PF_PrecacheSound: NULL pointer.')
 else
  if Name^ <= ' ' then
-  Host_Error(['PF_PrecacheSound: Bad string "', Name, '".'])
+  THost.Error(['PF_PrecacheSound: Bad string "', Name, '".'])
  else
   if Name^ = '!' then
-   Host_Error(['PF_PrecacheSound: "', Name, '": Can''t precache sentence names.'])
+   THost.Error(['PF_PrecacheSound: "', Name, '": Can''t precache sentence names.'])
   else
    begin
     for I := 0 to MAX_SOUNDS - 1 do
@@ -490,10 +490,10 @@ else
        end;
 
     if SV.State = SS_LOADING then
-     Host_Error(['PF_PrecacheSound: Sound "', Name, '" failed to precache because the item count is over the MAX_SOUNDS (', MAX_SOUNDS, ') limit.' + sLineBreak +
+     THost.Error(['PF_PrecacheSound: Sound "', Name, '" failed to precache because the item count is over the MAX_SOUNDS (', MAX_SOUNDS, ') limit.' + sLineBreak +
                  'Reduce the number of sound entities and ambient sounds in the map to correct this.'])
     else
-     Host_Error(['PF_PrecacheSound: "', Name, '": Precache can only be done in spawn functions, or when the server is loading.']);
+     THost.Error(['PF_PrecacheSound: "', Name, '": Precache can only be done in spawn functions, or when the server is loading.']);
    end;
 
 Result := 0;
@@ -520,7 +520,7 @@ if (@E <> nil) and (ModelName <> nil) then
       Exit;
      end;
 
-  Host_Error(['PF_SetModel: Model "', ModelName, '" is not precached.']);
+  THost.Error(['PF_SetModel: Model "', ModelName, '" is not precached.']);
  end;
 end;
 
@@ -570,7 +570,7 @@ if @E <> nil then
  begin
   I := NUM_FOR_EDICT(E);
   if (I = 0) or (I > SVS.MaxClients) then
-   Host_Error('PF_SetSpawnParms: Entity is not a client.');
+   THost.Error('PF_SetSpawnParms: Entity is not a client.');
  end;
 end;
 
@@ -582,7 +582,7 @@ if @E <> nil then
  begin
   I := NUM_FOR_EDICT(E);
   if (I = 0) or (I > SVS.MaxClients) then
-   Host_Error('PF_SaveSpawnParms: Entity is not a client.');
+   THost.Error('PF_SaveSpawnParms: Entity is not a client.');
  end;
 end;
 
@@ -2236,7 +2236,7 @@ end;
 
 procedure PF_EndSection(Name: PLChar); cdecl;
 begin
-Host_EndSection(Name);
+THost.EndSection(Name);
 end;
 
 function PF_CompareFileTime(S1, S2: PLChar; CompareResult: PInt32): Int32; cdecl;
@@ -2496,10 +2496,10 @@ var
  I: Int;
 begin
 if Name = nil then
- Host_Error('PF_PrecacheGeneric: NULL pointer.')
+ THost.Error('PF_PrecacheGeneric: NULL pointer.')
 else
  if Name^ <= ' ' then
-  Host_Error(['PF_PrecacheGeneric: Bad string "', Name, '".'])
+  THost.Error(['PF_PrecacheGeneric: Bad string "', Name, '".'])
  else
   begin
    for I := 0 to MAX_GENERICS - 1 do
@@ -2520,9 +2520,9 @@ else
       end;
 
    if SV.State = SS_LOADING then
-    Host_Error(['PF_PrecacheGeneric: Generic item "', Name, '" failed to precache because the item count is over the ', MAX_GENERICS, ' limit.'])
+    THost.Error(['PF_PrecacheGeneric: Generic item "', Name, '" failed to precache because the item count is over the ', MAX_GENERICS, ' limit.'])
    else
-    Host_Error(['PF_PrecacheGeneric: "', Name, '": Precache can only be done in spawn functions, or when the server is loading.']);
+    THost.Error(['PF_PrecacheGeneric: "', Name, '": Precache can only be done in spawn functions, or when the server is loading.']);
   end;
 
 Result := 0;
@@ -2856,10 +2856,10 @@ var
  C: PConsistency;
 begin
 if FileName = nil then
- Host_Error('PF_ForceUnmodified: NULL pointer.')
+ THost.Error('PF_ForceUnmodified: NULL pointer.')
 else
  if FileName^ <= ' ' then
-  Host_Error(['PF_ForceUnmodified: Bad string "', FileName, '".'])
+  THost.Error(['PF_ForceUnmodified: Bad string "', FileName, '".'])
  else
   if SV.State = SS_LOADING then
    begin
@@ -2881,7 +2881,7 @@ else
         Exit;
      end;
      
-    Host_Error(['PF_ForceUnmodified: File "', FileName, '" can''t be added to the consistency list because the item count is over the ', MAX_CONSISTENCY, ' limit.']);
+    THost.Error(['PF_ForceUnmodified: File "', FileName, '" can''t be added to the consistency list because the item count is over the ', MAX_CONSISTENCY, ' limit.']);
    end
   else
    begin
@@ -2892,7 +2892,7 @@ else
       if StrIComp(SV.PrecachedConsistency[I].Name, FileName) = 0 then
        Exit;
 
-    Host_Error(['PF_ForceUnmodified: "', FileName, '": Precache can only be done in spawn functions, or when the server is loading.']);
+    THost.Error(['PF_ForceUnmodified: "', FileName, '": Precache can only be done in spawn functions, or when the server is loading.']);
    end;
 end;
 

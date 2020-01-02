@@ -24,7 +24,7 @@ end;
 
 function Frame: Boolean;
 begin
-Result := Host_Frame;
+Result := THost.Frame;
 end;
 
 procedure Shutdown;

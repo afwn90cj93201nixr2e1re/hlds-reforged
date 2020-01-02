@@ -17,7 +17,7 @@ if CmdSource = csServer then
  if SV.Active then
   begin
    Print('Shutting down the server.');
-   Host_ShutdownServer(False);
+   THost.ShutdownServer(False);
   end
  else
   Print('The server is not active, can''t shutdown.');
@@ -29,7 +29,7 @@ var
 begin
 if (CmdSource = csServer) and SV.Active then
  begin
-  Host_ClearGameState;
+  THost.ClearGameState;
   SV_InactivateClients;
   StrCopy(@Map, @SV.Map);
   SV_ServerDeactivate;
@@ -249,7 +249,7 @@ if CmdSource = csServer then
   begin
    HostActive := 3;
    QuitCommandIssued := True;
-   Host_ShutdownServer(False);
+   THost.ShutdownServer(False);
   end
  else
   begin
@@ -291,7 +291,7 @@ else
     if not SVS.InitGameDLL then
      Host_InitializeGameDLL;
     FS_LogLevelLoadStarted(@MapName);
-    Host_Map(@MapName, False);
+    THost.Map(@MapName, False);
    end;
 end;
 
@@ -318,7 +318,7 @@ procedure Host_Reload_F; cdecl;
 begin
 if CmdSource = csServer then
  begin
-  Host_ClearGameState;
+  THost.ClearGameState;
   SV_InactivateClients;
   SV_ServerDeactivate;
   SV_SpawnServer(hostmap.Data, nil);
@@ -386,19 +386,19 @@ end;
 procedure Host_Say_F; cdecl;
 begin
 if CmdSource = csServer then
- Host_Say(False);
+ THost.Say(False);
 end;
 
 procedure Host_Say_Team_F; cdecl;
 begin
 if CmdSource = csServer then
- Host_Say(True);
+ THost.Say(True);
 end;
 
 procedure Host_Tell_F; cdecl;
 begin
 if CmdSource = csServer then
- Host_Say(False);
+ THost.Say(False);
 end;
 
 procedure Host_Kill_F; cdecl;
