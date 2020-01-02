@@ -452,7 +452,7 @@ else
     C.Entity.V.NetName := UInt(@C.NetName) - PRStrings;
     C.Protocol := Protocol;
 
-    Netchan_Setup(NS_SERVER, C.Netchan, NetFrom, ClientIndex, C, SV_GetFragmentSize);
+    Netchan.Setup(NS_SERVER, C.Netchan, NetFrom, ClientIndex, C, SV_GetFragmentSize);
 
     C.UpdateRate := 0.05;
     C.NextUpdateTime := RealTime + 0.05;
@@ -472,7 +472,7 @@ else
      else
       Print(['Client ', PLChar(@UserName), ' reconnected (', PLChar(@AddrBuf), ').']);
 
-    Netchan_OutOfBandPrint(NS_SERVER, C.Netchan.Addr, [LChar(S2C_CONNECT), ' ', C.UserID, ' "', PLChar(@AddrBuf), '" 0']);
+    Netchan.OutOfBandPrint(NS_SERVER, C.Netchan.Addr, [LChar(S2C_CONNECT), ' ', C.UserID, ' "', PLChar(@AddrBuf), '" 0']);
     LPrint(['"', PLChar(@UserName), '<', C.UserID, '><', SV_GetClientIDString(C^), '><>" connected (', PLChar(@AddrBuf), ').'#10]);
 
     StrLCopy(@C.UserInfo, @UserInfo, SizeOf(C.UserInfo) - 1);
@@ -1140,7 +1140,7 @@ while NET_GetPacket(NS_SERVER) do
      C := @SVS.Clients[I];
      if (C.Active or C.Spawned or C.Connected) and NET_CompareAdr(NetFrom, C.Netchan.Addr) then
       begin
-       if Netchan_Process(C.Netchan) then
+       if Netchan.Process(C.Netchan) then
         begin
          if (SVS.MaxClients = 1) or not C.Active or not C.Spawned or not C.SendInfo then
           C.NeedUpdate := True;
@@ -1149,15 +1149,15 @@ while NET_GetPacket(NS_SERVER) do
          GlobalVars.FrameTime := HostFrameTime;
         end;
 
-       if Netchan_IncomingReady(C.Netchan) then
+       if Netchan.IncomingReady(C.Netchan) then
         begin
-         if Netchan_CopyNormalFragments(C.Netchan) then
+         if Netchan.CopyNormalFragments(C.Netchan) then
           begin
            MSG_BeginReading;
            SV_ExecuteClientMessage(C^);
           end;
 
-         if Netchan_CopyFileFragments(C.Netchan) then
+         if Netchan.CopyFileFragments(C.Netchan) then
           begin
            HostClient := C;
            SV_ProcessFile(C^, @C.Netchan.FileName);

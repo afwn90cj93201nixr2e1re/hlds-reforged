@@ -479,7 +479,7 @@ Decal_Init;
 Mod_Init;
 R_Init;
 NET_Init;
-Netchan_Init;
+Netchan.Init;
 Delta_Init;
 SV_Init;
 

@@ -476,7 +476,7 @@ HostClient.ConnectSeq := SVS.SpawnCount;
 HostClient.NewCmdTime := RealTime + 1.5;
 
 SZ_Clear(HostClient.UnreliableMessage);
-Netchan_Clear(HostClient.Netchan);
+Netchan.Clear(HostClient.Netchan);
 
 SV_SendServerInfo(SB, HostClient^);
 
@@ -505,8 +505,8 @@ if DLLFunctions.ClientConnect(HostClient.Entity^, @Name, @Address, @RejectReason
    SV_DropClient(HostClient^, False, 'Connection buffer overflow.')
   else
    begin
-    Netchan_CreateFragments(HostClient.Netchan, SB);
-    Netchan_FragSend(HostClient.Netchan);
+    Netchan.CreateFragments(HostClient.Netchan, SB);
+    Netchan.FragSend(HostClient.Netchan);
    end;
  end
 else
@@ -556,8 +556,8 @@ if (CmdSource = csClient) and (Cmd_Argc = 3) then
      SV_DropClient(HostClient^, False, 'Spawn buffer overflow.')
     else
      begin
-      Netchan_CreateFragments(HostClient.Netchan, SB);
-      Netchan_FragSend(HostClient.Netchan);
+      Netchan.CreateFragments(HostClient.Netchan, SB);
+      Netchan.FragSend(HostClient.Netchan);
      end;
    end;
  end;
@@ -581,8 +581,8 @@ if (CmdSource <> csServer) and (HostClient.Active or not HostClient.Spawned) and
    SV_DropClient(HostClient^, False, 'Resource buffer overflow.')
   else
    begin
-    Netchan_CreateFragments(HostClient.Netchan, SB);
-    Netchan_FragSend(HostClient.Netchan);
+    Netchan.CreateFragments(HostClient.Netchan, SB);
+    Netchan.FragSend(HostClient.Netchan);
    end;
 
   if sv_sendresinterval.Value < 0 then

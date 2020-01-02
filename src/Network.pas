@@ -30,35 +30,38 @@ procedure NET_ClearLagData(Client, Server: Boolean);
 procedure NET_Init;
 procedure NET_Shutdown;
 
-procedure Netchan_OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; S: PLChar); overload;
-procedure Netchan_OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; const S: array of const); overload;
+type
+  Netchan = class
+    class procedure OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; S: PLChar); overload;
+    class procedure OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; const S: array of const); overload;
 
-// netchan
-procedure Netchan_FragSend(var C: TNetchan);
-procedure Netchan_AddBufferToList(var Base: PFragBuf; P: PFragBuf);
+    // netchan
+    class procedure FragSend(var C: TNetchan);
+    class procedure AddBufferToList(var Base: PFragBuf; P: PFragBuf);
 
-procedure Netchan_Clear(var C: TNetchan);
+    class procedure Clear(var C: TNetchan);
 
-procedure Netchan_CreateFragments(var C: TNetchan; var SB: TSizeBuf);
-procedure Netchan_CreateFileFragmentsFromBuffer(var C: TNetchan; Name: PLChar; Buffer: Pointer; Size: UInt);
+    class procedure CreateFragments(var C: TNetchan; var SB: TSizeBuf);
+    class procedure CreateFileFragmentsFromBuffer(var C: TNetchan; Name: PLChar; Buffer: Pointer; Size: UInt);
 
-function Netchan_CreateFileFragments(var C: TNetchan; Name: PLChar): Boolean;
+    class function CreateFileFragments(var C: TNetchan; Name: PLChar): Boolean;
 
-procedure Netchan_FlushIncoming(var C: TNetchan; Stream: TNetStream);
+    class procedure FlushIncoming(var C: TNetchan; Stream: TNetStream);
 
-procedure Netchan_Setup(Source: TNetSrc; var C: TNetchan; const Addr: TNetAdr; ClientID: Int; ClientPtr: PClient; Func: TFragmentSizeFunc);
+    class procedure Setup(Source: TNetSrc; var C: TNetchan; const Addr: TNetAdr; ClientID: Int; ClientPtr: PClient; Func: TFragmentSizeFunc);
 
-function Netchan_Process(var C: TNetchan): Boolean;
-procedure Netchan_Transmit(var C: TNetchan; Size: UInt; Buffer: Pointer);
+    class function Process(var C: TNetchan): Boolean;
+    class procedure Transmit(var C: TNetchan; Size: UInt; Buffer: Pointer);
 
-function Netchan_IncomingReady(const C: TNetchan): Boolean;
+    class function IncomingReady(const C: TNetchan): Boolean;
 
-function Netchan_CopyNormalFragments(var C: TNetchan): Boolean;
-function Netchan_CopyFileFragments(var C: TNetchan): Boolean;
+    class function CopyNormalFragments(var C: TNetchan): Boolean;
+    class function CopyFileFragments(var C: TNetchan): Boolean;
 
-function Netchan_CanPacket(var C: TNetchan): Boolean;
+    class function CanPacket(var C: TNetchan): Boolean;
 
-procedure Netchan_Init;
+    class procedure Init;
+  end;
 
 var
  InMessage, NetMessage: TSizeBuf;
@@ -1482,14 +1485,14 @@ if not (FSB_OVERFLOWED in SB.AllowOverflow) then
  NET_SendPacket(Source, SB.CurrentSize, SB.Data, Addr);
 end;
 
-procedure Netchan_OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; S: PLChar);
+class procedure Netchan.OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; S: PLChar);
 begin
 Netchan_OutOfBand(Source, Addr, StrLen(S) + 1, S);
 end;
 
-procedure Netchan_OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; const S: array of const);
+class procedure Netchan.OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; const S: array of const);
 begin
-Netchan_OutOfBandPrint(Source, Addr, PLChar(StringFromVarRec(S)));
+Netchan.OutOfBandPrint(Source, Addr, PLChar(StringFromVarRec(S)));
 end;
 
 procedure Netchan_UnlinkFragment(Frag: PFragBuf; var Base: PFragBuf);
@@ -1554,11 +1557,11 @@ for I := Low(I) to High(I) do
   C.FragBufQueue[I] := nil;
 
   Netchan_ClearFragBufs(C.FragBufBase[I]);
-  Netchan_FlushIncoming(C, I);
+  Netchan.FlushIncoming(C, I);
  end;
 end;
 
-procedure Netchan_Clear(var C: TNetchan);
+class procedure Netchan.Clear(var C: TNetchan);
 var
  I: TNetStream;
 begin
@@ -1587,7 +1590,7 @@ if C.TempBuffer <> nil then
 C.TempBufferSize := 0;
 end;
 
-procedure Netchan_Setup(Source: TNetSrc; var C: TNetchan; const Addr: TNetAdr; ClientID: Int; ClientPtr: PClient; Func: TFragmentSizeFunc);
+class procedure Netchan.Setup(Source: TNetSrc; var C: TNetchan; const Addr: TNetAdr; ClientID: Int; ClientPtr: PClient; Func: TFragmentSizeFunc);
 begin
 Netchan_ClearFragments(C);
 if C.TempBuffer <> nil then
@@ -1611,7 +1614,7 @@ C.NetMessage.MaxSize := SizeOf(C.NetMessageBuf);
 C.NetMessage.CurrentSize := 0;
 end;
 
-function Netchan_CanPacket(var C: TNetchan): Boolean;
+class function Netchan.CanPacket(var C: TNetchan): Boolean;
 begin
 if (C.Addr.AddrType = NA_LOOPBACK) and (net_chokeloop.Value = 0) then
  begin
@@ -1670,7 +1673,7 @@ var
  SendFrag: array[TNetStream] of Boolean;
  FileNameBuf: array[1..MAX_PATH_W] of LChar;
 begin
-Netchan_FragSend(C);
+Netchan.FragSend(C);
 for I := Low(I) to High(I) do
  SendFrag[I] := C.FragBufBase[I] <> nil;
 
@@ -1680,7 +1683,7 @@ if SendNormal and SendFrag[NS_NORMAL] then
   SendNormal := False;
   if C.NetMessage.CurrentSize > MAX_CLIENT_FRAGSIZE then
    begin
-    Netchan_CreateFragments(C, C.NetMessage);
+    Netchan.CreateFragments(C, C.NetMessage);
     C.NetMessage.CurrentSize := 0;
    end;
  end;
@@ -1758,7 +1761,7 @@ for I := Low(I) to High(I) do
  end;
 end;
 
-procedure Netchan_Transmit(var C: TNetchan; Size: UInt; Buffer: Pointer);
+class procedure Netchan.Transmit(var C: TNetchan; Size: UInt; Buffer: Pointer);
 var
  SB: TSizeBuf;
  SBData: array[1..MAX_PACKETLEN] of Byte;
@@ -1896,7 +1899,7 @@ if Alloc then
   if P <> nil then
    begin
     P.Index := Index;
-    Netchan_AddBufferToList(Base, P);
+    Netchan.AddBufferToList(Base, P);
     Result := P;
    end;
  end;
@@ -1936,7 +1939,7 @@ else
            (MSG_ReadCount + Offset + Size <= NetMessage.CurrentSize);
 end;
 
-function Netchan_Process(var C: TNetchan): Boolean;
+class function Netchan.Process(var C: TNetchan): Boolean;
 var
  Seq, Ack: Int32;
  I: TNetStream;
@@ -2077,7 +2080,7 @@ else
  end;    
 end;
 
-procedure Netchan_FragSend(var C: TNetchan);
+class procedure Netchan.FragSend(var C: TNetchan);
 var
  I: TNetStream;
  P: PFragBufDir;
@@ -2095,7 +2098,7 @@ for I := Low(I) to High(I) do
   end;
 end;
 
-procedure Netchan_AddBufferToList(var Base: PFragBuf; P: PFragBuf);
+class procedure Netchan.AddBufferToList(var Base: PFragBuf; P: PFragBuf);
 var
  P2: PFragBuf;
 begin
@@ -2214,7 +2217,7 @@ while RemainingSize > 0 do
 Netchan_AddDirToQueue(C.FragBufQueue[NS_NORMAL], Dir);
 end;
 
-procedure Netchan_CreateFragments(var C: TNetchan; var SB: TSizeBuf);
+class procedure Netchan.CreateFragments(var C: TNetchan; var SB: TSizeBuf);
 begin
 if C.NetMessage.CurrentSize > 0 then
  begin
@@ -2242,7 +2245,7 @@ if DstBuf <> nil then
  end;
 end;
 
-procedure Netchan_CreateFileFragmentsFromBuffer(var C: TNetchan; Name: PLChar; Buffer: Pointer; Size: UInt);
+class procedure Netchan.CreateFileFragmentsFromBuffer(var C: TNetchan; Name: PLChar; Buffer: Pointer; Size: UInt);
 var
  Compressed, NeedHeader: Boolean;
  DstBuf: Pointer;
@@ -2405,7 +2408,7 @@ else
   end;
 end;
 
-function Netchan_CreateFileFragments(var C: TNetchan; Name: PLChar): Boolean;
+class function Netchan.CreateFileFragments(var C: TNetchan; Name: PLChar): Boolean;
 var
  Compressed, NeedHeader: Boolean;
  ClientFragSize, FragIndex, Size, ThisSize, FileOffset, RemainingSize: UInt;
@@ -2481,7 +2484,7 @@ Netchan_AddDirToQueue(C.FragBufQueue[NS_FILE], Dir);
 Result := True;
 end;
 
-procedure Netchan_FlushIncoming(var C: TNetchan; Stream: TNetStream);
+class procedure Netchan.FlushIncoming(var C: TNetchan; Stream: TNetStream);
 var
  P, P2: PFragBuf;
 begin
@@ -2500,7 +2503,7 @@ C.IncomingBuf[Stream] := nil;
 C.IncomingReady[Stream] := False;
 end;
 
-function Netchan_CopyNormalFragments(var C: TNetchan): Boolean;
+class function Netchan.CopyNormalFragments(var C: TNetchan): Boolean;
 var
  P, P2: PFragBuf;
  DstSize: UInt;
@@ -2579,7 +2582,7 @@ else
  end;
 end;             
 
-function Netchan_CopyFileFragments(var C: TNetchan): Boolean;
+class function Netchan.CopyFileFragments(var C: TNetchan): Boolean;
 var
  P, P2: PFragBuf;
  IncomingSize, TotalSize, CurrentSize: UInt;
@@ -2627,14 +2630,14 @@ if C.IncomingReady[NS_FILE] then
             if sv_receivedecalsonly.Value <> 0 then
              begin
               DPrint(['Received a non-decal file "', PLChar(@FileName), '", ignored.']);
-              Netchan_FlushIncoming(C, NS_FILE);
+              Netchan.FlushIncoming(C, NS_FILE);
               Exit;
              end;
 
             if FS_FileExists(@FileName) then
              begin
               DPrint(['Can''t download "', PLChar(@FileName), '", already exists.']);
-              Netchan_FlushIncoming(C, NS_FILE);
+              Netchan.FlushIncoming(C, NS_FILE);
               Result := True;
               Exit;
              end;
@@ -2710,7 +2713,7 @@ if C.IncomingReady[NS_FILE] then
          end;
     end;
 
-   Netchan_FlushIncoming(C, NS_FILE);
+   Netchan.FlushIncoming(C, NS_FILE);
   end
  else
   begin
@@ -2729,12 +2732,12 @@ begin
 Result := (C.IncomingBuf[NS_NORMAL] <> nil) or (C.IncomingBuf[NS_FILE] <> nil);
 end;
 
-function Netchan_IncomingReady(const C: TNetchan): Boolean;
+class function Netchan.IncomingReady(const C: TNetchan): Boolean;
 begin
 Result := C.IncomingReady[NS_NORMAL] or C.IncomingReady[NS_FILE];
 end;
 
-procedure Netchan_Init;
+class procedure Netchan.Init;
 begin
 CVar_RegisterVariable(net_showpackets);
 CVar_RegisterVariable(net_showdrop);

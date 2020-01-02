@@ -840,8 +840,8 @@ if (CmdSource = csClient) and (Cmd_Argc = 2) then
         if HPAK_ResourceForHash('custom.hpk', @Hash, @Res) and
            HPAK_GetDataPointer('custom.hpk', Res, @Buffer, @Size) and (Buffer <> nil) and (Size > 0) then
          begin
-          Netchan_CreateFileFragmentsFromBuffer(HostClient.Netchan, S, Buffer, Size);
-          Netchan_FragSend(HostClient.Netchan);
+          Netchan.CreateFileFragmentsFromBuffer(HostClient.Netchan, S, Buffer, Size);
+          Netchan.FragSend(HostClient.Netchan);
           Mem_Free(Buffer);
           Exit;
          end;
@@ -851,9 +851,9 @@ if (CmdSource = csClient) and (Cmd_Argc = 2) then
        end
       else
      else
-      if (sv_send_resources.Value <> 0) and Netchan_CreateFileFragments(HostClient.Netchan, S) then
+      if (sv_send_resources.Value <> 0) and Netchan.CreateFileFragments(HostClient.Netchan, S) then
        begin
-        Netchan_FragSend(HostClient.Netchan);
+        Netchan.FragSend(HostClient.Netchan);
         Exit;
        end;
 

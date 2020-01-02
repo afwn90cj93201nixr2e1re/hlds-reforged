@@ -207,8 +207,8 @@ else
         SZ_Write(C.Netchan.NetMessage, SB.Data, SB.CurrentSize)
        else
         begin
-         Netchan_CreateFragments(C.Netchan, SB);
-         Netchan_FragSend(C.Netchan);
+         Netchan.CreateFragments(C.Netchan, SB);
+         Netchan.FragSend(C.Netchan);
         end;
      end;
   end;
@@ -390,11 +390,11 @@ for I := 0 to SVS.MaxClients - 1 do
   C := @SVS.Clients[I];
   if (C.Active or C.Connected) and not C.FakeClient then
    begin
-    Netchan_Clear(C.Netchan);
+    Netchan.Clear(C.Netchan);
     if SVS.MaxClients > 1 then
      begin
       SV_BuildReconnect(C.Netchan.NetMessage);
-      Netchan_Transmit(C.Netchan, 0, nil);
+      Netchan.Transmit(C.Netchan, 0, nil);
      end
     else
      SV_SendServerInfo(SB, C^);
@@ -407,8 +407,8 @@ for I := 0 to SVS.MaxClients - 1 do
     else
      begin
       C.UserMsgReady := True;
-      Netchan_CreateFragments(C.Netchan, SB);
-      Netchan_FragSend(C.Netchan);
+      Netchan. CreateFragments(C.Netchan, SB);
+      Netchan.FragSend(C.Netchan);
      end;
     
     SZ_Clear(SB);

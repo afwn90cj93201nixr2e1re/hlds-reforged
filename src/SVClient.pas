@@ -180,7 +180,7 @@ SV_ClearCustomizationList(C.Customization);
 SV_ClearResourceLists(C);
 SZ_Clear(C.UnreliableMessage);
 SV_ClearClientEvents(C);
-Netchan_Clear(C.Netchan);
+Netchan.Clear(C.Netchan);
 
 C.Active := False;
 C.Spawned := False;
@@ -344,7 +344,7 @@ if not SkipNotify then
     MSG_WriteString(C.Netchan.NetMessage, Msg);
     
     PByte(@Buf)^ := SVC_DISCONNECT;
-    Netchan_Transmit(C.Netchan, L + 2, @Buf);
+    Netchan.Transmit(C.Netchan, L + 2, @Buf);
    end;
  end;
 
@@ -706,8 +706,8 @@ for I := 0 to SVS.MaxClients - 1 do
 
 DPrint(['Client "', PLChar(@HostClient.NetName), '" (index #', (UInt(HostClient) - UInt(SVS.Clients)) div SizeOf(TClient) + 1,
         ') requested fullupdate, sending.']);
-Netchan_CreateFragments(HostClient.Netchan, SB);
-Netchan_FragSend(HostClient.Netchan);
+Netchan.CreateFragments(HostClient.Netchan, SB);
+Netchan.FragSend(HostClient.Netchan);
 end;
 
 procedure SV_ClientPrint(var C: TClient; Msg: PLChar; LineBreak: Boolean = True);
@@ -1179,7 +1179,7 @@ for I := 0 to SVS.MaxClients - 1 do
      C.Spawned := False;
      C.SendInfo := False;
      C.Connected := True;
-     Netchan_Clear(C.Netchan);
+     Netchan.Clear(C.Netchan);
      SZ_Clear(C.UnreliableMessage);
      SV_ClearCustomizationList(C.Customization);
      MemSet(C.PhysInfo, SizeOf(C.PhysInfo), 0);
@@ -1515,7 +1515,7 @@ for I := 0 to SVS.MaxClients - 1 do
      begin
       SZ_Clear(SB);
       SZ_Write(SB, SV.ReliableDatagram.Data, SV.ReliableDatagram.CurrentSize);
-      Netchan_CreateFragments(C.Netchan, SB);
+      Netchan.CreateFragments(C.Netchan, SB);
      end;
 
     if SV.Datagram.CurrentSize + C.UnreliableMessage.CurrentSize < C.UnreliableMessage.MaxSize then
@@ -1583,7 +1583,7 @@ SZ_Clear(C.UnreliableMessage);
 if FSB_OVERFLOWED in SB.AllowOverflow then
  DPrint(['Warning: Message overflowed for "', PLChar(@C.NetName), '".'])
 else
- Netchan_Transmit(C.Netchan, SB.CurrentSize, SB.Data);
+ Netchan.Transmit(C.Netchan, SB.CurrentSize, SB.Data);
  
 Result := True;
 end;
@@ -1626,14 +1626,14 @@ for I := 0 to SVS.MaxClients - 1 do
        C.NeedUpdate := False;
 
      if C.NeedUpdate then
-      if Netchan_CanPacket(C.Netchan) then
+      if Netchan.CanPacket(C.Netchan) then
        begin
         C.NeedUpdate := False;
         C.NextUpdateTime := RealTime + HostFrameTime + C.UpdateRate;
         if C.Active and C.Spawned and C.SendInfo then
          SV_SendClientDatagram(C^)
         else
-         Netchan_Transmit(C.Netchan, 0, nil);
+         Netchan.Transmit(C.Netchan, 0, nil);
        end
       else
        Inc(C.ChokeCount);
