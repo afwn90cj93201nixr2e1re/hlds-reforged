@@ -24,7 +24,7 @@ var
 
 implementation
 
-uses Common, Console, Delta, Edict, FileSys, Host, HostSave, Memory,
+uses Common, Console, Delta, Edict, FileSys, Host, Memory,
   Network, ParseLib, Renderer, SVEdict, SVExport, SVDelta, SVMain, SVMove,
   SysArgs, SysMain;
 
@@ -382,7 +382,6 @@ for I := 0 to NumExtDLL - 1 do
   F := Sys_GetProcAddress(ExtDLL[I].Handle, 'SV_SaveGameComment');
   if F <> nil then
    begin
-    SaveGameCommentFunc := F;
     Exit;
    end;
  end;

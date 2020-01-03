@@ -89,7 +89,7 @@ var
 implementation
 
 uses Common, Console, CoreUI, Decal, Delta, Edict, Encode, GameLib, HostCmds,
-  HostSave, HPAK, Memory, Model, MsgBuf, Network, Renderer, Resource, SVClient,
+  HPAK, Memory, Model, MsgBuf, Network, Renderer, Resource, SVClient,
   SVEdict, SVEvent, SVExport, SVMain, SVPacket, SVPhys, SVRcon, SVSend, SVWorld,
   SysMain, SysArgs, SysClock, Texture, Netchan, Client;
 
@@ -276,8 +276,7 @@ if not Save then
 if SV_SpawnServer(Name, nil) then
  if Save then
   begin
-   if not LoadGamestate(Name, True) then
-    SV_LoadEntities;
+   SV_LoadEntities;
 
    SV.Paused := True;
    SV.SavedGame := True;

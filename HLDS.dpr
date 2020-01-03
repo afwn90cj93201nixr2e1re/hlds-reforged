@@ -28,7 +28,6 @@ uses
   GameLib in 'src/GameLib.pas',
   Host in 'src/Host.pas',
   HostCmds in 'src/HostCmds.pas',
-  HostSave in 'src/HostSave.pas',
   HPAK in 'src/HPAK.pas',
   Info in 'src/Info.pas',
   MathLib in 'src/MathLib.pas',
