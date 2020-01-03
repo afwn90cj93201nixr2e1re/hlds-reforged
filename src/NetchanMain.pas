@@ -7,34 +7,23 @@ uses
 
 type
   Netchan = class
+  public
     class procedure OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; S: PLChar); overload;
     class procedure OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; const S: array of const); overload;
-
-    // netchan
     class procedure FragSend(var C: TNetchan);
     class procedure AddBufferToList(var Base: PFragBuf; P: PFragBuf);
-
     class procedure Clear(var C: TNetchan);
-
     class procedure CreateFragments(var C: TNetchan; var SB: TSizeBuf);
     class procedure CreateFileFragmentsFromBuffer(var C: TNetchan; Name: PLChar; Buffer: Pointer; Size: UInt);
-
     class function CreateFileFragments(var C: TNetchan; Name: PLChar): Boolean;
-
     class procedure FlushIncoming(var C: TNetchan; Stream: TNetStream);
-
     class procedure Setup(Source: TNetSrc; var C: TNetchan; const Addr: TNetAdr; ClientID: Int; ClientPtr: PClient; Func: TFragmentSizeFunc);
-
     class function Process(var C: TNetchan): Boolean;
     class procedure Transmit(var C: TNetchan; Size: UInt; Buffer: Pointer);
-
     class function IncomingReady(const C: TNetchan): Boolean;
-
     class function CopyNormalFragments(var C: TNetchan): Boolean;
     class function CopyFileFragments(var C: TNetchan): Boolean;
-
     class function CanPacket(var C: TNetchan): Boolean;
-
     class procedure Init;
 
   private
