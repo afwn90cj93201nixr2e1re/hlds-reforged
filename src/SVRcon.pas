@@ -302,7 +302,7 @@ end;
 
 procedure SV_CheckForRcon;
 begin
-if not SV.Active and not QuitCommandIssued and HostInit then
+if not SV.Active and not QuitCommandIssued and THost.Inited then
  while NET_GetPacket(NS_SERVER) do
   if SV_FilterPacket then
    SV_SendBan

@@ -1388,7 +1388,7 @@ procedure Cmd_AddCommand(Name: PLChar; Func: TCmdFunction);
 var
  C, C2: PCommand;
 begin
-if HostInit then
+if Thost.Inited then
  Sys_Error(['Tried to register a command ("', Name, '") after the server was initialized.']);
 
 if CVar_FindVar(Name) <> nil then

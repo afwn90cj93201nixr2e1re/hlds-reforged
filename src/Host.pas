@@ -30,6 +30,9 @@ type
 
     class procedure InitCommands;
     class procedure InitCVars;
+
+    class var Inited: Boolean;
+
   end;
 
 
@@ -56,7 +59,6 @@ var
  host_profile: TCVar = (Name: 'host_profile'; Data: '0');
  pausable: TCVar = (Name: 'pausable'; Data: '0'; Flags: [FCVAR_SERVER]);
 
- HostInit: Boolean = False;
  HostActive, HostSubState, HostStateInfo: UInt;
  QuitCommandIssued: Boolean;
  InHostError: Boolean;
@@ -504,7 +506,7 @@ HostActive := 1;
 HostNumFrames := 0;
 
 HostTimes.Prev := Sys_FloatTime;
-HostInit := True;
+THost.Inited := True;
 end;
 
 class procedure THost.Shutdown;
@@ -514,7 +516,7 @@ if InHostShutdown then
 else
  begin
   InHostShutdown := True;
-  HostInit := False;
+  THost.Inited := False;
 
   SV_ServerDeactivate;
 
@@ -1280,5 +1282,8 @@ CVar_RegisterVariable(skill);
 CVar_RegisterVariable(sys_maxframetime);
 CVar_RegisterVariable(sys_minframetime);
 end;
+
+initialization
+  THost.Inited := False;
 
 end.

@@ -237,7 +237,7 @@ end;
 
 procedure Sys_Init;
 begin
-HostInit := False;
+  THost.Inited := False;
 
 Sys_InitArgs;
 if COM_CheckParm('-dev') > 0 then
@@ -254,7 +254,7 @@ Memory_Init;
 FileSystem_Init;
 THost.Init;
 
-if HostInit then
+if THost.Inited then
  begin
   UI_EngineReady(EngFuncs);
   NET_Config(True);
