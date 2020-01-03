@@ -476,7 +476,7 @@ else
      else
       Print(['Client ', PLChar(@UserName), ' reconnected (', PLChar(@AddrBuf), ').']);
 
-    Netchan.OutOfBandPrint(NS_SERVER, C.Netchan.Addr, [LChar(S2C_CONNECT), ' ', C.UserID, ' "', PLChar(@AddrBuf), '" 0']);
+    TNetchan.OutOfBandPrint(NS_SERVER, C.Netchan.Addr, [LChar(S2C_CONNECT), ' ', C.UserID, ' "', PLChar(@AddrBuf), '" 0']);
     LPrint(['"', PLChar(@UserName), '<', C.UserID, '><', SV_GetClientIDString(C^), '><>" connected (', PLChar(@AddrBuf), ').'#10]);
 
     StrLCopy(@C.UserInfo, @UserInfo, SizeOf(C.UserInfo) - 1);

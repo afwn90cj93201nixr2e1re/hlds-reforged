@@ -1682,12 +1682,12 @@ if SVS.LogEnabled or SVS.LogToAddr or (FirstLog <> nil) then
   StrLCopy(S, Msg, SizeOf(Buf) - StrLen(@Buf) - 1); 
   
   if SVS.LogToAddr then
-   Netchan.OutOfBandPrint(NS_SERVER, SVS.LogAddr, ['log ', PLChar(@Buf)]);
+   TNetchan.OutOfBandPrint(NS_SERVER, SVS.LogAddr, ['log ', PLChar(@Buf)]);
 
   P := FirstLog;
   while P <> nil do
    begin
-    Netchan.OutOfBandPrint(NS_SERVER, P.Adr, ['log ', PLChar(@Buf)]);
+    TNetchan.OutOfBandPrint(NS_SERVER, P.Adr, ['log ', PLChar(@Buf)]);
     P := P.Prev;
    end;
  

@@ -482,7 +482,7 @@ Decal_Init;
 Mod_Init;
 R_Init;
 NET_Init;
-Netchan.Init;
+TNetchan.Init;
 Delta_Init;
 SV_Init;
 

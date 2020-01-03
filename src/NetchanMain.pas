@@ -74,28 +74,26 @@ type
     procedure UpdateFlow;
     procedure PushStreams(var SendReliable: Boolean);
     procedure CheckForCompletion(Index: TNetStream; Total: UInt);
-  end;
 
-type
-  Netchan = class
+
   public
-    class procedure OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; S: PLChar); overload;
-    class procedure OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; const S: array of const); overload;
+    class procedure OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; S: PLChar); overload; static;
+    class procedure OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; const S: array of const); overload; static;
 
-    class procedure AddBufferToList(var Base: PFragBuf; P: PFragBuf);
-    class procedure Init;
+    class procedure AddBufferToList(var Base: PFragBuf; P: PFragBuf); static;
+    class procedure Init; static;
 
   private
-    class procedure UnlinkFragment(Frag: PFragBuf; var Base: PFragBuf);
-    class procedure ClearFragBufs(var P: PFragBuf);
-    class function AllocFragBuf: PFragBuf;
-    class function FindBufferByID(var Base: PFragBuf; Index: UInt; Alloc: Boolean): PFragBuf;
-    class function ValidateHeader(Ready: Boolean; Seq, Offset, Size: UInt): Boolean;
-    class procedure AddFragBufToTail(Dir: PFragBufDir; var Tail: PFragBuf; P: PFragBuf);
-    class procedure AddDirToQueue(var Queue: PFragBufDir; Dir: PFragBufDir);
-    class function CompressBuf(SrcBuf: Pointer; SrcSize: UInt; out DstBuf: Pointer; out DstSize: UInt): Boolean;
-    class function GetFileInfo(var C: TNetchan; Name: PLChar; out Size, CompressedSize: UInt; out Compressed: Boolean): Boolean;
-    class function DecompressIncoming(FileName: PLChar; var Src: Pointer; var TotalSize: UInt; IncomingSize: UInt): Boolean;
+    class procedure UnlinkFragment(Frag: PFragBuf; var Base: PFragBuf); static;
+    class procedure ClearFragBufs(var P: PFragBuf); static;
+    class function AllocFragBuf: PFragBuf; static;
+    class function FindBufferByID(var Base: PFragBuf; Index: UInt; Alloc: Boolean): PFragBuf; static;
+    class function ValidateHeader(Ready: Boolean; Seq, Offset, Size: UInt): Boolean; static;
+    class procedure AddFragBufToTail(Dir: PFragBufDir; var Tail: PFragBuf; P: PFragBuf); static;
+    class procedure AddDirToQueue(var Queue: PFragBufDir; Dir: PFragBufDir); static;
+    class function CompressBuf(SrcBuf: Pointer; SrcSize: UInt; out DstBuf: Pointer; out DstSize: UInt): Boolean; static;
+    class function GetFileInfo(var C: TNetchan; Name: PLChar; out Size, CompressedSize: UInt; out Compressed: Boolean): Boolean; static;
+    class function DecompressIncoming(FileName: PLChar; var Src: Pointer; var TotalSize: UInt; IncomingSize: UInt): Boolean; static;
   end;
 
 var
@@ -121,7 +119,7 @@ var
  // 3 - packets & files
  net_compress: TCVar = (Name: 'net_compress'; Data: '3');
 
-class procedure Netchan.OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; S: PLChar);
+class procedure TNetchan.OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; S: PLChar);
   procedure Netchan_OutOfBand(Source: TNetSrc; const Addr: TNetAdr; Size: UInt; Data: Pointer);
   var
    SB: TSizeBuf;
@@ -142,12 +140,12 @@ begin
 Netchan_OutOfBand(Source, Addr, StrLen(S) + 1, S);
 end;
 
-class procedure Netchan.OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; const S: array of const);
+class procedure TNetchan.OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; const S: array of const);
 begin
-Netchan.OutOfBandPrint(Source, Addr, PLChar(StringFromVarRec(S)));
+TNetchan.OutOfBandPrint(Source, Addr, PLChar(StringFromVarRec(S)));
 end;
 
-class procedure Netchan.UnlinkFragment(Frag: PFragBuf; var Base: PFragBuf);
+class procedure TNetchan.UnlinkFragment(Frag: PFragBuf; var Base: PFragBuf);
 var
  P: PFragBuf;
 begin
@@ -176,7 +174,7 @@ else
   end;
 end;
 
-class procedure Netchan.ClearFragBufs(var P: PFragBuf);
+class procedure TNetchan.ClearFragBufs(var P: PFragBuf);
 var
  P2, P3: PFragBuf;
 begin
@@ -202,13 +200,13 @@ for I := Low(I) to High(I) do
   while P <> nil do
    begin
     P2 := P.Next;
-    Netchan.ClearFragBufs(P.FragBuf);
+    TNetchan.ClearFragBufs(P.FragBuf);
     Mem_Free(P);
     P := P2;
    end;
   FragBufQueue[I] := nil;
 
-  Netchan.ClearFragBufs(FragBufBase[I]);
+  TNetchan.ClearFragBufs(FragBufBase[I]);
   FlushIncoming(I);
  end;
 end;
@@ -404,7 +402,7 @@ for I := Low(I) to High(I) do
     Move(FB.FragMessage.Data^, Pointer(UInt(@ReliableBuf) + ReliableLength)^, FB.FragMessage.CurrentSize);
     Inc(ReliableLength, FB.FragMessage.CurrentSize);
     FragBufSize[I] := FB.FragMessage.CurrentSize;
-    Netchan.UnlinkFragment(FB, FragBufBase[I]);
+    TNetchan.UnlinkFragment(FB, FragBufBase[I]);
     if I = NS_NORMAL then
      Inc(FragBufOffset[NS_FILE], FragBufSize[NS_NORMAL]);
 
@@ -514,7 +512,7 @@ else
  end;
 end;
 
-class function Netchan.AllocFragBuf: PFragBuf;
+class function TNetchan.AllocFragBuf: PFragBuf;
 var
  P: PFragBuf;
 begin
@@ -530,7 +528,7 @@ if P <> nil then
 Result := P;
 end;
 
-class function Netchan.FindBufferByID(var Base: PFragBuf; Index: UInt; Alloc: Boolean): PFragBuf;
+class function TNetchan.FindBufferByID(var Base: PFragBuf; Index: UInt; Alloc: Boolean): PFragBuf;
 var
  P: PFragBuf;
 begin
@@ -547,11 +545,11 @@ while P <> nil do
 
 if Alloc then
  begin
-  P := Netchan.AllocFragBuf;
+  P := TNetchan.AllocFragBuf;
   if P <> nil then
    begin
     P.Index := Index;
-    Netchan.AddBufferToList(Base, P);
+    TNetchan.AddBufferToList(Base, P);
     Result := P;
    end;
  end;
@@ -577,7 +575,7 @@ if P <> nil then
  end;
 end;
 
-class function Netchan.ValidateHeader(Ready: Boolean; Seq, Offset, Size: UInt): Boolean;
+class function TNetchan.ValidateHeader(Ready: Boolean; Seq, Offset, Size: UInt): Boolean;
 var
  Index, Count: UInt16;
 begin
@@ -644,7 +642,7 @@ if Fragmented then
     end;
 
   for I := Low(I) to High(I) do
-   if not Netchan.ValidateHeader(FragReady[I], FragSeq[I], FragOffset[I], FragSize[I]) then
+   if not TNetchan.ValidateHeader(FragReady[I], FragSeq[I], FragOffset[I], FragSize[I]) then
     begin
      DPrint('Received a fragmented packet with invalid header, ignoring.');
      Exit;
@@ -691,7 +689,7 @@ if Seq > IncomingSequence then
       begin
        if FragSeq[I] > 0 then
         begin
-         P := Netchan.FindBufferByID(IncomingBuf[I], FragSeq[I], True);
+         P := TNetchan.FindBufferByID(IncomingBuf[I], FragSeq[I], True);
          if P = nil then
           DPrint(['Netchan_Process: Couldn''t allocate or find buffer #', FragSeq[I] shr 16, '.'])
          else
@@ -750,7 +748,7 @@ for I := Low(I) to High(I) do
   end;
 end;
 
-class procedure Netchan.AddBufferToList(var Base: PFragBuf; P: PFragBuf);
+class procedure TNetchan.AddBufferToList(var Base: PFragBuf; P: PFragBuf);
 var
  P2: PFragBuf;
 begin
@@ -775,7 +773,7 @@ else
  end;
 end;
 
-class procedure Netchan.AddFragBufToTail(Dir: PFragBufDir; var Tail: PFragBuf; P: PFragBuf);
+class procedure TNetchan.AddFragBufToTail(Dir: PFragBufDir; var Tail: PFragBuf; P: PFragBuf);
 begin
 P.Next := nil;
 Inc(Dir.Count);
@@ -788,7 +786,7 @@ else
 Tail := P;
 end;
 
-class procedure Netchan.AddDirToQueue(var Queue: PFragBufDir; Dir: PFragBufDir);
+class procedure TNetchan.AddDirToQueue(var Queue: PFragBufDir; Dir: PFragBufDir);
 var
  P: PFragBufDir;
 begin
@@ -845,11 +843,11 @@ while RemainingSize > 0 do
   else
    ThisSize := ClientFragSize;
 
-  FB := Netchan.AllocFragBuf;
+  FB := TNetchan.AllocFragBuf;
   if FB = nil then
    begin
     DPrint('Couldn''t allocate fragment buffer.');
-    Netchan.ClearFragBufs(Dir.FragBuf);
+    TNetchan.ClearFragBufs(Dir.FragBuf);
     Mem_Free(Dir);
 
     if C.Client <> nil then
@@ -863,10 +861,10 @@ while RemainingSize > 0 do
   Inc(DataOffset, ThisSize);
   Dec(RemainingSize, ThisSize);
 
-  Netchan.AddFragBufToTail(Dir, Tail, FB);
+  TNetchan.AddFragBufToTail(Dir, Tail, FB);
  end;
 
-Netchan.AddDirToQueue(C.FragBufQueue[NS_NORMAL], Dir);
+TNetchan.AddDirToQueue(C.FragBufQueue[NS_NORMAL], Dir);
 end;
 
 procedure TNetchan.CreateFragments(var SB: TSizeBuf);
@@ -880,7 +878,7 @@ if NetMessage.CurrentSize > 0 then
 Netchan_CreateFragments_(Self, SB);
 end;
 
-class function Netchan.CompressBuf(SrcBuf: Pointer; SrcSize: UInt; out DstBuf: Pointer; out DstSize: UInt): Boolean;
+class function TNetchan.CompressBuf(SrcBuf: Pointer; SrcSize: UInt; out DstBuf: Pointer; out DstSize: UInt): Boolean;
 var
  E: UInt;
 begin
@@ -908,7 +906,7 @@ begin
 if Size = 0 then
  Exit;
 
-Compressed := (net_compress.Value >= 2) and Netchan.CompressBuf(Buffer, Size, DstBuf, DstSize);
+Compressed := (net_compress.Value >= 2) and TNetchan.CompressBuf(Buffer, Size, DstBuf, DstSize);
 if Compressed then
  DPrint(['Compressed "', Name, '" for transmission (', Size, ' -> ', DstSize, ').'])
 else
@@ -936,11 +934,11 @@ while RemainingSize > 0 do
   else
    ThisSize := ClientFragSize;
 
-  FB := Netchan.AllocFragBuf;
+  FB := TNetchan.AllocFragBuf;
   if FB = nil then
    begin
     DPrint('Couldn''t allocate fragment buffer.');
-    Netchan.ClearFragBufs(Dir.FragBuf);
+    TNetchan.ClearFragBufs(Dir.FragBuf);
     Mem_Free(Dir);
     if Compressed then
      Mem_Free(DstBuf);
@@ -978,16 +976,16 @@ while RemainingSize > 0 do
   Inc(FileOffset, ThisSize);
   Dec(RemainingSize, ThisSize);
 
-  Netchan.AddFragBufToTail(Dir, Tail, FB);
+  TNetchan.AddFragBufToTail(Dir, Tail, FB);
  end;
 
-Netchan.AddDirToQueue(FragBufQueue[NS_FILE], Dir);
+TNetchan.AddDirToQueue(FragBufQueue[NS_FILE], Dir);
 
 if Compressed then
  Mem_Free(DstBuf);
 end;
 
-class function Netchan.GetFileInfo(var C: TNetchan; Name: PLChar; out Size, CompressedSize: UInt; out Compressed: Boolean): Boolean;
+class function TNetchan.GetFileInfo(var C: TNetchan; Name: PLChar; out Size, CompressedSize: UInt; out Compressed: Boolean): Boolean;
 var
  NetAdrBuf: array[1..64] of LChar;
  Buf: array[1..MAX_PATH_W] of LChar;
@@ -1037,7 +1035,7 @@ else
          if FS_Read(F, SrcBuf, Size) <> Size then
           DPrint(['File read error while caching compressed version of "', Name, '".'])
          else
-          if Netchan.CompressBuf(SrcBuf, Size, DstBuf, DstSize) then
+          if TNetchan.CompressBuf(SrcBuf, Size, DstBuf, DstSize) then
            begin
             if FS_Open(F2, @Buf, 'wo') then
              begin
@@ -1068,7 +1066,7 @@ var
  FB, Tail: PFragBuf;
 begin
 Result := False;
-if not Netchan.GetFileInfo(Self, Name, Size, RemainingSize, Compressed) then
+if not TNetchan.GetFileInfo(Self, Name, Size, RemainingSize, Compressed) then
  Exit;
 
 if (@FragmentFunc <> nil) and (Client <> nil) then
@@ -1089,11 +1087,11 @@ while RemainingSize > 0 do
   else
    ThisSize := ClientFragSize;
 
-  FB := Netchan.AllocFragBuf;
+  FB := TNetchan.AllocFragBuf;
   if FB = nil then
    begin
     DPrint('Couldn''t allocate fragment buffer.');
-    Netchan.ClearFragBufs(Dir.FragBuf);
+    TNetchan.ClearFragBufs(Dir.FragBuf);
     Mem_Free(Dir);
 
     if Client <> nil then
@@ -1129,10 +1127,10 @@ while RemainingSize > 0 do
   Inc(FileOffset, ThisSize);
   Dec(RemainingSize, ThisSize);
 
-  Netchan.AddFragBufToTail(Dir, Tail, FB);
+  TNetchan.AddFragBufToTail(Dir, Tail, FB);
  end;
 
-Netchan.AddDirToQueue(FragBufQueue[NS_FILE], Dir);
+TNetchan.AddDirToQueue(FragBufQueue[NS_FILE], Dir);
 Result := True;
 end;
 
@@ -1208,7 +1206,7 @@ if IncomingReady[NS_NORMAL] then
   end;
 end;
 
-class function Netchan.DecompressIncoming(FileName: PLChar; var Src: Pointer; var TotalSize: UInt; IncomingSize: UInt): Boolean;
+class function TNetchan.DecompressIncoming(FileName: PLChar; var Src: Pointer; var TotalSize: UInt; IncomingSize: UInt): Boolean;
 var
  P: Pointer;
 begin
@@ -1337,7 +1335,7 @@ if IncomingReady[NS_FILE] then
             IncomingBuf[NS_FILE] := nil;
             IncomingReady[NS_FILE] := False;
 
-            if not Compressed or Netchan.DecompressIncoming(@FileName, Src, TotalSize, IncomingSize) then
+            if not Compressed or TNetchan.DecompressIncoming(@FileName, Src, TotalSize, IncomingSize) then
              begin
               if TempFileName[1] = '!' then
                begin
@@ -1379,7 +1377,7 @@ begin
   Result := IncomingReady[NS_NORMAL] or IncomingReady[NS_FILE];
 end;
 
-class procedure Netchan.Init;
+class procedure TNetchan.Init;
 begin
 CVar_RegisterVariable(net_showpackets);
 CVar_RegisterVariable(net_showdrop);
