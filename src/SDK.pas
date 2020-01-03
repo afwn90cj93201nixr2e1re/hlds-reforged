@@ -958,53 +958,7 @@ type
   KBRate, KBAvgRate: Single; // +8960 +8964 confirmed so yeah
  end;
  
- // Netchan
- PNetchan = ^TNetchan; // 9504 on hw.dll    9236 linux
- TNetchan = record
-  Source: TNetSrc; // +0, fully confirmed: 0, 1, 2 are possible values
-  Addr: TNetAdr; // +4, fully confirmed
-  ClientIndex: UInt32; // +24, fully confirmed client index
-  LastReceived, FirstReceived: Single; // +28 and +32
 
-  Rate: Double; // +40 | +36, guess it's confirmed
-  ClearTime: Double; // +48 | +44 fully confirmed
-
-  IncomingSequence: Int32; // +56 confirmed fully (2nd step)
-  IncomingAcknowledged: Int32; // +60 confirmed fully
-  IncomingReliableAcknowledged: Int32; // +64 confirmed fully
-  IncomingReliableSequence: Int32; // +68 confirmed fully (2nd step)
-
-  OutgoingSequence: Int32; // W 72   L 68 confirmed fully (2nd step)
-  ReliableSequence: Int32; // W 76 L 72  confirmed fully
-  LastReliableSequence: Int32; // W 80 L 76 confirmed fully
-
-  Client: Pointer; // +84 | +80, confirmed  pclient
-  FragmentFunc: function(Client: Pointer): UInt32; cdecl; // +88 | +84, fully confirmed
-  NetMessage: TSizeBuf; // +92 | +88, fully confirmed
-  NetMessageBuf: array[1..MAX_NETCHANLEN] of Byte; // W 112,  L 108 fully confirmed
-
-  ReliableLength: UInt32; // +4104 yeah confirmed
-  ReliableBuf: array[1..MAX_NETCHANLEN] of Byte; // W 4108 confirmed   L 4104 confirmed
-
-  // this fragbuf stuff seems to be confirmed
-  FragBufQueue: array[TNetStream] of PFragBufDir; // W 8100   L 8096?
-  FragBufActive: array[TNetStream] of Boolean; // W 8108
-  FragBufSequence: array[TNetStream] of Int32; // W 8116
-  FragBufBase: array[TNetStream] of PFragBuf; // W 8124   L ?8120
-  FragBufNum: array[TNetStream] of UInt32; // W 8132 L 8128
-  FragBufOffset: array[TNetStream] of UInt16; // W 8140
-  FragBufSize: array[TNetStream] of UInt16; // W 8144
-  
-  IncomingBuf: array[TNetStream] of PFragBuf; // W 8148 L 8144
-  IncomingReady: array[TNetStream] of Boolean; // W 8156 L 8152  is completed
-
-  FileName: array[1..MAX_PATH_A] of LChar; // W 8164 confirmed
-
-  TempBuffer: Pointer; // W 8424
-  TempBufferSize: UInt32; // W 8428
-
-  Flow: array[TFlowSrc] of TNetchanFlowData; // W 8432    flow data size = 536
- end;
 
 const
  MAX_SPLIT_FRAGLEN = MAX_FRAGLEN - SizeOf(TSplitHeader); // 1391

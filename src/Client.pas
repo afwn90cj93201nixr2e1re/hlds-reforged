@@ -3,7 +3,7 @@ unit Client;
 interface
 
 uses
-  Default, SDK;
+  Default, SDK, NetchanMain;
 
 type
  PClient = ^TClient; // 20488 W, 20200 L
@@ -103,7 +103,6 @@ type
  end;
  TClientArray = array[0..0] of TClient;
 
- TFragmentSizeFunc = function(Client: PClient): UInt32; cdecl;
 
 implementation
 

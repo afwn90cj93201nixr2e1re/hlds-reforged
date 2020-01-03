@@ -10,7 +10,7 @@ function SV_CheckChallenge(const Addr: TNetAdr; Challenge: UInt32; Reject: Boole
 procedure SV_RejectConnection(const Addr: TNetAdr; Msg: PLChar); overload;
 procedure SV_RejectConnection(const Addr: TNetAdr; const Msg: array of const); overload;
 
-function SV_GetFragmentSize(C: PClient): UInt32; cdecl;
+function SV_GetFragmentSize(C: Pointer): UInt32; cdecl;
 
 procedure SV_HandleRconPacket;
 function SV_FilterPacket: Boolean;
@@ -105,18 +105,20 @@ NET_SendPacket(NS_SERVER, NetMessage.CurrentSize, NetMessage.Data, Addr);
 SZ_Clear(NetMessage);
 end;
 
-function SV_GetFragmentSize(C: PClient): UInt32; cdecl;
+function SV_GetFragmentSize(C: Pointer): UInt32; cdecl;
 var
  X: UInt;
  S: PLChar;
+ Client: PClient;
 begin
-if not C.Connected then
+  Client := PClient(C);
+if not Client.Connected then
  Result := DEF_CLIENT_FRAGSIZE
 else
  begin
-  if not C.FragSizeUpdated then
+  if not Client.FragSizeUpdated then
    begin
-    S := Info_ValueForKey(@C.UserInfo, 'cl_dlmax');
+    S := Info_ValueForKey(@Client.UserInfo, 'cl_dlmax');
     if (S = nil) or (S^ = #0) then
      X := DEF_CLIENT_FRAGSIZE
     else
@@ -132,11 +134,11 @@ else
          X := MAX_CLIENT_FRAGSIZE;
      end;
 
-    C.FragSize := X;
-    C.FragSizeUpdated := True;
+    Client.FragSize := X;
+    Client.FragSizeUpdated := True;
    end;
 
-  Result := C.FragSize;
+  Result := Client.FragSize;
  end;
 end;
 
