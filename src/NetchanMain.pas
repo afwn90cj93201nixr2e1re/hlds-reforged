@@ -72,6 +72,8 @@ type
     function CanPacket: Boolean;
     procedure ClearFragments;
     procedure UpdateFlow;
+    procedure PushStreams(var SendReliable: Boolean);
+    procedure CheckForCompletion(Index: TNetStream; Total: UInt);
   end;
 
 type
@@ -86,10 +88,8 @@ type
   private
     class procedure UnlinkFragment(Frag: PFragBuf; var Base: PFragBuf);
     class procedure ClearFragBufs(var P: PFragBuf);
-    class procedure PushStreams(var C: TNetchan; var SendReliable: Boolean);
     class function AllocFragBuf: PFragBuf;
     class function FindBufferByID(var Base: PFragBuf; Index: UInt; Alloc: Boolean): PFragBuf;
-    class procedure CheckForCompletion(var C: TNetchan; Index: TNetStream; Total: UInt);
     class function ValidateHeader(Ready: Boolean; Seq, Offset, Size: UInt): Boolean;
     class procedure AddFragBufToTail(Dir: PFragBufDir; var Tail: PFragBuf; P: PFragBuf);
     class procedure AddDirToQueue(var Queue: PFragBufDir; Dir: PFragBufDir);
@@ -315,7 +315,7 @@ for I := Low(I) to High(I) do
  end;
 end;
 
-class procedure Netchan.PushStreams(var C: TNetchan; var SendReliable: Boolean);
+procedure TNetchan.PushStreams(var SendReliable: Boolean);
 var
  I: TNetStream;
  Size: UInt;
@@ -325,50 +325,50 @@ var
  SendFrag: array[TNetStream] of Boolean;
  FileNameBuf: array[1..MAX_PATH_W] of LChar;
 begin
-C.FragSend;
+FragSend;
 for I := Low(I) to High(I) do
- SendFrag[I] := C.FragBufBase[I] <> nil;
+ SendFrag[I] := FragBufBase[I] <> nil;
 
-SendNormal := C.NetMessage.CurrentSize > 0;
+SendNormal := NetMessage.CurrentSize > 0;
 if SendNormal and SendFrag[NS_NORMAL] then
  begin
   SendNormal := False;
-  if C.NetMessage.CurrentSize > MAX_CLIENT_FRAGSIZE then
+  if NetMessage.CurrentSize > MAX_CLIENT_FRAGSIZE then
    begin
-    C.CreateFragments(C.NetMessage);
-    C.NetMessage.CurrentSize := 0;
+    CreateFragments(NetMessage);
+    NetMessage.CurrentSize := 0;
    end;
  end;
 
 HasFrag := False;
 for I := Low(I) to High(I) do
  begin
-  C.FragBufActive[I] := False;
-  C.FragBufSequence[I] := 0;
-  C.FragBufOffset[I] := 0;
-  C.FragBufSize[I] := 0;
+  FragBufActive[I] := False;
+  FragBufSequence[I] := 0;
+  FragBufOffset[I] := 0;
+  FragBufSize[I] := 0;
   if SendFrag[I] then
    HasFrag := True;
  end;
 
 if SendNormal or HasFrag then
  begin
-  C.ReliableSequence := C.ReliableSequence xor 1;
+  ReliableSequence := ReliableSequence xor 1;
   SendReliable := True;
  end;
 
 if SendNormal then
  begin
-  Move(C.NetMessageBuf, C.ReliableBuf, C.NetMessage.CurrentSize);
-  C.ReliableLength := C.NetMessage.CurrentSize;
-  C.NetMessage.CurrentSize := 0;
+  Move(NetMessageBuf, ReliableBuf, NetMessage.CurrentSize);
+  ReliableLength := NetMessage.CurrentSize;
+  NetMessage.CurrentSize := 0;
   for I := Low(I) to High(I) do
-   C.FragBufOffset[I] := C.ReliableLength;
+   FragBufOffset[I] := ReliableLength;
  end;
 
 for I := Low(I) to High(I) do
  begin
-  FB := C.FragBufBase[I];
+  FB := FragBufBase[I];
   if FB = nil then
    Size := 0
   else
@@ -377,9 +377,9 @@ for I := Low(I) to High(I) do
    else
     Size := FB.FragMessage.CurrentSize;
 
-  if SendFrag[I] and (FB <> nil) and (Size + C.ReliableLength <= MAX_CLIENT_FRAGSIZE) then
+  if SendFrag[I] and (FB <> nil) and (Size + ReliableLength <= MAX_CLIENT_FRAGSIZE) then
    begin
-    C.FragBufSequence[I] := (FB.Index shl 16) or UInt16(C.FragBufNum[I]);
+    FragBufSequence[I] := (FB.Index shl 16) or UInt16(FragBufNum[I]);
     if FB.FileFrag and not FB.FileBuffer then
      begin
       if FB.Compressed then
@@ -401,14 +401,14 @@ for I := Low(I) to High(I) do
       Inc(FB.FragMessage.CurrentSize, FB.FragmentSize);
      end;
 
-    Move(FB.FragMessage.Data^, Pointer(UInt(@C.ReliableBuf) + C.ReliableLength)^, FB.FragMessage.CurrentSize);
-    Inc(C.ReliableLength, FB.FragMessage.CurrentSize);
-    C.FragBufSize[I] := FB.FragMessage.CurrentSize;
-    Netchan.UnlinkFragment(FB, C.FragBufBase[I]);
+    Move(FB.FragMessage.Data^, Pointer(UInt(@ReliableBuf) + ReliableLength)^, FB.FragMessage.CurrentSize);
+    Inc(ReliableLength, FB.FragMessage.CurrentSize);
+    FragBufSize[I] := FB.FragMessage.CurrentSize;
+    Netchan.UnlinkFragment(FB, FragBufBase[I]);
     if I = NS_NORMAL then
-     Inc(C.FragBufOffset[NS_FILE], C.FragBufSize[NS_NORMAL]);
+     Inc(FragBufOffset[NS_FILE], FragBufSize[NS_NORMAL]);
 
-    C.FragBufActive[I] := True;
+    FragBufActive[I] := True;
    end;
  end;
 end;
@@ -440,7 +440,7 @@ else
                   (IncomingReliableAcknowledged <> ReliableSequence);
 
   if ReliableLength = 0 then
-   Netchan.PushStreams(Self, SendReliable);
+   PushStreams(SendReliable);
 
   Fragmented := FragBufActive[NS_NORMAL] or FragBufActive[NS_FILE];
 
@@ -557,12 +557,12 @@ if Alloc then
  end;
 end;
 
-class procedure Netchan.CheckForCompletion(var C: TNetchan; Index: TNetStream; Total: UInt);
+procedure TNetchan.CheckForCompletion(Index: TNetStream; Total: UInt);
 var
  P: PFragBuf;
  I: UInt;
 begin
-P := C.IncomingBuf[Index];
+P := IncomingBuf[Index];
 I := 0;
 
 if P <> nil then
@@ -573,7 +573,7 @@ if P <> nil then
   until P = nil;
 
   if I = Total then
-   C.IncomingReady[Index] := True;
+   IncomingReady[Index] := True;
  end;
 end;
 
@@ -706,7 +706,7 @@ if Seq > IncomingSequence then
             end;
           end;
 
-         Netchan.CheckForCompletion(Self, I, FragSeq[I] and $FFFF);
+         CheckForCompletion(I, FragSeq[I] and $FFFF);
         end;
 
        Move(Pointer(UInt(gNetMessage.Data) + MSG_ReadCount + FragOffset[I] + FragSize[I])^,
