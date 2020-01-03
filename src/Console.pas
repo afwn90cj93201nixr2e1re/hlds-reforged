@@ -93,7 +93,7 @@ var
 
 implementation
 
-uses Common, CoreUI, FileSys, Info, HostMain, Memory, Network, SVClient,
+uses Common, CoreUI, FileSys, Info, Host, Memory, Network, SVClient,
   SVCmds, SVMain, SVRcon, SysArgs, SysMain, Netchan;
  
 var

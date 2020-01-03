@@ -21,7 +21,7 @@ var
  
 implementation
 
-uses Common, Console, Edict, HostMain, Memory, Model, MsgBuf, Network, SVMain,
+uses Common, Console, Edict, Host, Memory, Model, MsgBuf, Network, SVMain,
   SVMove, SVWorld, SysMain;
 
 procedure SV_LinkNewUserMsgs;
@@ -118,7 +118,7 @@ if SV_BuildSoundMsg(E, Channel, Sample, Volume, Attn, Flags, Pitch, V, SV.Multic
   if (Channel <> CHAN_STATIC) and ((Flags and SND_STOP) = 0) then
    SV_Multicast(E, V, MFlags or MULTICAST_PAS, False)
   else
-   SV_Multicast(E, V, MFlags or MULTICAST_ALL, not Host.IsSinglePlayerGame);
+   SV_Multicast(E, V, MFlags or MULTICAST_ALL, not THost.IsSinglePlayerGame);
  end;
 end;
 
@@ -308,7 +308,7 @@ var
 begin
 Flags := Flags and not MULTICAST_SKIP_SELF;
 
-if Host.IsSinglePlayerGame or C.HLTV or ((Flags and MULTICAST_ALL) > 0) then
+if THost.IsSinglePlayerGame or C.HLTV or ((Flags and MULTICAST_ALL) > 0) then
  Result := True
 else
  begin

@@ -162,7 +162,7 @@ var
 
 implementation
 
-uses Common, Console, Edict, Encode, GameLib, HostMain, HPAK, Memory, Model,
+uses Common, Console, Edict, Encode, GameLib, Host, HPAK, Memory, Model,
   Network, PMove, Resource, SVClient, SVCmds, SVDelta, SVEdict, SVEvent,
   SVMove, SVPacket, SVPhys, SVRcon, SVSend, SVWorld, SysArgs, SysClock,
   Netchan;
@@ -456,7 +456,7 @@ Log_PrintServerVars;
 StrCopy(@PrevMap, @SV.Map);
 HPAK_CheckSize('custom');
 
-Host.ClearMemory;
+THost.ClearMemory;
 
 if hostname.Data^ = #0 then
  begin

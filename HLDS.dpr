@@ -26,7 +26,7 @@ uses
   FileSys in 'src/FileSys.pas',
   FilterIP in 'src/FilterIP.pas',
   GameLib in 'src/GameLib.pas',
-  HostMain in 'src/HostMain.pas',
+  Host in 'src/Host.pas',
   HostCmds in 'src/HostCmds.pas',
   HostSave in 'src/HostSave.pas',
   HPAK in 'src/HPAK.pas',

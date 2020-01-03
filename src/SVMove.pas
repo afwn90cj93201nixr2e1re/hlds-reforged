@@ -53,7 +53,7 @@ var
 
 implementation
 
-uses Common, Console, Edict, Encode, HostMain, GameLib, MathLib, Model, MsgBuf,
+uses Common, Console, Edict, Encode, Host, GameLib, MathLib, Model, MsgBuf,
   Network, PMove, SVClient, SVEdict, SVEvent, SVMain, SVPhys, SVSend, SVWorld;
 
 var

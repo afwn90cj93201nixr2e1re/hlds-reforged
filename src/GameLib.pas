@@ -24,7 +24,7 @@ var
 
 implementation
 
-uses Common, Console, Delta, Edict, FileSys, HostMain, HostSave, Memory,
+uses Common, Console, Delta, Edict, FileSys, Host, HostSave, Memory,
   Network, ParseLib, Renderer, SVEdict, SVExport, SVDelta, SVMain, SVMove,
   SysArgs, SysMain;
 
@@ -253,7 +253,7 @@ else
 
 if (FullNameBuf[0] = #0) or (NumExtDLL = 0) then
  begin
-  Host.Error('No game DLL provided to the engine, exiting.');
+  THost.Error('No game DLL provided to the engine, exiting.');
   Exit;
  end;
 
@@ -278,7 +278,7 @@ if @GetEntityAPI2 <> nil then
     else
      Print('Engine appears to be outdated, check for updates.');
     Print('==================');
-    Host.Error('Game DLL version mismatch.');
+    THost.Error('Game DLL version mismatch.');
     Exit;
    end;
  end
@@ -287,7 +287,7 @@ else
   GetEntityAPI := GetDispatch('GetEntityAPI');
   if @GetEntityAPI = nil then
    begin
-    Host.Error(['Couldn''t get DLL API from ', FullNameBuf, '.']);
+    THost.Error(['Couldn''t get DLL API from ', FullNameBuf, '.']);
     Exit;
    end;
   Version := DLL_INTERFACE_VERSION;
@@ -296,7 +296,7 @@ else
     Print(['==================' + sLineBreak + 'Game DLL version mismatch.']);
     Print(['The game DLL for ', GameDir, ' appears to be outdated, check for updates.']);
     Print('==================');
-    Host.Error('Game DLL version mismatch.');
+    THost.Error('Game DLL version mismatch.');
     Exit;
    end;
  end;

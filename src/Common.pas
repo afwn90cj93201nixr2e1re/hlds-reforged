@@ -106,7 +106,7 @@ var
 
 implementation
 
-uses Console, Encode, FileSys, HostMain, Memory, MsgBuf, SysArgs, SysMain, SVWorld;
+uses Console, Encode, FileSys, Host, Memory, MsgBuf, SysArgs, SysMain, SVWorld;
 
 type
  TPacketEncodeTable = packed array[0..15] of Byte;

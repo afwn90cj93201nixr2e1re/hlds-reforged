@@ -39,7 +39,7 @@ var
 
 implementation
 
-uses BZip2, Common, Console, FileSys, Memory, MsgBuf, HostMain, HostCmds,
+uses BZip2, Common, Console, FileSys, Memory, MsgBuf, Host, HostCmds,
   Resource, SVClient, SVMain, SysArgs, SysMain, Netchan;
 
 const

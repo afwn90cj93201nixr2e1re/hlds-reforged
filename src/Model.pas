@@ -32,7 +32,7 @@ var
 
 implementation
 
-uses Common, Console, Decal, Encode, FileSys, HostMain, MathLib, Memory,
+uses Common, Console, Decal, Encode, FileSys, Host, MathLib, Memory,
   Renderer, SVMain, SysArgs, SysClock, SysMain, Texture;
 
 const

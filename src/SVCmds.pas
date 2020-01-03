@@ -31,7 +31,7 @@ var
 
 implementation
 
-uses Common, Console, FileSys, GameLib, Info, Memory, MsgBuf, HostMain,
+uses Common, Console, FileSys, GameLib, Info, Memory, MsgBuf, Host,
   Network, SVAuth, SVClient, SVDelta, SVMain, SVRcon, SVSend, Netchan,
   Client;
 

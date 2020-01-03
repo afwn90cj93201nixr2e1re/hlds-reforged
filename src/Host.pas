@@ -1,4 +1,4 @@
-unit HostMain;
+unit Host;
 
 // hostcmds for commands
 
@@ -7,7 +7,7 @@ interface
 uses SysUtils, Default, SDK;
 
 type
-  Host = class
+  THost = class
   public
     class procedure Init;
     class procedure Shutdown;
@@ -93,28 +93,28 @@ uses Common, Console, CoreUI, Decal, Delta, Edict, Encode, GameLib, HostCmds,
   SVEdict, SVEvent, SVExport, SVMain, SVPacket, SVPhys, SVRcon, SVSend, SVWorld,
   SysMain, SysArgs, SysClock, Texture, Netchan, Client;
 
-class function Host.SaveGameDirectory: PLChar;
+class function THost.SaveGameDirectory: PLChar;
 begin
 Result := 'SAVE' + CorrectSlash;
 end;
 
-class procedure Host.ClearSaveDirectory;
+class procedure THost.ClearSaveDirectory;
 begin
 
 end;
 
-class procedure Host.ClearGameState;
+class procedure THost.ClearGameState;
 begin
-Host.ClearSaveDirectory;
+THost.ClearSaveDirectory;
 DLLFunctions.ResetGlobalState;
 end;
 
-class function Host.IsSinglePlayerGame: Boolean;
+class function THost.IsSinglePlayerGame: Boolean;
 begin
 Result := SV.Active and (SVS.MaxClients = 1);
 end;
 
-class procedure Host.EndSection(Name: PLChar);
+class procedure THost.EndSection(Name: PLChar);
 begin
 HostActive := 2;
 HostSubState := 1;
@@ -137,7 +137,7 @@ else
 CBuf_AddText(#10'disconnect'#10);
 end;
 
-class procedure Host.ClearMemory;
+class procedure THost.ClearMemory;
 begin
 DPrint('Clearing memory.');
 
@@ -155,7 +155,7 @@ SV_ClearClientStates;
 MemSet(SV, SizeOf(SV), 0);
 end;
 
-class procedure Host.Error(Msg: PLChar);
+class procedure THost.Error(Msg: PLChar);
 begin
 if InHostError then
  Sys_Error('Host_Error: Recursively entered.')
@@ -164,18 +164,18 @@ else
   InHostError := True;
   Print(['Host_Error: ', Msg]);
   if SV.Active then
-   Host.ShutdownServer(False);
+   THost.ShutdownServer(False);
 
   Sys_Error(['Host_Error: ', Msg]);
  end;
 end;
 
-class procedure Host.Error(const Msg: array of const);
+class procedure THost.Error(const Msg: array of const);
 begin
-Host.Error(PLChar(StringFromVarRec(Msg)));
+THost.Error(PLChar(StringFromVarRec(Msg)));
 end;
 
-class procedure Host.ShutdownServer(SkipNotify: Boolean);
+class procedure THost.ShutdownServer(SkipNotify: Boolean);
 var
  I: Int;
  C: PClient;
@@ -193,7 +193,7 @@ if SV.Active then
   SV.Active := False;
 
   HPAK_FlushHostQueue;
-  Host.ClearMemory;
+  THost.ClearMemory;
 
   SV_ClearClients;
   MemSet(SVS.Clients^, SizeOf(TClient) * SVS.MaxClientsLimit, 0);
@@ -210,7 +210,7 @@ Host_InitCommands;
 Host_InitCVars;
 end;
 
-class procedure Host.Say(Team: Boolean);
+class procedure THost.Say(Team: Boolean);
 var
  Buf: array[1..192] of LChar;
  S, S2: PLChar;
@@ -264,12 +264,12 @@ if CmdSource = csServer then
   end;
 end;
 
-class procedure Host.Map(Name: PLChar; Save: Boolean);
+class procedure THost.Map(Name: PLChar; Save: Boolean);
 begin
-Host.ShutdownServer(False);
+THost.ShutdownServer(False);
 if not Save then
  begin
-  Host.ClearGameState;
+  THost.ClearGameState;
   SVS.ServerFlags := 0;
  end;
 
@@ -404,7 +404,7 @@ if Host_FilterTime(Time) then
  end;
 end;
 
-class function Host.Frame: Boolean;
+class function THost.Frame: Boolean;
 var
  TimeStart, TimeEnd: Double;
  Profile: Boolean;
@@ -459,7 +459,7 @@ else
  end;
 end;
 
-class procedure Host.Init;
+class procedure THost.Init;
 var
  Buf: array[1..256] of LChar;
  IntBuf: array[1..32] of LChar;
@@ -471,7 +471,7 @@ CBuf_Init;
 Cmd_Init;
 CVar_Init;       
 Host_InitLocal;
-Host.ClearSaveDirectory;
+THost.ClearSaveDirectory;
 Con_Init;
 HPAK_Init;
 
@@ -504,7 +504,7 @@ HostTimes.Prev := Sys_FloatTime;
 HostInit := True;
 end;
 
-class procedure Host.Shutdown;
+class procedure THost.Shutdown;
 begin
 if InHostShutdown then
  Sys_DebugOutStraight('Host_Shutdown: Recursive shutdown.')

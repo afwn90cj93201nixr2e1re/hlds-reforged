@@ -33,7 +33,7 @@ var
 
 implementation
 
-uses Common, Console, CoreUI, FileSys, GameLib, HostMain, Main, Memory, Network,
+uses Common, Console, CoreUI, FileSys, GameLib, Host, Main, Memory, Network,
   SVExport, SVMain, SysArgs, SysClock;
 
 var
@@ -252,7 +252,7 @@ Sys_SetStartTime;
 
 Memory_Init;
 FileSystem_Init;
-Host.Init;
+THost.Init;
 
 if HostInit then
  begin
@@ -264,7 +264,7 @@ end;
 
 procedure Sys_Shutdown;
 begin
-Host.Shutdown;
+THost.Shutdown;
 FileSystem_Shutdown;
 Memory_Shutdown;
 Sys_ShutdownClock;

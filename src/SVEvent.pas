@@ -18,7 +18,7 @@ procedure SV_ClearClientEvents(var C: TClient);
 
 implementation
 
-uses Common, Console, Delta, Edict, HostMain, MathLib, Memory, MsgBuf, Network,
+uses Common, Console, Delta, Edict, Host, MathLib, Memory, MsgBuf, Network,
   SVDelta, SVMain, SVMove, SVSend, Netchan;
 
 procedure EV_PlayReliableEvent(var C: TClient; Index: Int; EventIndex: UInt16; Delay: Single; const Event: TEvent);
@@ -185,7 +185,7 @@ procedure EV_SV_Playback(Flags, ClientIndex: UInt; EventIndex: UInt16; Delay: Si
 begin
 if (Flags and FEV_CLIENT) = 0 then
  if ClientIndex >= SVS.MaxClients then
-  Host.Error(['EV_SV_Playback: Client index #', ClientIndex, ' is out of range.'])
+  THost.Error(['EV_SV_Playback: Client index #', ClientIndex, ' is out of range.'])
  else
   EV_Playback(Flags, SVS.Clients[ClientIndex].Entity^, EventIndex, Delay, Origin, Angles, FParam1, FParam2, IParam1, IParam2, BParam1, BParam2);
 end;
@@ -199,10 +199,10 @@ var
  Size: UInt32;
 begin
 if Name = nil then
- Host.Error('EV_Precache: NULL pointer.')
+ THost.Error('EV_Precache: NULL pointer.')
 else
  if Name^ <= ' ' then
-  Host.Error(['EV_Precache: Bad string "', Name, '".'])
+  THost.Error(['EV_Precache: Bad string "', Name, '".'])
  else
   begin
    for I := 1 to MAX_EVENTS - 1 do
@@ -214,13 +214,13 @@ else
       else
        begin
         if EventType <> 1 then
-         Host.Error('EV_Precache: The event type must be "1".');
+         THost.Error('EV_Precache: The event type must be "1".');
 
         StrLCopy(@Buf, Name, SizeOf(Buf) - 1);
         COM_FixSlashes(@Buf);
         P := COM_LoadFile(@Buf, FILE_ALLOC_MEMORY, @Size);
         if P = nil then
-         Host.Error(['EV_Precache: File "', PLChar(@Buf), '" is missing from server.']);
+         THost.Error(['EV_Precache: File "', PLChar(@Buf), '" is missing from server.']);
 
         E.Index := I;
         E.Name := Hunk_StrDup(Name);
@@ -238,9 +238,9 @@ else
     end;
 
    if SV.State = SS_LOADING then
-    Host.Error(['EV_Precache: Event "', Name, '" failed to precache because the item count is over the ', MAX_EVENTS - 1, ' limit.'])
+    THost.Error(['EV_Precache: Event "', Name, '" failed to precache because the item count is over the ', MAX_EVENTS - 1, ' limit.'])
    else
-    Host.Error(['EV_Precache: "', Name, '": Precache can only be done in spawn functions.']);
+    THost.Error(['EV_Precache: "', Name, '": Precache can only be done in spawn functions.']);
   end;
 
 Result := 0;

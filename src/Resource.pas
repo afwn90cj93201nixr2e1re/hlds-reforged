@@ -35,7 +35,7 @@ var
  
 implementation
 
-uses Common, Console, Decal, Encode, FileSys, GameLib, HostMain, MathLib,
+uses Common, Console, Decal, Encode, FileSys, GameLib, Host, MathLib,
   Memory, MsgBuf, Network, HPAK, Renderer, SVClient, SVExport, SVMain,
   SysMain, Netchan;
 

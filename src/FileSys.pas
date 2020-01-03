@@ -59,7 +59,7 @@ procedure FileSystem_Shutdown;
 
 implementation
 
-uses FSNative, Common, Console, Info, Memory, HostMain, SysArgs, SysMain;
+uses FSNative, Common, Console, Info, Memory, Host, SysArgs, SysMain;
 
 var
  FSInput: PFileSystem;

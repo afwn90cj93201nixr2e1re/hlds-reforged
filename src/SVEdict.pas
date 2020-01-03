@@ -27,7 +27,7 @@ var
 
 implementation
 
-uses Common, Console, Delta, Edict, GameLib, HostMain, MathLib, Memory, MsgBuf,
+uses Common, Console, Delta, Edict, GameLib, Host, MathLib, Memory, MsgBuf,
   PMove, SVClient, SVDelta, SVEvent, SVMain, SVPhys, SVWorld, SysMain;
 
 var
@@ -48,7 +48,7 @@ var
 procedure SetMinMaxSize(var E: TEdict; const MinS, MaxS: TVec3);
 begin
 if (MaxS[0] < MinS[0]) or (MaxS[1] < MinS[1]) or (MaxS[2] < MinS[2]) then
- Host.Error(['SetMinMaxSize: Backwards mins/maxs on "', PLChar(PRStrings + E.V.ClassName), '".']);
+ THost.Error(['SetMinMaxSize: Backwards mins/maxs on "', PLChar(PRStrings + E.V.ClassName), '".']);
 
 E.V.MinS := MinS;
 E.V.MaxS := MaxS;

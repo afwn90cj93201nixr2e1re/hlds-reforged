@@ -107,7 +107,7 @@ var
 
 implementation
 
-uses Common, Console, Delta, Edict, Encode, GameLib, Info, HostMain, Memory,
+uses Common, Console, Delta, Edict, Encode, GameLib, Info, Host, Memory,
   MsgBuf, Network, PMove, Resource, SVMain, SVAuth, SVDelta, SVEdict, SVEvent,
   SVMove, SVPacket, SVSend, SysArgs, SysMain, Netchan;
 
@@ -906,7 +906,7 @@ if not C.HLTV then
     DLLFunctions.ParmsChangeLevel;
     MSG_WriteByte(SB, SVC_RESTORE);
 
-    StrLCopy(@Buf, Host.SaveGameDirectory, SizeOf(Buf) - 1);
+    StrLCopy(@Buf, THost.SaveGameDirectory, SizeOf(Buf) - 1);
     StrLCat(PLChar(@Buf), @SV.Map, SizeOf(Buf) - 1);
     StrLCat(PLChar(@Buf), '.HL2', SizeOf(Buf) - 1);
     COM_FixSlashes(@Buf);
