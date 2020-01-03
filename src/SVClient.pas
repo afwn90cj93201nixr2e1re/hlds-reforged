@@ -347,7 +347,7 @@ if not SkipNotify then
     MSG_WriteString(C.Netchan.NetMessage, Msg);
     
     PByte(@Buf)^ := SVC_DISCONNECT;
-    Netchan.Transmit(C.Netchan, L + 2, @Buf);
+    C.Netchan.Transmit(L + 2, @Buf);
    end;
  end;
 
@@ -1586,7 +1586,7 @@ SZ_Clear(C.UnreliableMessage);
 if FSB_OVERFLOWED in SB.AllowOverflow then
  DPrint(['Warning: Message overflowed for "', PLChar(@C.NetName), '".'])
 else
- Netchan.Transmit(C.Netchan, SB.CurrentSize, SB.Data);
+ C.Netchan.Transmit(SB.CurrentSize, SB.Data);
  
 Result := True;
 end;
@@ -1629,14 +1629,14 @@ for I := 0 to SVS.MaxClients - 1 do
        C.NeedUpdate := False;
 
      if C.NeedUpdate then
-      if Netchan.CanPacket(C.Netchan) then
+      if C.Netchan.CanPacket then
        begin
         C.NeedUpdate := False;
         C.NextUpdateTime := RealTime + HostFrameTime + C.UpdateRate;
         if C.Active and C.Spawned and C.SendInfo then
          SV_SendClientDatagram(C^)
         else
-         Netchan.Transmit(C.Netchan, 0, nil);
+         C.Netchan.Transmit(0, nil);
        end
       else
        Inc(C.ChokeCount);

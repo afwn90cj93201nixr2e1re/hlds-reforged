@@ -397,7 +397,7 @@ for I := 0 to SVS.MaxClients - 1 do
     if SVS.MaxClients > 1 then
      begin
       SV_BuildReconnect(C.Netchan.NetMessage);
-      Netchan.Transmit(C.Netchan, 0, nil);
+      C.Netchan.Transmit(0, nil);
      end
     else
      SV_SendServerInfo(SB, C^);

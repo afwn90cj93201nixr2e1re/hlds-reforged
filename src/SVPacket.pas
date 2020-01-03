@@ -1153,15 +1153,15 @@ while NET_GetPacket(NS_SERVER) do
          GlobalVars.FrameTime := HostFrameTime;
         end;
 
-       if Netchan.IncomingReady(C.Netchan) then
+       if C.Netchan.IsIncomingReady then
         begin
-         if Netchan.CopyNormalFragments(C.Netchan) then
+         if C.Netchan.CopyNormalFragments then
           begin
            MSG_BeginReading;
            SV_ExecuteClientMessage(C^);
           end;
 
-         if Netchan.CopyFileFragments(C.Netchan) then
+         if C.Netchan.CopyFileFragments then
           begin
            HostClient := C;
            SV_ProcessFile(C^, @C.Netchan.FileName);

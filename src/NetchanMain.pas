@@ -65,6 +65,13 @@ type
     procedure FlushIncoming(Stream: TNetStream);
     procedure Setup(ASource: TNetSrc; const AAddr: TNetAdr; ClientID: Int; ClientPtr: Pointer; Func: TFragmentSizeFunc);
     function Process: Boolean;
+    procedure Transmit(Size: UInt; Buffer: Pointer);
+    function IsIncomingReady: Boolean;
+    function CopyNormalFragments: Boolean;
+    function CopyFileFragments: Boolean;
+    function CanPacket: Boolean;
+    procedure ClearFragments;
+    procedure UpdateFlow;
   end;
 
 type
@@ -74,18 +81,11 @@ type
     class procedure OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; const S: array of const); overload;
 
     class procedure AddBufferToList(var Base: PFragBuf; P: PFragBuf);
-    class procedure Transmit(var C: TNetchan; Size: UInt; Buffer: Pointer);
-    class function IncomingReady(const C: TNetchan): Boolean;
-    class function CopyNormalFragments(var C: TNetchan): Boolean;
-    class function CopyFileFragments(var C: TNetchan): Boolean;
-    class function CanPacket(var C: TNetchan): Boolean;
     class procedure Init;
 
   private
     class procedure UnlinkFragment(Frag: PFragBuf; var Base: PFragBuf);
     class procedure ClearFragBufs(var P: PFragBuf);
-    class procedure ClearFragments(var C: TNetchan);
-    class procedure UpdateFlow(var C: TNetchan);
     class procedure PushStreams(var C: TNetchan; var SendReliable: Boolean);
     class function AllocFragBuf: PFragBuf;
     class function FindBufferByID(var Base: PFragBuf; Index: UInt; Alloc: Boolean): PFragBuf;
@@ -191,14 +191,14 @@ while P2 <> nil do
 P := nil;
 end;
 
-class procedure Netchan.ClearFragments(var C: TNetchan);
+procedure TNetchan.ClearFragments;
 var
  I: TNetStream;
  P, P2: PFragBufDir;
 begin
 for I := Low(I) to High(I) do
  begin
-  P := C.FragBufQueue[I];
+  P := FragBufQueue[I];
   while P <> nil do
    begin
     P2 := P.Next;
@@ -206,10 +206,10 @@ for I := Low(I) to High(I) do
     Mem_Free(P);
     P := P2;
    end;
-  C.FragBufQueue[I] := nil;
+  FragBufQueue[I] := nil;
 
-  Netchan.ClearFragBufs(C.FragBufBase[I]);
-  C.FlushIncoming(I);
+  Netchan.ClearFragBufs(FragBufBase[I]);
+  FlushIncoming(I);
  end;
 end;
 
@@ -217,7 +217,7 @@ procedure TNetchan.Clear;
 var
  I: TNetStream;
 begin
-Netchan.ClearFragments(Self);
+  ClearFragments;
 if ReliableLength > 0 then
  begin
   ReliableLength := 0;
@@ -244,7 +244,7 @@ end;
 
 procedure TNetchan.Setup(ASource: TNetSrc; const AAddr: TNetAdr; ClientID: Int; ClientPtr: Pointer; Func: TFragmentSizeFunc);
 begin
-Netchan.ClearFragments(Self);
+ClearFragments;
 if TempBuffer <> nil then
  Mem_Free(TempBuffer);
 
@@ -266,18 +266,18 @@ NetMessage.MaxSize := SizeOf(NetMessageBuf);
 NetMessage.CurrentSize := 0;
 end;
 
-class function Netchan.CanPacket(var C: TNetchan): Boolean;
+function TNetchan.CanPacket: Boolean;
 begin
-if (C.Addr.AddrType = NA_LOOPBACK) and (net_chokeloop.Value = 0) then
+if (Addr.AddrType = NA_LOOPBACK) and (net_chokeloop.Value = 0) then
  begin
-  C.ClearTime := RealTime;
+  ClearTime := RealTime;
   Result := True;
  end
 else
- Result := C.ClearTime < RealTime;
+ Result := ClearTime < RealTime;
 end;
 
-class procedure Netchan.UpdateFlow(var C: TNetchan);
+procedure TNetchan.UpdateFlow;
 var
  I: TFlowSrc;
  Base, J: Int;
@@ -291,7 +291,7 @@ Time := 0;
 
 for I := Low(I) to High(I) do
  begin
-  F := @C.Flow[I];
+  F := @Flow[I];
   if RealTime - F.UpdateTime >= FLOW_UPDATETIME then
    begin
     F.UpdateTime := RealTime + FLOW_UPDATETIME;
@@ -413,7 +413,7 @@ for I := Low(I) to High(I) do
  end;
 end;
 
-class procedure Netchan.Transmit(var C: TNetchan; Size: UInt; Buffer: Pointer);
+procedure TNetchan.Transmit(Size: UInt; Buffer: Pointer);
 var
  SB: TSizeBuf;
  SBData: array[1..MAX_PACKETLEN] of Byte;
@@ -424,7 +424,7 @@ var
  J, FragSize: UInt;
  Seq, Seq2: Int32;
  FP: PNetchanFlowStats;
- Rate: Double;
+ TempRate: Double;
 begin
 SB.Name := 'Netchan_Transmit';
 SB.AllowOverflow := [];
@@ -432,20 +432,20 @@ SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData) - 3;
 SB.CurrentSize := 0;
 
-if FSB_OVERFLOWED in C.NetMessage.AllowOverflow then
- DPrint([NET_AdrToString(C.Addr, NetAdrBuf, SizeOf(NetAdrBuf)), ': Outgoing message overflow.'])
+if FSB_OVERFLOWED in NetMessage.AllowOverflow then
+ DPrint([NET_AdrToString(Addr, NetAdrBuf, SizeOf(NetAdrBuf)), ': Outgoing message overflow.'])
 else
  begin
-  SendReliable := (C.IncomingAcknowledged > C.LastReliableSequence) and
-                  (C.IncomingReliableAcknowledged <> C.ReliableSequence);
+  SendReliable := (IncomingAcknowledged > LastReliableSequence) and
+                  (IncomingReliableAcknowledged <> ReliableSequence);
 
-  if C.ReliableLength = 0 then
-   Netchan.PushStreams(C, SendReliable);
+  if ReliableLength = 0 then
+   Netchan.PushStreams(Self, SendReliable);
 
-  Fragmented := C.FragBufActive[NS_NORMAL] or C.FragBufActive[NS_FILE];
+  Fragmented := FragBufActive[NS_NORMAL] or FragBufActive[NS_FILE];
 
-  Seq := C.OutgoingSequence or (Int(SendReliable) shl 31);
-  Seq2 := C.IncomingSequence or (C.IncomingReliableSequence shl 31);
+  Seq := OutgoingSequence or (Int(SendReliable) shl 31);
+  Seq2 := IncomingSequence or (IncomingReliableSequence shl 31);
   if SendReliable and Fragmented then
    Seq := Seq or $40000000;
 
@@ -456,21 +456,21 @@ else
    begin
     if Fragmented then
      for I := Low(I) to High(I) do
-      if C.FragBufActive[I] then
+      if FragBufActive[I] then
        begin
         MSG_WriteByte(SB, 1);
-        MSG_WriteLong(SB, C.FragBufSequence[I]);
-        MSG_WriteShort(SB, C.FragBufOffset[I]);
-        MSG_WriteShort(SB, C.FragBufSize[I]);
+        MSG_WriteLong(SB, FragBufSequence[I]);
+        MSG_WriteShort(SB, FragBufOffset[I]);
+        MSG_WriteShort(SB, FragBufSize[I]);
        end
       else
        MSG_WriteByte(SB, 0);
 
-    SZ_Write(SB, @C.ReliableBuf, C.ReliableLength);
-    C.LastReliableSequence := C.OutgoingSequence;
+    SZ_Write(SB, @ReliableBuf, ReliableLength);
+    LastReliableSequence := OutgoingSequence;
    end;
 
-  Inc(C.OutgoingSequence);
+  Inc(OutgoingSequence);
 
   if not SendReliable then
    FragSize := SB.MaxSize
@@ -486,30 +486,30 @@ else
   for J := SB.CurrentSize to 15 do
    MSG_WriteByte(SB, SVC_NOP);
 
-  FP := @C.Flow[FS_TX].Stats[C.Flow[FS_TX].InSeq and (MAX_LATENT - 1)];
+  FP := @Flow[FS_TX].Stats[Flow[FS_TX].InSeq and (MAX_LATENT - 1)];
   FP.Bytes := SB.CurrentSize + UDP_OVERHEAD;
   FP.Time := RealTime;
-  Inc(C.Flow[FS_TX].InSeq);
-  Netchan.UpdateFlow(C);
+  Inc(Flow[FS_TX].InSeq);
+  UpdateFlow;
 
-  COM_Munge2(Pointer(UInt(SB.Data) + 8), SB.CurrentSize - 8, Byte(C.OutgoingSequence - 1));
-  NET_SendPacket(C.Source, SB.CurrentSize, SB.Data, C.Addr);
+  COM_Munge2(Pointer(UInt(SB.Data) + 8), SB.CurrentSize - 8, Byte(OutgoingSequence - 1));
+  NET_SendPacket(Source, SB.CurrentSize, SB.Data, Addr);
 
   if SV.Active and (sv_lan.Value <> 0) and (sv_lan_rate.Value > MIN_CLIENT_RATE) then
-   Rate := 1 / sv_lan_rate.Value
+   TempRate := 1 / sv_lan_rate.Value
   else
-   if C.Rate > 0 then
-    Rate := 1 / C.Rate
+   if Rate > 0 then
+    TempRate := 1 / Rate
    else
-    Rate := 1 / 10000;
+    TempRate := 1 / 10000;
 
-  if C.ClearTime <= RealTime then
-   C.ClearTime := RealTime + (SB.CurrentSize + UDP_OVERHEAD) * Rate
+  if ClearTime <= RealTime then
+   ClearTime := RealTime + (SB.CurrentSize + UDP_OVERHEAD) * TempRate
   else
-   C.ClearTime := C.ClearTime + (SB.CurrentSize + UDP_OVERHEAD) * Rate;
+   ClearTime := ClearTime + (SB.CurrentSize + UDP_OVERHEAD) * TempRate;
 
   if (net_showpackets.Value <> 0) and (net_showpackets.Value <> 2) then
-   Print([' s --> sz=', SB.CurrentSize, ' seq=', C.OutgoingSequence - 1, ' ack=', C.IncomingSequence, ' rel=',
+   Print([' s --> sz=', SB.CurrentSize, ' seq=', OutgoingSequence - 1, ' ack=',  IncomingSequence, ' rel=',
           Int(SendReliable), ' tm=', SV.Time]);
  end;
 end;
@@ -680,7 +680,7 @@ if Seq > IncomingSequence then
   FP.Bytes := gNetMessage.CurrentSize + UDP_OVERHEAD;
   FP.Time := RealTime;
   Inc(Flow[FS_RX].InSeq);
-  Netchan.UpdateFlow(Self);
+  UpdateFlow;
 
   if not Fragmented then
    Result := True
@@ -1155,7 +1155,7 @@ IncomingBuf[Stream] := nil;
 IncomingReady[Stream] := False;
 end;
 
-class function Netchan.CopyNormalFragments(var C: TNetchan): Boolean;
+function TNetchan.CopyNormalFragments: Boolean;
 var
  P, P2: PFragBuf;
  DstSize: UInt;
@@ -1163,12 +1163,12 @@ var
 begin
 Result := False;
 
-if C.IncomingReady[NS_NORMAL] then
- if C.IncomingBuf[NS_NORMAL] <> nil then
+if IncomingReady[NS_NORMAL] then
+ if IncomingBuf[NS_NORMAL] <> nil then
   begin
    SZ_Clear(gNetMessage);
 
-   P := C.IncomingBuf[NS_NORMAL];
+   P := IncomingBuf[NS_NORMAL];
    while P <> nil do
     begin
      P2 := P.Next;
@@ -1177,8 +1177,8 @@ if C.IncomingReady[NS_NORMAL] then
      P := P2;
     end;
 
-   C.IncomingBuf[NS_NORMAL] := nil;
-   C.IncomingReady[NS_NORMAL] := False;
+   IncomingBuf[NS_NORMAL] := nil;
+   IncomingReady[NS_NORMAL] := False;
 
    if FSB_OVERFLOWED in gNetMessage.AllowOverflow then
     begin
@@ -1204,7 +1204,7 @@ if C.IncomingReady[NS_NORMAL] then
  else
   begin
    DPrint('Netchan_CopyNormalFragments: Called with no fragments readied.');
-   C.IncomingReady[NS_NORMAL] := False;
+   IncomingReady[NS_NORMAL] := False;
   end;
 end;
 
@@ -1234,23 +1234,23 @@ else
  end;
 end;
 
-class function Netchan.CopyFileFragments(var C: TNetchan): Boolean;
+function TNetchan.CopyFileFragments: Boolean;
 var
  P, P2: PFragBuf;
  IncomingSize, TotalSize, CurrentSize: UInt;
- FileName: array[1..MAX_PATH_A] of LChar;
+ TempFileName: array[1..MAX_PATH_A] of LChar;
  Compressed: Boolean;
  Src, Data: Pointer;
 begin
 Result := False;
 
-if C.IncomingReady[NS_FILE] then
- if C.IncomingBuf[NS_FILE] <> nil then
+if IncomingReady[NS_FILE] then
+ if IncomingBuf[NS_FILE] <> nil then
   begin
    SZ_Clear(gNetMessage);
    MSG_BeginReading;
 
-   P := C.IncomingBuf[NS_FILE];
+   P := IncomingBuf[NS_FILE];
    if P.FragMessage.CurrentSize > gNetMessage.MaxSize then
     DPrint('File fragment buffer overflowed.')
    else
@@ -1275,21 +1275,21 @@ if C.IncomingReady[NS_FILE] then
          DPrint('File fragment received with too big size.')
         else
          begin
-          StrLCopy(@C.FileName, @FileName, SizeOf(C.FileName) - 1);
+          StrLCopy(@FileName, @TempFileName, SizeOf(FileName) - 1);
 
           if FileName[1] <> '!' then
            begin
             if sv_receivedecalsonly.Value <> 0 then
              begin
               DPrint(['Received a non-decal file "', PLChar(@FileName), '", ignored.']);
-              C.FlushIncoming(NS_FILE);
+              FlushIncoming(NS_FILE);
               Exit;
              end;
 
             if FS_FileExists(@FileName) then
              begin
               DPrint(['Can''t download "', PLChar(@FileName), '", already exists.']);
-              C.FlushIncoming(NS_FILE);
+              FlushIncoming(NS_FILE);
               Result := True;
               Exit;
              end;
@@ -1316,11 +1316,11 @@ if C.IncomingReady[NS_FILE] then
            begin
             CurrentSize := 0;
 
-            P := C.IncomingBuf[NS_FILE];
+            P := IncomingBuf[NS_FILE];
             while P <> nil do
              begin
               P2 := P.Next;
-              if P = C.IncomingBuf[NS_FILE] then
+              if P = IncomingBuf[NS_FILE] then
                begin
                 Dec(P.FragMessage.CurrentSize, MSG_ReadCount);
                 Data := Pointer(UInt(P.FragMessage.Data) + MSG_ReadCount);
@@ -1334,28 +1334,28 @@ if C.IncomingReady[NS_FILE] then
               P := P2;
              end;
 
-            C.IncomingBuf[NS_FILE] := nil;
-            C.IncomingReady[NS_FILE] := False;
+            IncomingBuf[NS_FILE] := nil;
+            IncomingReady[NS_FILE] := False;
 
             if not Compressed or Netchan.DecompressIncoming(@FileName, Src, TotalSize, IncomingSize) then
              begin
-              if FileName[1] = '!' then
+              if TempFileName[1] = '!' then
                begin
-                if C.TempBuffer <> nil then
-                 Mem_FreeAndNil(C.TempBuffer);
-                C.TempBuffer := Src;
-                C.TempBufferSize := TotalSize;
+                if TempBuffer <> nil then
+                 Mem_FreeAndNil(TempBuffer);
+                TempBuffer := Src;
+                TempBufferSize := TotalSize;
                end
               else
                begin
-                COM_WriteFile(@FileName, Src, TotalSize);
+                COM_WriteFile(@TempFileName, Src, TotalSize);
                 Mem_Free(Src);
                end;
 
               SZ_Clear(gNetMessage);
               MSG_BeginReading;
-              C.IncomingBuf[NS_FILE] := nil;
-              C.IncomingReady[NS_FILE] := False;
+              IncomingBuf[NS_FILE] := nil;
+              IncomingReady[NS_FILE] := False;
               Result := True;
               Exit;
              end;
@@ -1365,18 +1365,18 @@ if C.IncomingReady[NS_FILE] then
          end;
     end;
 
-   C.FlushIncoming(NS_FILE);
+   FlushIncoming(NS_FILE);
   end
  else
   begin
    DPrint('Netchan_CopyFileFragments: Called with no fragments readied.');
-   C.IncomingReady[NS_FILE] := False;
+   IncomingReady[NS_FILE] := False;
   end;
 end;
 
-class function Netchan.IncomingReady(const C: TNetchan): Boolean;
+function TNetchan.IsIncomingReady: Boolean;
 begin
-Result := C.IncomingReady[NS_NORMAL] or C.IncomingReady[NS_FILE];
+  Result := IncomingReady[NS_NORMAL] or IncomingReady[NS_FILE];
 end;
 
 class procedure Netchan.Init;
