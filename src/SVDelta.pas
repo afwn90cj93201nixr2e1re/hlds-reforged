@@ -2,7 +2,7 @@ unit SVDelta;
 
 interface
 
-uses Default, SDK, Client;
+uses Default, SDK, Client, Delta;
 
 procedure SV_InitDeltas;
 procedure SV_WriteDeltaDescriptionsToClient(var SB: TSizeBuf);
@@ -14,7 +14,7 @@ var
 
 implementation
 
-uses Console, Delta, Host, Memory, MsgBuf, SysMain;
+uses Console, Host, Memory, MsgBuf, SysMain;
 
 const
  MetaDeltaDescription: array[1..7] of TDeltaField =

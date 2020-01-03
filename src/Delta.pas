@@ -2,9 +2,82 @@ unit Delta;
 
 interface
 
-uses SysUtils, Default, SDK;
+uses SysUtils, Default;
+
+const
+  DT_BYTE = 1 shl 0;
+  DT_SHORT = 1 shl 1;
+  DT_FLOAT = 1 shl 2;
+  DT_INTEGER = 1 shl 3;
+  DT_ANGLE = 1 shl 4;
+  DT_TIMEWINDOW_8 = 1 shl 5;
+  DT_TIMEWINDOW_BIG = 1 shl 6;
+  DT_STRING = 1 shl 7;
+
+  DT_SIGNED = 1 shl 31;
 
 type
+  PDelta = ^TDelta;
+
+  TDeltaEncoder = procedure(Delta: PDelta; OS, NS: Pointer); cdecl;
+
+  PDeltaEncoderEntry = ^TDeltaEncoderEntry; // 12. Confirmed.
+  TDeltaEncoderEntry = record
+    Prev: PDeltaEncoderEntry;
+    Name: PLChar; // through StrDup
+    Func: TDeltaEncoder;
+  end;
+
+  PDeltaReg = ^TDeltaReg;
+  TDeltaReg = record
+    Prev: PDeltaReg;
+    Name: PLChar;
+    FileName: PLChar;
+    Delta: PDelta;
+  end;
+
+  PDeltaField = ^TDeltaField; // Size is 68. Confirmed.
+  TDeltaField = record
+    FieldType: UInt32;          // 0. Confirmed.
+    Name: array[1..32] of LChar; // 4. Confirmed. A field name.
+    Offset: UInt32;             // 36. Confirmed. Offset (unsigned).
+    FieldSize: UInt16;                 // 40. Sets to "1" when parsing.
+    Bits: UInt32;               // 44. Confirmed. How many bits are in offset value.
+    Scale: Single;              // 48. Should really be a scale.
+    PScale: Single;             // 52. Another scale.
+    Flags: set of (ffReady, __ffPadding = 15);    // 56. Unsure about this.
+                                                //     Is 16-bit, actually.
+    SendCount: UInt32;          // 60. How many times we should "send" this field.
+    RecvCount: UInt32;          // 64. Delta_Parse increments it.
+    TotalScale: Single;         // 68. Custom field.
+  end;
+  TDeltaFieldArray = array[0..0] of TDeltaField;
+  // dp @ metadelta; dp @ static delta constants
+  // {$IF SizeOf(TDeltaField) <> 68} {$MESSAGE WARN 'Structure size mismatch @ TDeltaField.'} {$DEFINE MSME} {$IFEND}
+
+  TDelta = record
+    Active: Boolean;    // 0: If active, fields are written out.
+    NumFields: Int32; // 4: Number of delta fields. Signed.
+    Name: array[1..32] of LChar; // 8. Confirmed.
+    ConditionalEncoder: TDeltaEncoder; // 40. Confirmed.
+    Fields: ^TDeltaFieldArray; // 44: Pointer to a field array.
+  end;
+
+  PDeltaOffset = ^TDeltaOffset;
+  TDeltaOffset = record
+    Name: PLChar;
+    Offset: UInt32;
+  end;
+
+  PDeltaOffsetArray = ^TDeltaOffsetArray;
+  TDeltaOffsetArray = array[0..0] of TDeltaOffset;
+
+  PDeltaLinkedField = ^TDeltaLinkedField;
+  TDeltaLinkedField = record
+    Prev: PDeltaLinkedField;
+    Field: PDeltaField;
+  end;
+
   TDeltaFuncs = record helper for TDelta
     class function FindField(const D: TDelta; Name: PLChar): PDeltaField; static;
     class function FindFieldIndex(const D: TDelta; Name: PLChar): Int; static;
@@ -52,13 +125,21 @@ type
     class procedure Shutdown; static;
   end;
 
+  PDeltaDefinition = ^TDeltaDefinition; // 16, confirmed.
+  TDeltaDefinition = record
+    Prev: PDeltaDefinition;
+    Name: PLChar;
+    Count: UInt32;
+    Offsets: PDeltaOffsetArray;
+  end;
 
 var
  RegList: PDeltaReg = nil;
 
 implementation
 
-uses Common, Console, Memory, MsgBuf, SVMain, SysMain;
+uses
+  Common, Console, Memory, MsgBuf, SVMain, SysMain, SDK;
 
 type
  TSendFlagArray = array[0..1] of UInt32;
@@ -66,6 +147,225 @@ type
 var
  EncoderList: PDeltaEncoderEntry = nil;
  DefList: PDeltaDefinition = nil;
+
+const
+ DT_ClientData_T: array[1..56] of TDeltaOffset =
+ ((Name: 'origin[0]'; Offset: 0),
+  (Name: 'origin[1]'; Offset: 4),
+  (Name: 'origin[2]'; Offset: 8),
+  (Name: 'velocity[0]'; Offset: 12),
+  (Name: 'velocity[1]'; Offset: 16),
+  (Name: 'velocity[2]'; Offset: 20),
+  (Name: 'viewmodel'; Offset: 24),
+  (Name: 'punchangle[0]'; Offset: 28),
+  (Name: 'punchangle[1]'; Offset: 32),
+  (Name: 'punchangle[2]'; Offset: 36),
+  (Name: 'flags'; Offset: 40),
+  (Name: 'waterlevel'; Offset: 44),
+  (Name: 'watertype'; Offset: 48),
+  (Name: 'view_ofs[0]'; Offset: 52),
+  (Name: 'view_ofs[1]'; Offset: 56),
+  (Name: 'view_ofs[2]'; Offset: 60),
+  (Name: 'health'; Offset: 64),
+  (Name: 'bInDuck'; Offset: 68),
+  (Name: 'weapons'; Offset: 72),
+  (Name: 'flTimeStepSound'; Offset: 76),
+  (Name: 'flDuckTime'; Offset: 80),
+  (Name: 'flSwimTime'; Offset: 84),
+  (Name: 'waterjumptime'; Offset: 88),
+  (Name: 'maxspeed'; Offset: 92),
+  (Name: 'fov'; Offset: 96),
+  (Name: 'weaponanim'; Offset: 100),
+  (Name: 'm_iId'; Offset: 104),
+  (Name: 'ammo_shells'; Offset: 108),
+  (Name: 'ammo_nails'; Offset: 112),
+  (Name: 'ammo_cells'; Offset: 116),
+  (Name: 'ammo_rockets'; Offset: 120),
+  (Name: 'm_flNextAttack'; Offset: 124),
+  (Name: 'tfstate'; Offset: 128),
+  (Name: 'pushmsec'; Offset: 132),
+  (Name: 'deadflag'; Offset: 136),
+  (Name: 'physinfo'; Offset: 140),
+  (Name: 'iuser1'; Offset: 396),
+  (Name: 'iuser2'; Offset: 400),
+  (Name: 'iuser3'; Offset: 404),
+  (Name: 'iuser4'; Offset: 408),
+  (Name: 'fuser1'; Offset: 412),
+  (Name: 'fuser2'; Offset: 416),
+  (Name: 'fuser3'; Offset: 420),
+  (Name: 'fuser4'; Offset: 424),
+  (Name: 'vuser1[0]'; Offset: 428),
+  (Name: 'vuser1[1]'; Offset: 432),
+  (Name: 'vuser1[2]'; Offset: 436),
+  (Name: 'vuser2[0]'; Offset: 440),
+  (Name: 'vuser2[1]'; Offset: 444),
+  (Name: 'vuser2[2]'; Offset: 448),
+  (Name: 'vuser3[0]'; Offset: 452),
+  (Name: 'vuser3[1]'; Offset: 456),
+  (Name: 'vuser3[2]'; Offset: 460),
+  (Name: 'vuser4[0]'; Offset: 464),
+  (Name: 'vuser4[1]'; Offset: 468),
+  (Name: 'vuser4[2]'; Offset: 472));
+
+ DT_WeaponData_T: array[1..22] of TDeltaOffset =
+ ((Name: 'm_iId'; Offset: 0),
+  (Name: 'm_iClip'; Offset: 4),
+  (Name: 'm_flNextPrimaryAttack'; Offset: 8),
+  (Name: 'm_flNextSecondaryAttack'; Offset: 12),
+  (Name: 'm_flTimeWeaponIdle'; Offset: 16),
+  (Name: 'm_fInReload'; Offset: 20),
+  (Name: 'm_fInSpecialReload'; Offset: 24),
+  (Name: 'm_flNextReload'; Offset: 28),
+  (Name: 'm_flPumpTime'; Offset: 32),
+  (Name: 'm_fReloadTime'; Offset: 36),
+  (Name: 'm_fAimedDamage'; Offset: 40),
+  (Name: 'm_fNextAimBonus'; Offset: 44),
+  (Name: 'm_fInZoom'; Offset: 48),
+  (Name: 'm_iWeaponState'; Offset: 52),
+  (Name: 'iuser1'; Offset: 56),
+  (Name: 'iuser2'; Offset: 60),
+  (Name: 'iuser3'; Offset: 64),
+  (Name: 'iuser4'; Offset: 68),
+  (Name: 'fuser1'; Offset: 72),
+  (Name: 'fuser2'; Offset: 76),
+  (Name: 'fuser3'; Offset: 80),
+  (Name: 'fuser4'; Offset: 84));
+
+ DT_UserCmd_T: array[1..16] of TDeltaOffset =
+ ((Name: 'lerp_msec'; Offset: 0),
+  (Name: 'msec'; Offset: 2),
+  (Name: 'viewangles[0]'; Offset: 4),
+  (Name: 'viewangles[1]'; Offset: 8),
+  (Name: 'viewangles[2]'; Offset: 12),
+  (Name: 'forwardmove'; Offset: 16),
+  (Name: 'sidemove'; Offset: 20),
+  (Name: 'upmove'; Offset: 24),
+  (Name: 'lightlevel'; Offset: 28),
+  (Name: 'buttons'; Offset: 30),
+  (Name: 'impulse'; Offset: 32),
+  (Name: 'weaponselect'; Offset: 33),
+  (Name: 'impact_index'; Offset: 36),
+  (Name: 'impact_position[0]'; Offset: 40),
+  (Name: 'impact_position[1]'; Offset: 44),
+  (Name: 'impact_position[2]'; Offset: 48));
+
+ DT_EntityState_T: array[1..87] of TDeltaOffset =
+ (
+  (Name: 'origin[0]'; Offset: 16),
+  (Name: 'origin[1]'; Offset: 20),
+  (Name: 'origin[2]'; Offset: 24),
+  (Name: 'angles[0]'; Offset: 28),
+  (Name: 'angles[1]'; Offset: 32),
+  (Name: 'angles[2]'; Offset: 36),
+  (Name: 'modelindex'; Offset: 40),
+  (Name: 'sequence'; Offset: 44),
+  (Name: 'frame'; Offset: 48),
+  (Name: 'colormap'; Offset: 52),
+  (Name: 'skin'; Offset: 56),
+  (Name: 'solid'; Offset: 58),
+  (Name: 'effects'; Offset: 60),
+  (Name: 'scale'; Offset: 64),
+  (Name: 'eflags'; Offset: 68),
+  (Name: 'rendermode'; Offset: 72),
+  (Name: 'renderamt'; Offset: 76),
+  (Name: 'rendercolor.r'; Offset: 80),
+  (Name: 'rendercolor.g'; Offset: 81),
+  (Name: 'rendercolor.b'; Offset: 82),
+  (Name: 'renderfx'; Offset: 84),
+  (Name: 'movetype'; Offset: 88),
+  (Name: 'animtime'; Offset: 92),
+  (Name: 'framerate'; Offset: 96),
+  (Name: 'body'; Offset: 100),
+  (Name: 'controller[0]'; Offset: 104),
+  (Name: 'controller[1]'; Offset: 105),
+  (Name: 'controller[2]'; Offset: 106),
+  (Name: 'controller[3]'; Offset: 107),
+  (Name: 'blending[0]'; Offset: 108),
+  (Name: 'blending[1]'; Offset: 109),
+  (Name: 'velocity[0]'; Offset: 112),
+  (Name: 'velocity[1]'; Offset: 116),
+  (Name: 'velocity[2]'; Offset: 120),
+  (Name: 'mins[0]'; Offset: 124),
+  (Name: 'mins[1]'; Offset: 128),
+  (Name: 'mins[2]'; Offset: 132),
+  (Name: 'maxs[0]'; Offset: 136),
+  (Name: 'maxs[1]'; Offset: 140),
+  (Name: 'maxs[2]'; Offset: 144),
+  (Name: 'aiment'; Offset: 148),
+  (Name: 'owner'; Offset: 152),
+  (Name: 'friction'; Offset: 156),
+  (Name: 'gravity'; Offset: 160),
+  (Name: 'team'; Offset: 164),
+  (Name: 'playerclass'; Offset: 168),
+  (Name: 'health'; Offset: 172),
+  (Name: 'spectator'; Offset: 176),
+  (Name: 'weaponmodel'; Offset: 180),
+  (Name: 'gaitsequence'; Offset: 184),
+  (Name: 'basevelocity[0]'; Offset: 188),
+  (Name: 'basevelocity[1]'; Offset: 192),
+  (Name: 'basevelocity[2]'; Offset: 196),
+  (Name: 'usehull'; Offset: 200),
+  (Name: 'oldbuttons'; Offset: 204),
+  (Name: 'onground'; Offset: 208),
+  (Name: 'iStepLeft'; Offset: 212),
+  (Name: 'flFallVelocity'; Offset: 216),
+
+  (Name: 'weaponanim'; Offset: 224),
+  (Name: 'startpos[0]'; Offset: 228),
+  (Name: 'startpos[1]'; Offset: 232),
+  (Name: 'startpos[2]'; Offset: 236),
+  (Name: 'endpos[0]'; Offset: 240),
+  (Name: 'endpos[1]'; Offset: 244),
+  (Name: 'endpos[2]'; Offset: 248),
+  (Name: 'impacttime'; Offset: 252),
+  (Name: 'starttime'; Offset: 256),
+  (Name: 'iuser1'; Offset: 260),
+  (Name: 'iuser2'; Offset: 264),
+  (Name: 'iuser3'; Offset: 268),
+  (Name: 'iuser4'; Offset: 272),
+  (Name: 'fuser1'; Offset: 276),
+  (Name: 'fuser2'; Offset: 280),
+  (Name: 'fuser3'; Offset: 284),
+  (Name: 'fuser4'; Offset: 288),
+  (Name: 'vuser1[0]'; Offset: 292),
+  (Name: 'vuser1[1]'; Offset: 296),
+  (Name: 'vuser1[2]'; Offset: 300),
+  (Name: 'vuser2[0]'; Offset: 304),
+  (Name: 'vuser2[1]'; Offset: 308),
+  (Name: 'vuser2[2]'; Offset: 312),
+  (Name: 'vuser3[0]'; Offset: 316),
+  (Name: 'vuser3[1]'; Offset: 320),
+  (Name: 'vuser3[2]'; Offset: 324),
+  (Name: 'vuser4[0]'; Offset: 328),
+  (Name: 'vuser4[1]'; Offset: 332),
+  (Name: 'vuser4[2]'; Offset: 336));
+
+ DT_Event_T: array[1..14] of TDeltaOffset =
+ ((Name: 'entindex'; Offset: 4),
+  (Name: 'origin[0]'; Offset: 8),
+  (Name: 'origin[1]'; Offset: 12),
+  (Name: 'origin[2]'; Offset: 16),
+  (Name: 'angles[0]'; Offset: 20),
+  (Name: 'angles[1]'; Offset: 24),
+  (Name: 'angles[2]'; Offset: 28),
+  (Name: 'ducking'; Offset: 44),
+  (Name: 'fparam1'; Offset: 48),
+  (Name: 'fparam2'; Offset: 52),
+  (Name: 'iparam1'; Offset: 56),
+  (Name: 'iparam2'; Offset: 60),
+  (Name: 'bparam1'; Offset: 64),
+  (Name: 'bparam2'; Offset: 68));
+
+ DT_MetaDelta_T: array[1..8] of TDeltaOffset =
+ ((Name: 'fieldType'; Offset: 0),
+  (Name: 'fieldName'; Offset: 4),
+  (Name: 'fieldOffset'; Offset: 36),
+  (Name: 'fieldSize'; Offset: 40),
+  (Name: 'significant_bits'; Offset: 44),
+  (Name: 'premultiply'; Offset: 48),
+  (Name: 'postmultiply'; Offset: 52),
+  (Name: 'flags'; Offset: 56));
+
 
 class function TDeltaFuncs.FindField(const D: TDelta; Name: PLChar): PDeltaField;
 var
