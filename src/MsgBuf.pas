@@ -4,7 +4,8 @@ unit MsgBuf;
 
 interface
 
-uses Default, SDK;
+uses
+  Default, SDK, SizeBuf;
 
 procedure MSG_WriteChar(var Buffer: TSizeBuf; Value: LChar);
 procedure MSG_WriteByte(var Buffer: TSizeBuf; Value: Byte);

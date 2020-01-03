@@ -2,7 +2,7 @@ unit SVRcon;
 
 interface
 
-uses SysUtils, Default, SDK;
+uses SysUtils, Default, SDK, SizeBuf;
 
 type
  TRedirectType = (srNone = 0, srClient, srRemote);

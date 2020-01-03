@@ -3,7 +3,7 @@ unit Netchan;
 interface
 
 uses
-  SysUtils, Default, SDK;
+  SysUtils, Default, SDK, SizeBuf;
 
 type
  TFragmentSizeFunc = function(Client: Pointer): UInt32; cdecl;

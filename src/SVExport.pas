@@ -2,7 +2,7 @@ unit SVExport;
 
 interface
 
-uses {$IFDEF LINUX}Libc, {$ENDIF} Default, SDK, Delta;
+uses {$IFDEF LINUX}Libc, {$ENDIF} Default, SDK, Delta, SizeBuf;
 
 function PF_PrecacheModel(Name: PLChar): UInt32; cdecl;
 function PF_PrecacheSound(Name: PLChar): UInt32; cdecl;

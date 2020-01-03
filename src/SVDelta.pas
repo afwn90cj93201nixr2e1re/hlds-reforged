@@ -2,7 +2,7 @@ unit SVDelta;
 
 interface
 
-uses Default, SDK, Client, Delta;
+uses Default, SDK, Client, Delta, SizeBuf;
 
 procedure SV_InitDeltas;
 procedure SV_WriteDeltaDescriptionsToClient(var SB: TSizeBuf);

@@ -59,7 +59,8 @@ uses
   SysMain in 'src/SysMain.pas',
   Texture in 'src/Texture.pas',
   FSNative in 'src/FSNative.pas',
-  Client in 'src/Client.pas';
+  Client in 'src/Client.pas',
+  SizeBuf in 'src/SizeBuf.pas';
 
 // stuff to do
 

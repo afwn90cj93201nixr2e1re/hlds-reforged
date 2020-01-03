@@ -2,7 +2,8 @@ unit Network;
 
 interface
 
-uses SysUtils, {$IFDEF MSWINDOWS} Windows, Winsock, {$ELSE} Libc, KernelIoctl, {$ENDIF} Default, SDK;
+uses SysUtils, {$IFDEF MSWINDOWS} Windows, Winsock, {$ELSE} Libc, KernelIoctl, {$ENDIF}
+  Default, SDK, SizeBuf;
 
 function NET_AdrToString(const A: TNetAdr; out Buf; L: UInt): PLChar; overload;
 function NET_BaseAdrToString(const A: TNetAdr; out Buf; L: UInt): PLChar;

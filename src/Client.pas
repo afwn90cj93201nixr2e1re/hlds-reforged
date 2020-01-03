@@ -3,7 +3,7 @@ unit Client;
 interface
 
 uses
-  Default, SDK, Netchan;
+  Default, SDK, Netchan, SizeBuf;
 
 type
  PClient = ^TClient; // 20488 W, 20200 L

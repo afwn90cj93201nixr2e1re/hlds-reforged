@@ -2,7 +2,8 @@ unit SDK;
 
 interface
                                                                                               
-uses Default, Delta;
+uses
+  Default, Delta, SizeBuf;
 
 {$MinEnumSize 4}
 
@@ -237,19 +238,6 @@ type
   Name: array[1..56] of LChar;
   Command: PLChar;
  end;
- 
- // dp NET_GetLong
- // can be changed
- PSizeBuf = ^TSizeBuf;
- TSizeBuf = packed record
-  Name: PLChar;
-  AllowOverflow: set of (FSB_ALLOWOVERFLOW = 0, FSB_OVERFLOWED, __FSB_PADDING = 15); // 16 bit boundary
-  __Padding1: UInt16;
-  Data: Pointer;
-  MaxSize: UInt32;
-  CurrentSize: UInt32;
- end;
- {$IF SizeOf(TSizeBuf) <> 20} {$MESSAGE WARN 'Structure size mismatch @ TSizeBuf.'} {$DEFINE MSME} {$IFEND}
 
  // COM_LoadFile
  TFileAllocType = (FILE_ALLOC_ZONE = 0, FILE_ALLOC_HUNK, FILE_ALLOC_TEMP_HUNK, FILE_ALLOC_CACHE,
