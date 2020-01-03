@@ -3,7 +3,7 @@ unit NetchanMain;
 interface
 
 uses
-  SysUtils, Default, SDK;
+  SysUtils, Default, SDK, Client;
 
 type
   Netchan = class

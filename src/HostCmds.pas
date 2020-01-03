@@ -2,7 +2,7 @@ unit HostCmds;
 
 interface
 
-uses SysUtils, Default, SDK;
+uses SysUtils, Default, SDK, Client;
 
 procedure Host_InitCommands;
 procedure Host_InitCVars;

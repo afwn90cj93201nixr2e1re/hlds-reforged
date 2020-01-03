@@ -2,7 +2,7 @@ unit SVMove;
 
 interface
 
-uses Default, SDK;
+uses Default, SDK, Client;
 
 function SV_CheckBottom(const E: TEdict): Boolean;
 function SV_MoveTest(var E: TEdict; const Move: TVec3; Relink: Boolean): Boolean;

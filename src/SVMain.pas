@@ -2,7 +2,7 @@ unit SVMain;
 
 interface
 
-uses Default, SDK, FilterIP, SVExport;
+uses Default, SDK, FilterIP, SVExport, Client;
 
 procedure SV_Frame;
 

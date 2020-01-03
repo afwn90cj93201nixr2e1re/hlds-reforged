@@ -60,7 +60,8 @@ uses
   SysClock in 'src/SysClock.pas',
   SysMain in 'src/SysMain.pas',
   Texture in 'src/Texture.pas',
-  FSNative in 'src/FSNative.pas';
+  FSNative in 'src/FSNative.pas',
+  Client in 'src/Client.pas';
 
 // stuff to do
 

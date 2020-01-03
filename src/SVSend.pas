@@ -2,7 +2,7 @@ unit SVSend;
 
 interface
 
-uses Default, SDK;
+uses Default, SDK, Client;
 
 procedure SV_LinkNewUserMsgs;
 procedure SV_FreeAllUserMsgs;

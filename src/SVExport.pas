@@ -395,7 +395,7 @@ implementation
 uses Common, Console, Delta, Edict, Encode, FileSys, GameLib, HostMain, Info,
   MathLib, Memory, Model, MsgBuf, PMove, Renderer, Resource, SVAuth, SVClient,
   SVCmds, SVEdict, SVEvent, SVMain, SVMove, SVPhys, SVSend, SVWorld, SysArgs,
-  SysClock, SysMain;
+  SysClock, SysMain, Client;
 
 const
  PFHullMinS: array[0..3] of TVec3 =

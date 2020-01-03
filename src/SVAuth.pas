@@ -2,7 +2,8 @@ unit SVAuth;
 
 interface
 
-uses Default, SDK;
+uses
+  Default, SDK, Client;
 
 function SV_CreateSID(const C: TClient): Int64;
 function SV_GetClientIDString(const C: TClient): PLChar;

@@ -2,7 +2,8 @@ unit SVEvent;
 
 interface
 
-uses SysUtils, Default, SDK;
+uses
+  SysUtils, Default, SDK, Client;
 
 procedure EV_PlayReliableEvent(var C: TClient; Index: Int; EventIndex: UInt16; Delay: Single; const Event: TEvent);
 procedure EV_Playback(Flags: UInt; const E: TEdict; EventIndex: UInt16; Delay: Single; const Origin, Angles: TVec3; FParam1, FParam2: Single; IParam1, IParam2, BParam1, BParam2: Int32);

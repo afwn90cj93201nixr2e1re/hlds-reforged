@@ -91,7 +91,7 @@ implementation
 uses Common, Console, CoreUI, Decal, Delta, Edict, Encode, GameLib, HostCmds,
   HostSave, HPAK, Memory, Model, MsgBuf, Network, Renderer, Resource, SVClient,
   SVEdict, SVEvent, SVExport, SVMain, SVPacket, SVPhys, SVRcon, SVSend, SVWorld,
-  SysMain, SysArgs, SysClock, Texture, NetchanMain;
+  SysMain, SysArgs, SysClock, Texture, NetchanMain, Client;
 
 class function Host.SaveGameDirectory: PLChar;
 begin

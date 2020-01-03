@@ -2,7 +2,7 @@ unit SVEdict;
 
 interface
 
-uses Default, SDK;
+uses Default, SDK, Client;
 
 procedure SetMinMaxSize(var E: TEdict; const MinS, MaxS: TVec3);
 function SV_ModelIndex(Name: PLChar): UInt;
