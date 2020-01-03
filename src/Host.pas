@@ -973,8 +973,8 @@ else
     else
      SV_BroadcastPrint([S, ' unpaused the game.'#10]);
 
-    MSG_WriteByte(SV.ReliableDatagram, SVC_SETPAUSE);
-    MSG_WriteByte(SV.ReliableDatagram, Byte(SV.Paused));
+    SV.ReliableDatagram.WriteByte(SVC_SETPAUSE);
+    SV.ReliableDatagram.WriteByte(Byte(SV.Paused));
    end;
 end;
 

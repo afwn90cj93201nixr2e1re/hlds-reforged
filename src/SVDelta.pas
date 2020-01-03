@@ -58,8 +58,8 @@ MemSet(OS, SizeOf(OS), 0);
 P := RegList;
 while P <> nil do
  begin
-  MSG_WriteByte(SB, SVC_DELTADESCRIPTION);
-  MSG_WriteString(SB, P.Name);
+  SB.WriteByte(SVC_DELTADESCRIPTION);
+  SB.WriteString(P.Name);
   MSG_StartBitWriting(SB);
   MSG_WriteBits(P.Delta.NumFields, 16);
   for I := 0 to P.Delta.NumFields - 1 do

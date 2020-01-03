@@ -264,15 +264,15 @@ for I := 0 to SVS.MaxClients - 1 do
      begin
       if P.InUse then
        begin
-        MSG_WriteByte(Dest.Netchan.NetMessage, SVC_CUSTOMIZATION);
-        MSG_WriteByte(Dest.Netchan.NetMessage, I);
-        MSG_WriteByte(Dest.Netchan.NetMessage, Byte(P.Resource.ResourceType));
-        MSG_WriteString(Dest.Netchan.NetMessage, @P.Resource.Name);
-        MSG_WriteShort(Dest.Netchan.NetMessage, P.Resource.Index);
-        MSG_WriteLong(Dest.Netchan.NetMessage, P.Resource.DownloadSize);
-        MSG_WriteByte(Dest.Netchan.NetMessage, Byte(P.Resource.Flags));
+        Dest.Netchan.NetMessage.WriteByte(SVC_CUSTOMIZATION);
+        Dest.Netchan.NetMessage.WriteByte(I);
+        Dest.Netchan.NetMessage.WriteByte(Byte(P.Resource.ResourceType));
+        Dest.Netchan.NetMessage.WriteString(@P.Resource.Name);
+        Dest.Netchan.NetMessage.WriteShort(P.Resource.Index);
+        Dest.Netchan.NetMessage.WriteLong(P.Resource.DownloadSize);
+        Dest.Netchan.NetMessage.WriteByte(Byte(P.Resource.Flags));
         if RES_CUSTOM in P.Resource.Flags then
-         MSG_WriteBuffer(Dest.Netchan.NetMessage, SizeOf(P.Resource.MD5Hash), @P.Resource.MD5Hash);
+         Dest.Netchan.NetMessage.WriteBuffer(SizeOf(P.Resource.MD5Hash), @P.Resource.MD5Hash);
        end;
        
       P := P.Next;
@@ -294,15 +294,15 @@ for I := 0 to SVS.MaxClients - 1 do
   P := @SVS.Clients[I];
   if (P.Active or P.Spawned) and P.Connected and not P.FakeClient and (not SkipSelf or (UInt(I) <> Index)) then
    begin
-    MSG_WriteByte(P.Netchan.NetMessage, SVC_CUSTOMIZATION);
-    MSG_WriteByte(P.Netchan.NetMessage, Index);
-    MSG_WriteByte(P.Netchan.NetMessage, Byte(Res.ResourceType));
-    MSG_WriteString(P.Netchan.NetMessage, @Res.Name);
-    MSG_WriteShort(P.Netchan.NetMessage, Res.Index);
-    MSG_WriteLong(P.Netchan.NetMessage, Res.DownloadSize);
-    MSG_WriteByte(P.Netchan.NetMessage, Byte(Res.Flags));
+    P.Netchan.NetMessage.WriteByte(SVC_CUSTOMIZATION);
+    P.Netchan.NetMessage.WriteByte(Index);
+    P.Netchan.NetMessage.WriteByte(Byte(Res.ResourceType));
+    P.Netchan.NetMessage.WriteString(@Res.Name);
+    P.Netchan.NetMessage.WriteShort(Res.Index);
+    P.Netchan.NetMessage.WriteLong(Res.DownloadSize);
+    P.Netchan.NetMessage.WriteByte(Byte(Res.Flags));
     if RES_CUSTOM in Res.Flags then
-     MSG_WriteBuffer(P.Netchan.NetMessage, SizeOf(Res.MD5Hash), @Res.MD5Hash);
+     P.Netchan.NetMessage.WriteBuffer(SizeOf(Res.MD5Hash), @Res.MD5Hash);
    end;
  end;
 end;
@@ -381,8 +381,8 @@ else
   S := StrECopy(S, @MD5S);
   StrCopy(S, '"'#10);
 
-  MSG_WriteByte(SB, SVC_STUFFTEXT);
-  MSG_WriteString(SB, @Buf);
+  SB.WriteByte(SVC_STUFFTEXT);
+  SB.WriteString(@Buf);
   Result := False;
  end;
 end;
@@ -860,8 +860,8 @@ if (CmdSource = csClient) and (Cmd_Argc = 2) then
         Exit;
        end;
 
-    MSG_WriteByte(HostClient.Netchan.NetMessage, SVC_FILETXFERFAILED);
-    MSG_WriteString(HostClient.Netchan.NetMessage, S);
+    HostClient.Netchan.NetMessage.WriteByte(SVC_FILETXFERFAILED);
+    HostClient.Netchan.NetMessage.WriteString(S);
    end;
  end;
 end;

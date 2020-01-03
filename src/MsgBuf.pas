@@ -7,16 +7,6 @@ interface
 uses
   Default, SDK, SizeBuf;
 
-procedure MSG_WriteChar(var Buffer: TSizeBuf; Value: LChar);
-procedure MSG_WriteByte(var Buffer: TSizeBuf; Value: Byte);
-procedure MSG_WriteShort(var Buffer: TSizeBuf; Value: Int16);
-procedure MSG_WriteWord(var Buffer: TSizeBuf; Value: UInt16);
-procedure MSG_WriteLong(var Buffer: TSizeBuf; Value: Int32);
-procedure MSG_WriteFloat(var Buffer: TSizeBuf; Value: Single);
-procedure MSG_WriteString(var Buffer: TSizeBuf; S: PLChar);
-procedure MSG_WriteBuffer(var Buffer: TSizeBuf; Size: UInt; Data: Pointer);
-procedure MSG_WriteAngle(var Buffer: TSizeBuf; F: Single);
-procedure MSG_WriteHiResAngle(var Buffer: TSizeBuf; F: Single);
 
 procedure MSG_WriteOneBit(B: Byte);
 procedure MSG_StartBitWriting(var Buffer: TSizeBuf);
@@ -45,7 +35,6 @@ procedure MSG_WriteBitCoord(F: Single);
 procedure MSG_ReadBitVec3Coord(out P: TVec3);
 procedure MSG_WriteBitVec3Coord(const P: TVec3);
 function MSG_ReadCoord: Single;
-procedure MSG_WriteCoord(var Buffer: TSizeBuf; F: Single);
 procedure MSG_ReadVec3Coord(var Buffer: TSizeBuf; out P: TVec3);
 procedure MSG_WriteVec3Coord(var Buffer: TSizeBuf; const P: TVec3);
 procedure MSG_BeginReading;
@@ -124,59 +113,6 @@ var
  StringBuffer: array[1..8192] of LChar;
  StringLineBuffer: array[1..2048] of LChar;
 
-procedure MSG_WriteChar(var Buffer: TSizeBuf; Value: LChar);
-begin
-PLChar(Buffer.GetSpace(SizeOf(Value)))^ := Value;
-end;
-
-procedure MSG_WriteByte(var Buffer: TSizeBuf; Value: Byte);
-begin
-PByte(Buffer.GetSpace(SizeOf(Value)))^ := Value;
-end;
-
-procedure MSG_WriteShort(var Buffer: TSizeBuf; Value: Int16);
-begin
-PInt16(Buffer.GetSpace(SizeOf(Value)))^ := LittleShort(Value);
-end;
-
-procedure MSG_WriteWord(var Buffer: TSizeBuf; Value: UInt16);
-begin
-PUInt16(Buffer.GetSpace(SizeOf(Value)))^ := LittleShort(Value);
-end;
-
-procedure MSG_WriteLong(var Buffer: TSizeBuf; Value: Int32);
-begin
-PInt32(Buffer.GetSpace(SizeOf(Value)))^ := LittleLong(Value);
-end;
-
-procedure MSG_WriteFloat(var Buffer: TSizeBuf; Value: Single);
-begin
-PSingle(Buffer.GetSpace(SizeOf(Value)))^ := LittleFloat(Value);
-end;
-
-procedure MSG_WriteString(var Buffer: TSizeBuf; S: PLChar);
-begin
-if S <> nil then
- Buffer.Write(S, StrLen(S) + 1)
-else
- Buffer.Write(EmptyString, 1)
-end;
-
-procedure MSG_WriteBuffer(var Buffer: TSizeBuf; Size: UInt; Data: Pointer);
-begin
-if Data <> nil then
- Buffer.Write(Data, Size);
-end;
-
-procedure MSG_WriteAngle(var Buffer: TSizeBuf; F: Single);
-begin
-MSG_WriteByte(Buffer, Trunc(F * 256 / 360));
-end;
-
-procedure MSG_WriteHiResAngle(var Buffer: TSizeBuf; F: Single);
-begin
-MSG_WriteShort(Buffer, Trunc(F * 65536 / 360));
-end;
 
 procedure MSG_WriteOneBit(B: Byte);
 begin
@@ -599,11 +535,6 @@ end;
 function MSG_ReadCoord: Single;
 begin
 Result := MSG_ReadShort / 8;
-end;
-
-procedure MSG_WriteCoord(var Buffer: TSizeBuf; F: Single);
-begin
-MSG_WriteShort(Buffer, Trunc(F * 8));
 end;
 
 procedure MSG_ReadVec3Coord(var Buffer: TSizeBuf; out P: TVec3);

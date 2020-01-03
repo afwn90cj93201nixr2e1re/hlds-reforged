@@ -964,25 +964,25 @@ begin
 if @E = nil then
  Exit;
 
-MSG_WriteByte(SV.Signon, SVC_SPAWNSTATIC);
-MSG_WriteShort(SV.Signon, SV_ModelIndex(PLChar(PRStrings + E.V.Model)));
-MSG_WriteByte(SV.Signon, E.V.Sequence);
-MSG_WriteByte(SV.Signon, Trunc(E.V.Frame));
-MSG_WriteWord(SV.Signon, E.V.ColorMap);
-MSG_WriteByte(SV.Signon, E.V.Skin);
+SV.Signon.WriteByte(SVC_SPAWNSTATIC);
+SV.Signon.WriteShort(SV_ModelIndex(PLChar(PRStrings + E.V.Model)));
+SV.Signon.WriteByte(E.V.Sequence);
+SV.Signon.WriteByte(Trunc(E.V.Frame));
+SV.Signon.WriteWord(E.V.ColorMap);
+SV.Signon.WriteByte(E.V.Skin);
 for I := 0 to 2 do
  begin
-  MSG_WriteCoord(SV.Signon, E.V.Origin[I]);
-  MSG_WriteAngle(SV.Signon, E.V.Angles[I]);
+  SV.Signon.WriteCoord(E.V.Origin[I]);
+  SV.Signon.WriteAngle(E.V.Angles[I]);
  end;
-MSG_WriteByte(SV.Signon, E.V.RenderMode);
+SV.Signon.WriteByte(E.V.RenderMode);
 if E.V.RenderMode <> 0 then
  begin
-  MSG_WriteByte(SV.Signon, Trunc(E.V.RenderAmt));
-  MSG_WriteByte(SV.Signon, Trunc(E.V.RenderColor[0]));
-  MSG_WriteByte(SV.Signon, Trunc(E.V.RenderColor[1]));
-  MSG_WriteByte(SV.Signon, Trunc(E.V.RenderColor[2]));
-  MSG_WriteByte(SV.Signon, E.V.RenderFX);
+  SV.Signon.WriteByte(Trunc(E.V.RenderAmt));
+  SV.Signon.WriteByte(Trunc(E.V.RenderColor[0]));
+  SV.Signon.WriteByte(Trunc(E.V.RenderColor[1]));
+  SV.Signon.WriteByte(Trunc(E.V.RenderColor[2]));
+  SV.Signon.WriteByte(E.V.RenderFX);
  end;
 ED_Free(E);
 end;
@@ -1123,16 +1123,16 @@ if SB.CurrentSize > SB.MaxSize - 16 then
   Exit;
  end;
 
-MSG_WriteByte(SB^, SVC_SPAWNSTATICSOUND);
+SB.WriteByte(SVC_SPAWNSTATICSOUND);
 for I := 0 to 2 do
- MSG_WriteCoord(SB^, Origin[I]);
+ SB.WriteCoord(Origin[I]);
 
-MSG_WriteShort(SB^, Index);
-MSG_WriteByte(SB^, Trunc(Volume * 255));
-MSG_WriteByte(SB^, Trunc(Attn * 64));
-MSG_WriteShort(SB^, NUM_FOR_EDICT(E));
-MSG_WriteByte(SB^, Pitch);
-MSG_WriteByte(SB^, Flags);
+SB.WriteShort(Index);
+SB.WriteByte(Trunc(Volume * 255));
+SB.WriteByte(Trunc(Attn * 64));
+SB.WriteShort(NUM_FOR_EDICT(E));
+SB.WriteByte(Pitch);
+SB.WriteByte(Flags);
 end;
 
 procedure PF_TraceLineShared(const VStart, VEnd: TVec3; MoveType: Int; PassEdict: PEdict);
@@ -1409,8 +1409,8 @@ else
       C := @SVS.Clients[I - 1];
       if C.Connected and not C.FakeClient then
        begin
-        MSG_WriteByte(C.Netchan.NetMessage, SVC_STUFFTEXT);
-        MSG_WriteString(C.Netchan.NetMessage, S);
+        C.Netchan.NetMessage.WriteByte(SVC_STUFFTEXT);
+        C.Netchan.NetMessage.WriteString(S);
        end;
      end;
   end;
@@ -1445,9 +1445,9 @@ if SV.State = SS_ACTIVE then
    C := @SVS.Clients[I];
    if (C.Active or C.Spawned) and not C.FakeClient then
     begin
-     MSG_WriteByte(C.Netchan.NetMessage, SVC_LIGHTSTYLE);
-     MSG_WriteByte(C.Netchan.NetMessage, Style);
-     MSG_WriteString(C.Netchan.NetMessage, Value);
+     C.Netchan.NetMessage.WriteByte(SVC_LIGHTSTYLE);
+     C.Netchan.NetMessage.WriteByte(Style);
+     C.Netchan.NetMessage.WriteString(Value);
     end;
   end;
 end;
@@ -1638,11 +1638,11 @@ if (MsgType > SVC_MESSAGE_END) and ((MsgDest = MSG_ONE) or (MsgDest = MSG_ONE_UN
    Exit;
  end;
 
-MSG_WriteByte(SB^, MsgType);
+SB.WriteByte(MsgType);
 if NeedSize then
- MSG_WriteByte(SB^, MsgBuffer.CurrentSize);
+ SB.WriteByte(MsgBuffer.CurrentSize);
 if MsgBuffer.CurrentSize > 0 then
- MSG_WriteBuffer(SB^, MsgBuffer.CurrentSize, MsgBuffer.Data);
+ SB.WriteBuffer(MsgBuffer.CurrentSize, MsgBuffer.Data);
 case MsgDest of
  MSG_PVS: SV_Multicast(MsgEntity^, MsgOrigin, MULTICAST_PVS, False);
  MSG_PAS: SV_Multicast(MsgEntity^, MsgOrigin, MULTICAST_PAS, False);
@@ -1656,7 +1656,7 @@ begin
 if not MsgStarted then
  Sys_Error('PF_WriteByte: Called with no active message.')
 else
- MSG_WriteByte(MsgBuffer, Value);
+ MsgBuffer.WriteByte(Value);
 end;
 
 procedure PF_WriteChar(Value: Int32); cdecl;
@@ -1664,7 +1664,7 @@ begin
 if not MsgStarted then
  Sys_Error('PF_WriteChar: Called with no active message.')
 else
- MSG_WriteChar(MsgBuffer, LChar(Value));
+ MsgBuffer. WriteChar(LChar(Value));
 end;
 
 procedure PF_WriteShort(Value: Int32); cdecl;
@@ -1672,7 +1672,7 @@ begin
 if not MsgStarted then
  Sys_Error('PF_WriteShort: Called with no active message.')
 else
- MSG_WriteShort(MsgBuffer, Value);
+ MsgBuffer.WriteShort(Value);
 end;
 
 procedure PF_WriteLong(Value: Int32); cdecl;
@@ -1680,7 +1680,7 @@ begin
 if not MsgStarted then
  Sys_Error('PF_WriteLong: Called with no active message.')
 else
- MSG_WriteLong(MsgBuffer, Value);
+ MsgBuffer.WriteLong(Value);
 end;
 
 procedure PF_WriteAngle(Value: Single); cdecl;
@@ -1688,7 +1688,7 @@ begin
 if not MsgStarted then
  Sys_Error('PF_WriteAngle: Called with no active message.')
 else
- MSG_WriteAngle(MsgBuffer, Value);
+ MsgBuffer.WriteAngle(Value);
 end;
 
 procedure PF_WriteCoord(Value: Single); cdecl;
@@ -1696,7 +1696,7 @@ begin
 if not MsgStarted then
  Sys_Error('PF_WriteCoord: Called with no active message.')
 else
- MSG_WriteShort(MsgBuffer, Trunc(Value * 8));
+ MsgBuffer.WriteShort(Trunc(Value * 8));
 end;
 
 procedure PF_WriteString(S: PLChar); cdecl;
@@ -1707,7 +1707,7 @@ else
  if S = nil then
   Sys_Error('PF_WriteString: Called with a bad string pointer.')
  else
-  MSG_WriteString(MsgBuffer, S);
+  MsgBuffer.WriteString(S);
 end;
 
 procedure PF_WriteEntity(Value: Int32); cdecl;
@@ -1715,7 +1715,7 @@ begin
 if not MsgStarted then
  Sys_Error('PF_WriteEntity: Called with no active message.')
 else
- MSG_WriteShort(MsgBuffer, Value);
+ MsgBuffer.WriteShort(Value);
 end;
 
 procedure PF_CVarRegister(var C: TCVar); cdecl;
@@ -2065,13 +2065,13 @@ else
     case PrintType of
      PrintConsole, PrintChat:
       begin
-       MSG_WriteByte(C.Netchan.NetMessage, SVC_PRINT);
-       MSG_WriteString(C.Netchan.NetMessage, Msg);
+       C.Netchan.NetMessage.WriteByte(SVC_PRINT);
+       C.Netchan.NetMessage.WriteString(Msg);
       end;
      PrintCenter:
       begin
-       MSG_WriteByte(C.Netchan.NetMessage, SVC_CENTERPRINT);
-       MSG_WriteString(C.Netchan.NetMessage, Msg);
+       C.Netchan.NetMessage.WriteByte(SVC_CENTERPRINT);
+       C.Netchan.NetMessage.WriteString(Msg);
       end;
      else
       Print(['PF_ClientPrintF: Invalid print type "', UInt(PrintType), '".']);
@@ -2179,8 +2179,8 @@ if (I >= 1) and (I <= SVS.MaxClients) then
   if C.Connected and not C.FakeClient then
    begin
     C.Target := @Target;
-    MSG_WriteByte(C.Netchan.NetMessage, SVC_SETVIEW);
-    MSG_WriteShort(C.Netchan.NetMessage, NUM_FOR_EDICT(Target));
+    C.Netchan.NetMessage.WriteByte(SVC_SETVIEW);
+    C.Netchan.NetMessage.WriteShort(NUM_FOR_EDICT(Target));
    end;  
  end;
 end;
@@ -2216,9 +2216,9 @@ if (I >= 1) and (I <= SVS.MaxClients) then
      if Yaw < -180 then
       Yaw := Yaw + 360;
 
-    MSG_WriteByte(C.Netchan.NetMessage, SVC_CROSSHAIRANGLE);
-    MSG_WriteByte(C.Netchan.NetMessage, Trunc(Pitch * 5));
-    MSG_WriteByte(C.Netchan.NetMessage, Trunc(Yaw * 5));
+    C.Netchan.NetMessage.WriteByte(SVC_CROSSHAIRANGLE);
+    C.Netchan.NetMessage.WriteByte(Trunc(Pitch * 5));
+    C.Netchan.NetMessage.WriteByte(Trunc(Yaw * 5));
    end;
  end;
 end;
@@ -2284,11 +2284,11 @@ if (I >= 1) and (I <= SVS.MaxClients) then
   C := @SVS.Clients[I - 1];
   if C.Connected and not C.FakeClient then
    begin
-    MSG_WriteByte(C.Netchan.NetMessage, SVC_SOUNDFADE);
-    MSG_WriteByte(C.Netchan.NetMessage, FadePercent);
-    MSG_WriteByte(C.Netchan.NetMessage, HoldTime);
-    MSG_WriteByte(C.Netchan.NetMessage, FadeOutSeconds);
-    MSG_WriteByte(C.Netchan.NetMessage, FadeInSeconds);
+    C.Netchan.NetMessage.WriteByte(SVC_SOUNDFADE);
+    C.Netchan.NetMessage.WriteByte(FadePercent);
+    C.Netchan.NetMessage.WriteByte(HoldTime);
+    C.Netchan.NetMessage.WriteByte(FadeOutSeconds);
+    C.Netchan.NetMessage.WriteByte(FadeInSeconds);
    end;
  end;
 end;
@@ -2483,15 +2483,15 @@ begin
 if @Origin = nil then
  Sys_Error('PF_StaticDecal: NULL pointer.');
 
-MSG_WriteByte(SV.Signon, SVC_TEMPENTITY);
-MSG_WriteByte(SV.Signon, TE_BSPDECAL);
-MSG_WriteCoord(SV.Signon, Origin[0]);
-MSG_WriteCoord(SV.Signon, Origin[1]);
-MSG_WriteCoord(SV.Signon, Origin[2]);
-MSG_WriteShort(SV.Signon, DecalIndex);
-MSG_WriteShort(SV.Signon, EntityIndex);
+SV.Signon.WriteByte(SVC_TEMPENTITY);
+SV.Signon.WriteByte(TE_BSPDECAL);
+SV.Signon.WriteCoord(Origin[0]);
+SV.Signon.WriteCoord(Origin[1]);
+SV.Signon.WriteCoord(Origin[2]);
+SV.Signon.WriteShort(DecalIndex);
+SV.Signon.WriteShort(EntityIndex);
 if ModelIndex <> 0 then
- MSG_WriteShort(SV.Signon, ModelIndex);
+ SV.Signon.WriteShort(ModelIndex);
 end;
 
 function PF_PrecacheGeneric(Name: PLChar): UInt32; cdecl;
@@ -3050,8 +3050,8 @@ I := NUM_FOR_EDICT(E);
 if (I >= 1) and (I <= SVS.MaxClients) then
  begin
   C := @SVS.Clients[I - 1];
-  MSG_WriteByte(C.Netchan.NetMessage, SVC_SENDCVARVALUE);
-  MSG_WriteString(C.Netchan.NetMessage, Name);
+  C.Netchan.NetMessage.WriteByte(SVC_SENDCVARVALUE);
+  C.Netchan.NetMessage.WriteString(Name);
  end
 else
  begin
@@ -3070,9 +3070,9 @@ I := NUM_FOR_EDICT(E);
 if (I >= 1) and (I <= SVS.MaxClients) then
  begin
   C := @SVS.Clients[I - 1];
-  MSG_WriteByte(C.Netchan.NetMessage, SVC_SENDCVARVALUE2);
-  MSG_WriteLong(C.Netchan.NetMessage, RequestID);
-  MSG_WriteString(C.Netchan.NetMessage, Name);
+  C.Netchan.NetMessage.WriteByte(SVC_SENDCVARVALUE2);
+  C.Netchan.NetMessage.WriteLong(RequestID);
+  C.Netchan.NetMessage.WriteString(Name);
  end
 else
  begin

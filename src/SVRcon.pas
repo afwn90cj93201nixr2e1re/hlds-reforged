@@ -64,10 +64,10 @@ if RedirectBuf[Low(RedirectBuf)] > #0 then
    SB.MaxSize := SizeOf(Buf);
    SB.CurrentSize := 0;
 
-   MSG_WriteLong(SB, OUTOFBAND_TAG);
-   MSG_WriteChar(SB, S2C_PRINT);
-   MSG_WriteString(SB, @RedirectBuf);
-   MSG_WriteChar(SB, #0);
+   SB.WriteLong(OUTOFBAND_TAG);
+   SB.WriteChar(S2C_PRINT);
+   SB.WriteString(@RedirectBuf);
+   SB.WriteChar(#0);
 
    if not (FSB_OVERFLOWED in SB.AllowOverflow) then
     NET_SendPacket(NS_SERVER, SB.CurrentSize, SB.Data, RedirectTo);
@@ -75,8 +75,8 @@ if RedirectBuf[Low(RedirectBuf)] > #0 then
  else
   if RedirectType = srClient then
    begin
-    MSG_WriteByte(HostClient.Netchan.NetMessage, SVC_PRINT);
-    MSG_WriteString(HostClient.Netchan.NetMessage, @RedirectBuf);
+    HostClient.Netchan.NetMessage.WriteByte(SVC_PRINT);
+    HostClient.Netchan.NetMessage.WriteString(@RedirectBuf);
    end;
 
 RedirectBuf[Low(RedirectBuf)] := #0;

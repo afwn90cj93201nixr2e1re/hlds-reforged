@@ -131,7 +131,7 @@ begin
   SB.MaxSize := SizeOf(Buf);
   SB.CurrentSize := 0;
 
-  MSG_WriteLong(SB, OUTOFBAND_TAG);
+  SB.WriteLong(OUTOFBAND_TAG);
   SB.Write(S, StrLen(S) + 1);
   if not (FSB_OVERFLOWED in SB.AllowOverflow) then
    NET_SendPacket(Source, SB.CurrentSize, SB.Data, Addr);
@@ -444,8 +444,8 @@ else
   if SendReliable and Fragmented then
    Seq := Seq or $40000000;
 
-  MSG_WriteLong(SB, Seq);
-  MSG_WriteLong(SB, Seq2);
+  SB.WriteLong(Seq);
+  SB.WriteLong(Seq2);
 
   if SendReliable then
    begin
@@ -453,13 +453,13 @@ else
      for I := Low(I) to High(I) do
       if FragBufActive[I] then
        begin
-        MSG_WriteByte(SB, 1);
-        MSG_WriteLong(SB, FragBufSequence[I]);
-        MSG_WriteShort(SB, FragBufOffset[I]);
-        MSG_WriteShort(SB, FragBufSize[I]);
+        SB.WriteByte(1);
+        SB.WriteLong(FragBufSequence[I]);
+        SB.WriteShort(FragBufOffset[I]);
+        SB.WriteShort(FragBufSize[I]);
        end
       else
-       MSG_WriteByte(SB, 0);
+       SB.WriteByte(0);
 
     SB.Write(@ReliableBuf, ReliableLength);
     LastReliableSequence := OutgoingSequence;
@@ -479,7 +479,7 @@ else
     SB.Write(Buffer, Size);
 
   for J := SB.CurrentSize to 15 do
-   MSG_WriteByte(SB, SVC_NOP);
+   SB.WriteByte(SVC_NOP);
 
   FP := @Flow[FS_TX].Stats[Flow[FS_TX].InSeq and (MAX_LATENT - 1)];
   FP.Bytes := SB.CurrentSize + UDP_OVERHEAD;
@@ -951,12 +951,12 @@ while RemainingSize > 0 do
   if NeedHeader then
    begin
     NeedHeader := False;
-    MSG_WriteString(FB.FragMessage, Name);
+    FB.FragMessage.WriteString(Name);
     if Compressed then
-     MSG_WriteString(FB.FragMessage, 'bz2')
+     FB.FragMessage.WriteString('bz2')
     else
-     MSG_WriteString(FB.FragMessage, 'uncompressed');
-    MSG_WriteLong(FB.FragMessage, Size);
+     FB.FragMessage.WriteString('uncompressed');
+    FB.FragMessage.WriteLong(Size);
 
     if ThisSize > FB.FragMessage.CurrentSize then
      Dec(ThisSize, FB.FragMessage.CurrentSize)
@@ -969,7 +969,7 @@ while RemainingSize > 0 do
   FB.FileFrag := True;
   FB.FileBuffer := True;
 
-  MSG_WriteBuffer(FB.FragMessage, ThisSize, Pointer(UInt(DstBuf) + FileOffset));
+  FB.FragMessage.WriteBuffer(ThisSize, Pointer(UInt(DstBuf) + FileOffset));
   Inc(FileOffset, ThisSize);
   Dec(RemainingSize, ThisSize);
 
@@ -1102,12 +1102,12 @@ while RemainingSize > 0 do
   if NeedHeader then
    begin
     NeedHeader := False;
-    MSG_WriteString(FB.FragMessage, Name);
+    FB.FragMessage.WriteString(Name);
     if Compressed then
-     MSG_WriteString(FB.FragMessage, 'bz2')
+     FB.FragMessage.WriteString('bz2')
     else
-     MSG_WriteString(FB.FragMessage, 'uncompressed');
-    MSG_WriteLong(FB.FragMessage, Size);
+     FB.FragMessage.WriteString('uncompressed');
+    FB.FragMessage.WriteLong(Size);
 
     if ThisSize > FB.FragMessage.CurrentSize then
      Dec(ThisSize, FB.FragMessage.CurrentSize)

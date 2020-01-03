@@ -491,11 +491,11 @@ NET_AdrToString(HostClient.Netchan.Addr, Address, SizeOf(Address));
 StrCopy(@RejectReason, 'Connection rejected by game.'#10);
 if DLLFunctions.ClientConnect(HostClient.Entity^, @Name, @Address, @RejectReason) <> 0 then
  begin
-  MSG_WriteByte(SB, SVC_STUFFTEXT);
+  SB.WriteByte(SVC_STUFFTEXT);
   S := StrECopy(@Buf, 'fullserverinfo "');
   S := StrECopy(S, @ServerInfo);
   StrCopy(S, '"'#10);
-  MSG_WriteString(SB, @Buf);
+  SB.WriteString(@Buf);
   for I := 0 to SVS.MaxClients - 1 do
    begin
     C := @SVS.Clients[I];

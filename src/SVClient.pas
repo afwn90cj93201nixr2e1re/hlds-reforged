@@ -343,8 +343,8 @@ if not SkipNotify then
 
   if not C.FakeClient then
    begin
-    MSG_WriteByte(C.Netchan.NetMessage, SVC_DISCONNECT);
-    MSG_WriteString(C.Netchan.NetMessage, Msg);
+    C.Netchan.NetMessage.WriteByte(SVC_DISCONNECT);
+    C.Netchan.NetMessage.WriteString(Msg);
     
     PByte(@Buf)^ := SVC_DISCONNECT;
     C.Netchan.Transmit(L + 2, @Buf);
@@ -393,8 +393,8 @@ if SV.Active then
     C := @SVS.Clients[I];
     if (C.Active or C.Spawned or C.Connected) and not C.FakeClient then
      begin
-      MSG_WriteByte(C.Netchan.NetMessage, SVC_STUFFTEXT);
-      MSG_WriteString(C.Netchan.NetMessage, S);
+      C.Netchan.NetMessage.WriteByte(SVC_STUFFTEXT);
+      C.Netchan.NetMessage.WriteString(S);
      end;
    end;
 end;
@@ -421,8 +421,8 @@ else
      C := @SVS.Clients[I];
      if (C.Active or C.Spawned or C.Connected) and not C.FakeClient then
       begin
-       MSG_WriteByte(C.Netchan.NetMessage, SVC_PRINT);
-       MSG_WriteString(C.Netchan.NetMessage, Msg);
+       C.Netchan.NetMessage.WriteByte(SVC_PRINT);
+       C.Netchan.NetMessage.WriteString(Msg);
       end;
     end;
  end;
@@ -668,15 +668,15 @@ var
 begin
 StrLCopy(@Buf, @C.UserInfo, SizeOf(Buf) - 1);
 Info_RemovePrefixedKeys(@Buf, '_');
-MSG_WriteByte(SB, SVC_UPDATEUSERINFO);
-MSG_WriteByte(SB, (UInt(@C) - UInt(SVS.Clients)) div SizeOf(TClient));
-MSG_WriteLong(SB, C.UserID);
-MSG_WriteString(SB, @Buf);
+SB.WriteByte(SVC_UPDATEUSERINFO);
+SB.WriteByte((UInt(@C) - UInt(SVS.Clients)) div SizeOf(TClient));
+SB.WriteLong(C.UserID);
+SB.WriteString(@Buf);
 
 MD5Init(MD5C);
 MD5Update(MD5C, @C.CDKey, SizeOf(C.CDKey));
 MD5Final(Hash, MD5C);
-MSG_WriteBuffer(SB, SizeOf(Hash), @Hash);
+SB.WriteBuffer(SizeOf(Hash), @Hash);
 end;
 
 procedure SV_ForceFullClientsUpdate;
@@ -717,15 +717,15 @@ procedure SV_ClientPrint(var C: TClient; Msg: PLChar; LineBreak: Boolean = True)
 begin
 if not C.FakeClient then
  begin
-  MSG_WriteByte(C.Netchan.NetMessage, SVC_PRINT);
+  C.Netchan.NetMessage.WriteByte(SVC_PRINT);
   if LineBreak then
    begin
-    MSG_WriteBuffer(C.Netchan.NetMessage, StrLen(Msg), Msg);
-    MSG_WriteChar(C.Netchan.NetMessage, #10);
-    MSG_WriteChar(C.Netchan.NetMessage, #0);
+    C.Netchan.NetMessage.WriteBuffer(StrLen(Msg), Msg);
+    C.Netchan.NetMessage.WriteChar(#10);
+    C.Netchan.NetMessage.WriteChar(#0);
    end
   else
-   MSG_WriteString(C.Netchan.NetMessage, Msg);
+   C.Netchan.NetMessage.WriteString(Msg);
  end;
 end;
 
@@ -762,7 +762,7 @@ Frame.PingTime := -1;
 
 if C.ChokeCount > 0 then
  begin
-  MSG_WriteByte(SB, SVC_CHOKE);
+  SB.WriteByte(SVC_CHOKE);
   C.ChokeCount := 0;
  end;
 
@@ -770,15 +770,15 @@ if E.V.FixAngle <> 0 then
  begin
   if E.V.FixAngle = 2 then
    begin
-    MSG_WriteByte(SB, SVC_ADDANGLE);
-    MSG_WriteHiResAngle(SB, E.V.AVelocity[1]);
+    SB.WriteByte(SVC_ADDANGLE);
+    SB.WriteHiResAngle(E.V.AVelocity[1]);
     E.V.AVelocity[1] := 0;
    end
   else
    begin
-    MSG_WriteByte(SB, SVC_SETANGLE);
+    SB.WriteByte(SVC_SETANGLE);
     for I := 0 to 2 do
-     MSG_WriteHiResAngle(SB, E.V.Angles[I]);
+     SB.WriteHiResAngle(E.V.Angles[I]);
    end;
 
   E.V.FixAngle := 0;
@@ -789,7 +789,7 @@ DLLFunctions.UpdateClientData(E^, Int32(C.LW), Frame.ClientData);
 if not C.HLTV then
  begin
   NoDelta := C.UpdateMask = -1;
-  MSG_WriteByte(SB, SVC_CLIENTDATA);
+  SB.WriteByte(SVC_CLIENTDATA);
   MSG_StartBitWriting(SB);
   if NoDelta then
    begin
@@ -870,8 +870,8 @@ else
   SV.State := SS_ACTIVE;
  end;
 
-MSG_WriteByte(SB, SVC_TIME);
-MSG_WriteFloat(SB, SV.Time);
+SB.WriteByte(SVC_TIME);
+SB.WriteFloat(SV.Time);
 
 C.UpdateInfo := True;
 
@@ -884,44 +884,44 @@ for I := 0 to SVS.MaxClients - 1 do
 
 for I := 0 to MAX_LIGHTSTYLES - 1 do
  begin
-  MSG_WriteByte(SB, SVC_LIGHTSTYLE);
-  MSG_WriteByte(SB, I);
+  SB.WriteByte(SVC_LIGHTSTYLE);
+  SB.WriteByte(I);
   if SV.LightStyles[I] = nil then
-   MSG_WriteString(SB, EmptyString)
+   SB.WriteString(EmptyString)
   else
-   MSG_WriteString(SB, SV.LightStyles[I]);
+   SB.WriteString(SV.LightStyles[I]);
  end;
 
 if not C.HLTV then
  begin
-  MSG_WriteByte(SB, SVC_SETANGLE);
-  MSG_WriteHiResAngle(SB, E.V.VAngle[0]);
-  MSG_WriteHiResAngle(SB, E.V.VAngle[1]);
-  MSG_WriteHiResAngle(SB, 0);
+  SB.WriteByte(SVC_SETANGLE);
+  SB.WriteHiResAngle(E.V.VAngle[0]);
+  SB.WriteHiResAngle(E.V.VAngle[1]);
+  SB.WriteHiResAngle(0);
   SV_WriteClientDataToMessage(C, SB);
   if SV.SavedGame then
    begin
     MemSet(SRD, SizeOf(SRD), 0);
     GlobalVars.SaveData := @SRD;
     DLLFunctions.ParmsChangeLevel;
-    MSG_WriteByte(SB, SVC_RESTORE);
+    SB.WriteByte(SVC_RESTORE);
 
     StrLCopy(@Buf, THost.SaveGameDirectory, SizeOf(Buf) - 1);
     StrLCat(PLChar(@Buf), @SV.Map, SizeOf(Buf) - 1);
     StrLCat(PLChar(@Buf), '.HL2', SizeOf(Buf) - 1);
     COM_FixSlashes(@Buf);
-    MSG_WriteString(SB, @Buf);
-    MSG_WriteByte(SB, SRD.ConnectionCount);
+    SB.WriteString(@Buf);
+    SB.WriteByte(SRD.ConnectionCount);
     for I := 0 to SRD.ConnectionCount - 1 do
-     MSG_WriteString(SB, @SRD.LevelList[I].MapName);
+     SB.WriteString(@SRD.LevelList[I].MapName);
 
     SV.SavedGame := False;
     GlobalVars.SaveData := nil;
    end;
  end;
 
-MSG_WriteByte(SB, SVC_SIGNONNUM);
-MSG_WriteByte(SB, 1);
+SB.WriteByte(SVC_SIGNONNUM);
+SB.WriteByte(1);
 
 C.Active := True;
 C.Spawned := True;
@@ -934,50 +934,50 @@ end;
 
 procedure SV_WriteVoiceCodec(var SB: TSizeBuf);
 begin
-MSG_WriteByte(SB, SVC_VOICEINIT);
-MSG_WriteString(SB, sv_voicecodec.Data);
-MSG_WriteByte(SB, Trunc(sv_voicequality.Value));
+SB.WriteByte(SVC_VOICEINIT);
+SB.WriteString(sv_voicecodec.Data);
+SB.WriteByte(Trunc(sv_voicequality.Value));
 end;
 
 procedure SV_SendBan;
 begin
 gNetMessage.Clear;
-MSG_WriteLong(gNetMessage, OUTOFBAND_TAG);
-MSG_WriteChar(gNetMessage, S2C_PRINT);
-MSG_WriteString(gNetMessage, 'You have been banned from this server.'#10);
+gNetMessage.WriteLong(OUTOFBAND_TAG);
+gNetMessage.WriteChar(S2C_PRINT);
+gNetMessage.WriteString('You have been banned from this server.'#10);
 NET_SendPacket(NS_SERVER, gNetMessage.CurrentSize, gNetMessage.Data, NetFrom);
 gNetMessage.Clear;
 end;
 
 procedure SV_WriteMoveVarsToClient(var SB: TSizeBuf);
 begin
-MSG_WriteByte(SB, SVC_NEWMOVEVARS);
-MSG_WriteFloat(SB, MoveVars.Gravity);
-MSG_WriteFloat(SB, MoveVars.StopSpeed);
-MSG_WriteFloat(SB, MoveVars.MaxSpeed);
-MSG_WriteFloat(SB, MoveVars.SpectatorMaxSpeed);
-MSG_WriteFloat(SB, MoveVars.Accelerate);
-MSG_WriteFloat(SB, MoveVars.AirAccelerate);
-MSG_WriteFloat(SB, MoveVars.WaterAccelerate);
-MSG_WriteFloat(SB, MoveVars.Friction);
-MSG_WriteFloat(SB, MoveVars.EdgeFriction);
-MSG_WriteFloat(SB, MoveVars.WaterFriction);
-MSG_WriteFloat(SB, MoveVars.EntGravity);
-MSG_WriteFloat(SB, MoveVars.Bounce);
-MSG_WriteFloat(SB, MoveVars.StepSize);
-MSG_WriteFloat(SB, MoveVars.MaxVelocity);
-MSG_WriteFloat(SB, MoveVars.ZMax);
-MSG_WriteFloat(SB, MoveVars.WaveHeight);
-MSG_WriteByte(SB, UInt(MoveVars.Footsteps <> 0));
-MSG_WriteFloat(SB, MoveVars.RollAngle);
-MSG_WriteFloat(SB, MoveVars.RollSpeed);
-MSG_WriteFloat(SB, MoveVars.SkyColorR);
-MSG_WriteFloat(SB, MoveVars.SkyColorG);
-MSG_WriteFloat(SB, MoveVars.SkyColorB);
-MSG_WriteFloat(SB, MoveVars.SkyVecX);
-MSG_WriteFloat(SB, MoveVars.SkyVecY);
-MSG_WriteFloat(SB, MoveVars.SkyVecZ);
-MSG_WriteString(SB, @MoveVars.SkyName);
+SB.WriteByte(SVC_NEWMOVEVARS);
+SB.WriteFloat(MoveVars.Gravity);
+SB.WriteFloat(MoveVars.StopSpeed);
+SB.WriteFloat(MoveVars.MaxSpeed);
+SB.WriteFloat(MoveVars.SpectatorMaxSpeed);
+SB.WriteFloat(MoveVars.Accelerate);
+SB.WriteFloat(MoveVars.AirAccelerate);
+SB.WriteFloat(MoveVars.WaterAccelerate);
+SB.WriteFloat(MoveVars.Friction);
+SB.WriteFloat(MoveVars.EdgeFriction);
+SB.WriteFloat(MoveVars.WaterFriction);
+SB.WriteFloat(MoveVars.EntGravity);
+SB.WriteFloat(MoveVars.Bounce);
+SB.WriteFloat(MoveVars.StepSize);
+SB.WriteFloat(MoveVars.MaxVelocity);
+SB.WriteFloat(MoveVars.ZMax);
+SB.WriteFloat(MoveVars.WaveHeight);
+SB.WriteByte(UInt(MoveVars.Footsteps <> 0));
+SB.WriteFloat(MoveVars.RollAngle);
+SB.WriteFloat(MoveVars.RollSpeed);
+SB.WriteFloat(MoveVars.SkyColorR);
+SB.WriteFloat(MoveVars.SkyColorG);
+SB.WriteFloat(MoveVars.SkyColorB);
+SB.WriteFloat(MoveVars.SkyVecX);
+SB.WriteFloat(MoveVars.SkyVecY);
+SB.WriteFloat(MoveVars.SkyVecZ);
+SB.WriteString(@MoveVars.SkyName);
 end;
 
 procedure SV_SendServerInfo(var SB: TSizeBuf; var C: TClient);
@@ -993,7 +993,7 @@ var
 begin
 if (developer.Value <> 0) or (SVS.MaxClients > 1) then
  begin
-  MSG_WriteByte(SB, SVC_PRINT);
+  SB.WriteByte(SVC_PRINT);
   S := StrECopy(@Buf, #2#10'BUILD ');
   S := IntToStrE(BuildNumber, S^, 32);
   if sv_sendmapcrc.Value = 0 then
@@ -1006,52 +1006,52 @@ if (developer.Value <> 0) or (SVS.MaxClients > 1) then
    end;
   S := IntToStrE(SVS.SpawnCount, S^, 32);
   StrCopy(S, #10);
-  MSG_WriteString(SB, @Buf);
+  SB.WriteString(@Buf);
  end;
 
-MSG_WriteByte(SB, SVC_SERVERINFO);
-MSG_WriteLong(SB, C.Protocol);
-MSG_WriteLong(SB, SVS.SpawnCount);
+SB.WriteByte(SVC_SERVERINFO);
+SB.WriteLong(C.Protocol);
+SB.WriteLong(SVS.SpawnCount);
 
 Index := (UInt(@C) - UInt(SVS.Clients)) div SizeOf(TClient);
 CRC := SV.WorldModelCRC;
 COM_Munge3(@CRC, SizeOf(CRC), Byte(not Index));
-MSG_WriteLong(SB, CRC);
-MSG_WriteBuffer(SB, SizeOf(SV.ClientDLLHash), @SV.ClientDLLHash);
+SB.WriteLong(CRC);
+SB.WriteBuffer(SizeOf(SV.ClientDLLHash), @SV.ClientDLLHash);
 
-MSG_WriteByte(SB, SVS.MaxClients);
-MSG_WriteByte(SB, Index);
-MSG_WriteByte(SB, UInt((coop.Value = 0) and (deathmatch.Value <> 0)));
+SB.WriteByte(SVS.MaxClients);
+SB.WriteByte(Index);
+SB.WriteByte(UInt((coop.Value = 0) and (deathmatch.Value <> 0)));
 COM_FileBase(GameDir, @GD);
-MSG_WriteString(SB, @GD);
-MSG_WriteString(SB, hostname.Data);
-MSG_WriteString(SB, @SV.MapFileName);
+SB.WriteString(@GD);
+SB.WriteString(hostname.Data);
+SB.WriteString(@SV.MapFileName);
 
 P := COM_LoadFile(mapcyclefile.Data, FILE_ALLOC_MEMORY, @L);
 if (P <> nil) and (L > 0) then
- MSG_WriteString(SB, P)
+ SB.WriteString(P)
 else
- MSG_WriteString(SB, 'mapcycle failure');
+ SB.WriteString('mapcycle failure');
 
 if P <> nil then
  COM_FreeFile(P);
 
-MSG_WriteByte(SB, 0);
+SB.WriteByte(0);
 
-MSG_WriteByte(SB, SVC_SENDEXTRAINFO);
-MSG_WriteString(SB, FallbackDir);
-MSG_WriteByte(SB, UInt(AllowCheats));
+SB.WriteByte(SVC_SENDEXTRAINFO);
+SB.WriteString(FallbackDir);
+SB.WriteByte(UInt(AllowCheats));
 
 SV_WriteDeltaDescriptionsToClient(SB);
 SV_SetMoveVars;
 SV_WriteMoveVarsToClient(SB);
 
-MSG_WriteByte(SB, SVC_CDTRACK);
-MSG_WriteByte(SB, GlobalVars.CDAudioTrack);
-MSG_WriteByte(SB, GlobalVars.CDAudioTrack);
+SB.WriteByte(SVC_CDTRACK);
+SB.WriteByte(GlobalVars.CDAudioTrack);
+SB.WriteByte(GlobalVars.CDAudioTrack);
 
-MSG_WriteByte(SB, SVC_SETVIEW);
-MSG_WriteShort(SB, Index + 1);
+SB.WriteByte(SVC_SETVIEW);
+SB.WriteShort(Index + 1);
 
 C.Spawned := False;
 C.SendInfo := False;
@@ -1109,17 +1109,17 @@ var
  I: Int;
 begin
 MemSet(Buf, SizeOf(Buf), 0);
-MSG_WriteByte(SB, SVC_RESOURCEREQUEST);
-MSG_WriteLong(SB, SVS.SpawnCount);
-MSG_WriteLong(SB, 0);
+SB.WriteByte(SVC_RESOURCEREQUEST);
+SB.WriteLong(SVS.SpawnCount);
+SB.WriteLong(0);
 
 if (sv_downloadurl.Data^ > #0) and (StrLen(sv_downloadurl.Data) < 128) then
  begin
-  MSG_WriteByte(SB, SVC_RESOURCELOCATION);
-  MSG_WriteString(SB, sv_downloadurl.Data);
+  SB.WriteByte(SVC_RESOURCELOCATION);
+  SB.WriteString(sv_downloadurl.Data);
  end;
 
-MSG_WriteByte(SB, SVC_RESOURCELIST);
+SB.WriteByte(SVC_RESOURCELIST);
 MSG_StartBitWriting(SB);
 MSG_WriteBits(SV.NumResources, 12);
 for I := 0 to SV.NumResources - 1 do
@@ -1163,8 +1163,8 @@ end;
 
 procedure SV_BuildReconnect(var SB: TSizeBuf);
 begin
-MSG_WriteByte(SB, SVC_STUFFTEXT);
-MSG_WriteString(SB, 'reconnect'#10);
+SB.WriteByte(SVC_STUFFTEXT);
+SB.WriteString('reconnect'#10);
 end;
 
 procedure SV_InactivateClients;
@@ -1331,10 +1331,10 @@ else
       if (P.Active and P.Connected and not (I in C.BlockedVoice)) or ((I = Index) and C.VoiceLoopback) then
        if P.UnreliableMessage.CurrentSize + Size + 4 < P.UnreliableMessage.MaxSize then
         begin
-         MSG_WriteByte(P.UnreliableMessage, SVC_VOICEDATA);
-         MSG_WriteByte(P.UnreliableMessage, Index);
-         MSG_WriteShort(P.UnreliableMessage, Size);
-         MSG_WriteBuffer(P.UnreliableMessage, Size, @Buf);
+         P.UnreliableMessage.WriteByte(SVC_VOICEDATA);
+         P.UnreliableMessage.WriteByte(Index);
+         P.UnreliableMessage.WriteShort(Size);
+         P.UnreliableMessage.WriteBuffer(Size, @Buf);
         end;
      end;
   end;
@@ -1544,7 +1544,7 @@ var
  I: Int;
  C: PClient;
 begin
-MSG_WriteByte(SB, SVC_PINGS);
+SB.WriteByte(SVC_PINGS);
 MSG_StartBitWriting(SB);
 for I := 0 to SVS.MaxClients - 1 do
  begin
@@ -1573,8 +1573,8 @@ SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);
 SB.CurrentSize := 0;
 
-MSG_WriteByte(SB, SVC_TIME);
-MSG_WriteFloat(SB, SV.Time);
+SB.WriteByte(SVC_TIME);
+SB.WriteFloat(SV.Time);
 SV_WriteClientDataToMessage(C, SB);
 SV_WriteEntitiesToClient(C, SB);
 if FSB_OVERFLOWED in C.UnreliableMessage.AllowOverflow then

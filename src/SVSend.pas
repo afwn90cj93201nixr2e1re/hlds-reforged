@@ -61,10 +61,10 @@ begin
 P := Base;
 while P <> nil do
  begin
-  MSG_WriteByte(SB, SVC_NEWUSERMSG);
-  MSG_WriteByte(SB, P.Index);
-  MSG_WriteByte(SB, P.Size);
-  MSG_WriteBuffer(SB, SizeOf(P.Name), @P.Name);
+  SB.WriteByte(SVC_NEWUSERMSG);
+  SB.WriteByte(P.Index);
+  SB.WriteByte(P.Size);
+  SB.WriteBuffer(SizeOf(P.Name), @P.Name);
   P := P.Prev;
  end;
 end;
@@ -80,9 +80,9 @@ if SV.Datagram.CurrentSize + 16 > SV.Datagram.MaxSize then
   Exit;
  end;
 
-MSG_WriteByte(SV.Datagram, SVC_PARTICLE);
+SV.Datagram.WriteByte(SVC_PARTICLE);
 for I := 0 to 2 do
- MSG_WriteCoord(SV.Datagram, Origin[I]);
+ SV.Datagram.WriteCoord(Origin[I]);
 
 for I := 0 to 2 do
  begin
@@ -93,11 +93,11 @@ for I := 0 to 2 do
    if J < -128 then
     J := -128;
 
-  MSG_WriteByte(SV.Datagram, J);
+  SV.Datagram.WriteByte(J);
  end;
 
-MSG_WriteByte(SV.Datagram, Count);
-MSG_WriteByte(SV.Datagram, Color);
+SV.Datagram.WriteByte(Count);
+SV.Datagram.WriteByte(Color);
 end;
 
 procedure SV_StartSound(SkipSelf: Boolean; const E: TEdict; Channel: Int; Sample: PLChar; Volume: Int; Attn: Single; Flags: UInt; Pitch: Int);
@@ -179,7 +179,7 @@ if Pitch <> 100 then
 if Index > 255 then
  Flags := Flags or SND_LONG_INDEX;
 
-MSG_WriteByte(SB, SVC_SOUND);
+SB.WriteByte(SVC_SOUND);
 MSG_StartBitWriting(SB);
 MSG_WriteBits(Flags, 9);
 if (Flags and SND_VOLUME) > 0 then

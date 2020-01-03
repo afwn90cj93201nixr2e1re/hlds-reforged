@@ -38,7 +38,7 @@ if not C.FakeClient then
   Move(Event, NewEvent, SizeOf(NewEvent));
   NewEvent.EntIndex := Index;
 
-  MSG_WriteByte(SB, SVC_EVENT_RELIABLE);
+  SB.WriteByte(SVC_EVENT_RELIABLE);
   MSG_StartBitWriting(SB);
   MSG_WriteBits(EventIndex, 10);
   EventDelta.WriteDelta(@OldEvent, @NewEvent, True, nil);
@@ -313,7 +313,7 @@ else
   Count := 31;
 
 MemSet(OS, SizeOf(OS), 0);
-MSG_WriteByte(SB, SVC_EVENT);
+SB.WriteByte(SVC_EVENT);
 MSG_StartBitWriting(SB);
 MSG_WriteBits(Count, 5);
 
