@@ -55,6 +55,11 @@ type
     TempBufferSize: UInt32; // W 8428
 
     Flow: array[TFlowSrc] of TNetchanFlowData; // W 8432    flow data size = 536
+
+  public
+    procedure FragSend;
+    procedure Clear;
+    procedure CreateFragments(var SB: TSizeBuf);
   end;
 
 type
@@ -62,10 +67,8 @@ type
   public
     class procedure OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; S: PLChar); overload;
     class procedure OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; const S: array of const); overload;
-    class procedure FragSend(var C: TNetchan);
+
     class procedure AddBufferToList(var Base: PFragBuf; P: PFragBuf);
-    class procedure Clear(var C: TNetchan);
-    class procedure CreateFragments(var C: TNetchan; var SB: TSizeBuf);
     class procedure CreateFileFragmentsFromBuffer(var C: TNetchan; Name: PLChar; Buffer: Pointer; Size: UInt);
     class function CreateFileFragments(var C: TNetchan; Name: PLChar): Boolean;
     class procedure FlushIncoming(var C: TNetchan; Stream: TNetStream);
@@ -210,33 +213,33 @@ for I := Low(I) to High(I) do
  end;
 end;
 
-class procedure Netchan.Clear(var C: TNetchan);
+procedure TNetchan.Clear;
 var
  I: TNetStream;
 begin
-Netchan.ClearFragments(C);
-if C.ReliableLength > 0 then
+Netchan.ClearFragments(Self);
+if ReliableLength > 0 then
  begin
-  C.ReliableLength := 0;
-  C.ReliableSequence := C.ReliableSequence xor 1;
+  ReliableLength := 0;
+  ReliableSequence := ReliableSequence xor 1;
  end;
 
-SZ_Clear(C.NetMessage);
-C.ClearTime := 0;
+SZ_Clear(NetMessage);
+ClearTime := 0;
 
 for I := Low(I) to High(I) do
  begin
-  C.FragBufActive[I] := False;
-  C.FragBufSequence[I] := 0;
-  C.FragBufNum[I] := 0;
-  C.FragBufOffset[I] := 0;
-  C.FragBufSize[I] := 0;
-  C.IncomingReady[I] := False;
+  FragBufActive[I] := False;
+  FragBufSequence[I] := 0;
+  FragBufNum[I] := 0;
+  FragBufOffset[I] := 0;
+  FragBufSize[I] := 0;
+  IncomingReady[I] := False;
  end;
 
-if C.TempBuffer <> nil then
- Mem_FreeAndNil(C.TempBuffer);
-C.TempBufferSize := 0;
+if TempBuffer <> nil then
+ Mem_FreeAndNil(TempBuffer);
+TempBufferSize := 0;
 end;
 
 class procedure Netchan.Setup(Source: TNetSrc; var C: TNetchan; const Addr: TNetAdr; ClientID: Int; ClientPtr: Pointer; Func: TFragmentSizeFunc);
@@ -322,7 +325,7 @@ var
  SendFrag: array[TNetStream] of Boolean;
  FileNameBuf: array[1..MAX_PATH_W] of LChar;
 begin
-Netchan.FragSend(C);
+C.FragSend;
 for I := Low(I) to High(I) do
  SendFrag[I] := C.FragBufBase[I] <> nil;
 
@@ -332,7 +335,7 @@ if SendNormal and SendFrag[NS_NORMAL] then
   SendNormal := False;
   if C.NetMessage.CurrentSize > MAX_CLIENT_FRAGSIZE then
    begin
-    Netchan.CreateFragments(C, C.NetMessage);
+    C.CreateFragments(C.NetMessage);
     C.NetMessage.CurrentSize := 0;
    end;
  end;
@@ -729,20 +732,20 @@ else
  end;
 end;
 
-class procedure Netchan.FragSend(var C: TNetchan);
+procedure TNetchan.FragSend;
 var
  I: TNetStream;
  P: PFragBufDir;
 begin
 for I := Low(I) to High(I) do
- if (C.FragBufQueue[I] <> nil) and (C.FragBufBase[I] = nil) then
+ if (FragBufQueue[I] <> nil) and (FragBufBase[I] = nil) then
   begin
-   P := C.FragBufQueue[I];
-   C.FragBufQueue[I] := P.Next;
+   P := FragBufQueue[I];
+   FragBufQueue[I] := P.Next;
    P.Next := nil;
 
-   C.FragBufBase[I] := P.FragBuf;
-   C.FragBufNum[I] := P.Count;
+   FragBufBase[I] := P.FragBuf;
+   FragBufNum[I] := P.Count;
    Mem_Free(P);
   end;
 end;
@@ -866,15 +869,15 @@ while RemainingSize > 0 do
 Netchan.AddDirToQueue(C.FragBufQueue[NS_NORMAL], Dir);
 end;
 
-class procedure Netchan.CreateFragments(var C: TNetchan; var SB: TSizeBuf);
+procedure TNetchan.CreateFragments(var SB: TSizeBuf);
 begin
-if C.NetMessage.CurrentSize > 0 then
+if NetMessage.CurrentSize > 0 then
  begin
-  Netchan_CreateFragments_(C, C.NetMessage);
-  C.NetMessage.CurrentSize := 0;
+  Netchan_CreateFragments_(Self, NetMessage);
+  NetMessage.CurrentSize := 0;
  end;
 
-Netchan_CreateFragments_(C, SB);
+Netchan_CreateFragments_(Self, SB);
 end;
 
 class function Netchan.CompressBuf(SrcBuf: Pointer; SrcSize: UInt; out DstBuf: Pointer; out DstSize: UInt): Boolean;

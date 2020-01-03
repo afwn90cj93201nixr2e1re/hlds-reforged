@@ -55,7 +55,7 @@ if not C.FakeClient then
    if SB.CurrentSize + C.Netchan.NetMessage.CurrentSize < C.Netchan.NetMessage.MaxSize then
     SZ_Write(C.Netchan.NetMessage, SB.Data, SB.CurrentSize)
    else
-    Netchan.CreateFragments(C.Netchan, SB);
+    C.Netchan.CreateFragments(SB);
  end;
 end;
 

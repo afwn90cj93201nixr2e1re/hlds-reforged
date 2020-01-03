@@ -183,7 +183,7 @@ SV_ClearCustomizationList(C.Customization);
 SV_ClearResourceLists(C);
 SZ_Clear(C.UnreliableMessage);
 SV_ClearClientEvents(C);
-Netchan.Clear(C.Netchan);
+C.Netchan.Clear;
 
 C.Active := False;
 C.Spawned := False;
@@ -709,8 +709,8 @@ for I := 0 to SVS.MaxClients - 1 do
 
 DPrint(['Client "', PLChar(@HostClient.NetName), '" (index #', (UInt(HostClient) - UInt(SVS.Clients)) div SizeOf(TClient) + 1,
         ') requested fullupdate, sending.']);
-Netchan.CreateFragments(HostClient.Netchan, SB);
-Netchan.FragSend(HostClient.Netchan);
+HostClient.Netchan.CreateFragments(SB);
+HostClient.Netchan.FragSend;
 end;
 
 procedure SV_ClientPrint(var C: TClient; Msg: PLChar; LineBreak: Boolean = True);
@@ -1182,7 +1182,7 @@ for I := 0 to SVS.MaxClients - 1 do
      C.Spawned := False;
      C.SendInfo := False;
      C.Connected := True;
-     Netchan.Clear(C.Netchan);
+     C.Netchan.Clear;
      SZ_Clear(C.UnreliableMessage);
      SV_ClearCustomizationList(C.Customization);
      MemSet(C.PhysInfo, SizeOf(C.PhysInfo), 0);
@@ -1518,7 +1518,7 @@ for I := 0 to SVS.MaxClients - 1 do
      begin
       SZ_Clear(SB);
       SZ_Write(SB, SV.ReliableDatagram.Data, SV.ReliableDatagram.CurrentSize);
-      Netchan.CreateFragments(C.Netchan, SB);
+      C.Netchan.CreateFragments(SB);
      end;
 
     if SV.Datagram.CurrentSize + C.UnreliableMessage.CurrentSize < C.UnreliableMessage.MaxSize then
