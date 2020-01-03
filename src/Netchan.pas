@@ -59,6 +59,7 @@ type
   public
     procedure FragSend;
     procedure Clear;
+    procedure CreateFragments_(var SB: TSizeBuf);
     procedure CreateFragments(var SB: TSizeBuf);
     procedure CreateFileFragmentsFromBuffer(Name: PLChar; Buffer: Pointer; Size: UInt);
     function CreateFileFragments(Name: PLChar): Boolean;
@@ -120,11 +121,10 @@ var
  net_compress: TCVar = (Name: 'net_compress'; Data: '3');
 
 class procedure TNetchan.OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; S: PLChar);
-  procedure Netchan_OutOfBand(Source: TNetSrc; const Addr: TNetAdr; Size: UInt; Data: Pointer);
-  var
-   SB: TSizeBuf;
-   Buf: array[1..MAX_PACKETLEN] of Byte;
-  begin
+var
+  SB: TSizeBuf;
+  Buf: array[1..MAX_PACKETLEN] of Byte;
+begin
   SB.Name := 'Netchan_OutOfBand';
   SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
   SB.Data := @Buf;
@@ -132,12 +132,9 @@ class procedure TNetchan.OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; S:
   SB.CurrentSize := 0;
 
   MSG_WriteLong(SB, OUTOFBAND_TAG);
-  SZ_Write(SB, Data, Size);
+  SZ_Write(SB, S, StrLen(S) + 1);
   if not (FSB_OVERFLOWED in SB.AllowOverflow) then
    NET_SendPacket(Source, SB.CurrentSize, SB.Data, Addr);
-  end;
-begin
-Netchan_OutOfBand(Source, Addr, StrLen(S) + 1, S);
 end;
 
 class procedure TNetchan.OutOfBandPrint(Source: TNetSrc; const Addr: TNetAdr; const S: array of const);
@@ -801,7 +798,7 @@ else
  end;
 end;
 
-procedure Netchan_CreateFragments_(var C: TNetchan; var SB: TSizeBuf);
+procedure TNetchan.CreateFragments_(var SB: TSizeBuf);
 var
  Buf: array[1..MAX_NETBUFLEN] of Byte;
  E, DstLen, ClientFragSize, ThisSize, RemainingSize, FragIndex, DataOffset: UInt;
@@ -825,8 +822,8 @@ if (net_compress.Value = 1) or (net_compress.Value >= 3) then
    end;
  end;
 
-if (@C.FragmentFunc <> nil) and (C.Client <> nil) then
- ClientFragSize := C.FragmentFunc(C.Client)
+if (@FragmentFunc <> nil) and (Client <> nil) then
+ ClientFragSize := FragmentFunc(Client)
 else
  ClientFragSize := DEF_CLIENT_FRAGSIZE;
 
@@ -850,8 +847,8 @@ while RemainingSize > 0 do
     TNetchan.ClearFragBufs(Dir.FragBuf);
     Mem_Free(Dir);
 
-    if C.Client <> nil then
-     SV_DropClient(PClient(C.Client)^, False, 'Server failed to allocate a fragment buffer.');
+    if Client <> nil then
+     SV_DropClient(PClient(Client)^, False, 'Server failed to allocate a fragment buffer.');
     Exit;
    end;
 
@@ -864,18 +861,18 @@ while RemainingSize > 0 do
   TNetchan.AddFragBufToTail(Dir, Tail, FB);
  end;
 
-TNetchan.AddDirToQueue(C.FragBufQueue[NS_NORMAL], Dir);
+TNetchan.AddDirToQueue(FragBufQueue[NS_NORMAL], Dir);
 end;
 
 procedure TNetchan.CreateFragments(var SB: TSizeBuf);
 begin
 if NetMessage.CurrentSize > 0 then
  begin
-  Netchan_CreateFragments_(Self, NetMessage);
+  CreateFragments_(NetMessage);
   NetMessage.CurrentSize := 0;
  end;
 
-Netchan_CreateFragments_(Self, SB);
+CreateFragments_(SB);
 end;
 
 class function TNetchan.CompressBuf(SrcBuf: Pointer; SrcSize: UInt; out DstBuf: Pointer; out DstSize: UInt): Boolean;
