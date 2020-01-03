@@ -486,7 +486,7 @@ Mod_Init;
 R_Init;
 NET_Init;
 TNetchan.Init;
-Delta_Init;
+TDelta.Init;
 SV_Init;
 
 StrLCopy(@Buf, ProjectVersion, SizeOf(Buf) - 1);
@@ -525,7 +525,7 @@ else
 
   SV_Shutdown;
   ReleaseEntityDLLs;
-  Delta_Shutdown;
+  TDelta.Shutdown;
   NET_Shutdown;
   if WADPath <> nil then
    Mem_FreeAndNil(WADPath);

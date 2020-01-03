@@ -804,7 +804,7 @@ if not C.HLTV then
     MSG_WriteBits(C.UpdateMask, 8);
    end;
 
-  Delta_WriteDelta(OS, @Frame.ClientData, True, ClientDelta^, nil);
+  TDelta.WriteDelta(OS, @Frame.ClientData, True, ClientDelta^, nil);
   if C.LW and (DLLFunctions.GetWeaponData(E^, Frame.WeaponData[0]) <> 0) then
    begin
     if NoDelta then
@@ -817,12 +817,12 @@ if not C.HLTV then
       else
        OS := @C.Frames[SVUpdateMask and C.UpdateMask].WeaponData[I];
 
-      Fields := Delta_CheckDelta(OS, @Frame.WeaponData[I], WeaponDelta^);
+      Fields := TDelta.CheckDelta(OS, @Frame.WeaponData[I], WeaponDelta^);
       if Fields > 0 then
        begin
         MSG_WriteBits(1, 1);
         MSG_WriteBits(I, 6); // <- ?
-        Delta_WriteMarkedDelta(OS, @Frame.WeaponData[I], True, WeaponDelta^, Fields, nil);
+        TDelta.WriteMarkedDelta(OS, @Frame.WeaponData[I], True, WeaponDelta^, Fields, nil);
        end;
      end;
    end;

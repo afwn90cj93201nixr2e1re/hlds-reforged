@@ -38,13 +38,13 @@ var
 
 procedure SV_InitDeltas;
 begin
-ClientDelta := Delta_Register('clientdata_t', 'delta.lst');
-EntityDelta := Delta_Register('entity_state_t', 'delta.lst');
-PlayerDelta := Delta_Register('entity_state_player_t', 'delta.lst');
-CustomEntityDelta := Delta_Register('custom_entity_state_t', 'delta.lst');
-UserCmdDelta := Delta_Register('usercmd_t', 'delta.lst');
-WeaponDelta := Delta_Register('weapon_data_t', 'delta.lst');
-EventDelta := Delta_Register('event_t', 'delta.lst');
+ClientDelta := TDelta.Register('clientdata_t', 'delta.lst');
+EntityDelta := TDelta.Register('entity_state_t', 'delta.lst');
+PlayerDelta := TDelta.Register('entity_state_player_t', 'delta.lst');
+CustomEntityDelta := TDelta.Register('custom_entity_state_t', 'delta.lst');
+UserCmdDelta := TDelta.Register('usercmd_t', 'delta.lst');
+WeaponDelta := TDelta.Register('weapon_data_t', 'delta.lst');
+EventDelta := TDelta.Register('event_t', 'delta.lst');
 DPrint('Delta descriptions initialized.');
 end;
 
@@ -63,7 +63,7 @@ while P <> nil do
   MSG_StartBitWriting(SB);
   MSG_WriteBits(P.Delta.NumFields, 16);
   for I := 0 to P.Delta.NumFields - 1 do
-   Delta_WriteDelta(@OS, @P.Delta.Fields[I], True, MetaDelta, nil);
+   TDelta.WriteDelta(@OS, @P.Delta.Fields[I], True, MetaDelta, nil);
   MSG_EndBitWriting;
 
   P := P.Prev;

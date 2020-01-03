@@ -41,7 +41,7 @@ if not C.FakeClient then
   MSG_WriteByte(SB, SVC_EVENT_RELIABLE);
   MSG_StartBitWriting(SB);
   MSG_WriteBits(EventIndex, 10);
-  Delta_WriteDelta(@OldEvent, @NewEvent, True, EventDelta^, nil);
+  TDelta.WriteDelta(@OldEvent, @NewEvent, True, EventDelta^, nil);
   if Delay = 0 then
    MSG_WriteBits(0, 1)
   else
@@ -343,7 +343,7 @@ for I := 0 to MAX_EVENT_QUEUE - 1 do
        else
         begin
          MSG_WriteBits(1, 1);
-         Delta_WriteDelta(@OS, @E.Args, True, EventDelta^, nil);
+         TDelta.WriteDelta(@OS, @E.Args, True, EventDelta^, nil);
         end;
       end;
 

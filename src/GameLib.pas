@@ -404,7 +404,7 @@ if not SVS.InitGameDLL then
   DLLFunctions.GameInit;
   DLLFunctions.PM_Init(ServerMove);
   DLLFunctions.RegisterEncoders;
-  Delta_InitEncoders;
+  TDelta.InitEncoders;
   SV_GetPlayerHulls;
   SV_CheckBlendingInterface;
   SV_CheckSaveGameCommentInterface;

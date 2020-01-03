@@ -2738,7 +2738,7 @@ end;
 procedure PF_Delta_SetField(var D: TDelta; FieldName: PLChar); cdecl;
 begin
 if (@D <> nil) and (FieldName <> nil) then
- Delta_SetField(D, FieldName)
+ TDelta.SetField(D, FieldName)
 else
  DPrint('PF_Delta_SetField: NULL pointer.');
 end;
@@ -2746,7 +2746,7 @@ end;
 procedure PF_Delta_UnsetField(var D: TDelta; FieldName: PLChar); cdecl;
 begin
 if (@D <> nil) and (FieldName <> nil) then
- Delta_UnsetField(D, FieldName)
+ TDelta.UnsetField(D, FieldName)
 else
  DPrint('PF_Delta_UnsetField: NULL pointer.');
 end;
@@ -2754,7 +2754,7 @@ end;
 procedure PF_Delta_AddEncoder(Name: PLChar; Func: TDeltaEncoder); cdecl;
 begin
 if Name <> nil then
- Delta_AddEncoder(Name, Func)
+ TDelta.AddEncoder(Name, Func)
 else
  DPrint('PF_Delta_AddEncoder: NULL pointer.');
 end;
@@ -2790,7 +2790,7 @@ end;
 function PF_Delta_FindField(var D: TDelta; FieldName: PLChar): Int32; cdecl;
 begin
 if (@D <> nil) and (FieldName <> nil) then
- Result := Delta_FindFieldIndex(D, FieldName)
+ Result := TDelta.FindFieldIndex(D, FieldName)
 else
  begin
   DPrint('PF_Delta_FindField: NULL pointer.');
@@ -2802,7 +2802,7 @@ procedure PF_Delta_SetFieldByIndex(var D: TDelta; FieldNumber: UInt32); cdecl;
 begin
 if @D <> nil then
  if FieldNumber < UInt32(D.NumFields) then
-  Delta_SetFieldByIndex(D, FieldNumber)
+  TDelta.SetFieldByIndex(D, FieldNumber)
  else
   DPrint(['PF_Delta_SetFieldByIndex: Bad field index #', FieldNumber, '.'])
 else
@@ -2813,7 +2813,7 @@ procedure PF_Delta_UnsetFieldByIndex(var D: TDelta; FieldNumber: UInt32); cdecl;
 begin
 if @D <> nil then
  if FieldNumber < UInt32(D.NumFields) then
-  Delta_UnsetFieldByIndex(D, FieldNumber)
+  TDelta.UnsetFieldByIndex(D, FieldNumber)
  else
   DPrint(['PF_Delta_UnsetFieldByIndex: Bad field index #', FieldNumber, '.'])
 else

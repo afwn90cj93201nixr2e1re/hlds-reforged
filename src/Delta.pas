@@ -4,34 +4,54 @@ interface
 
 uses SysUtils, Default, SDK;
 
-function Delta_FindField(const D: TDelta; Name: PLChar): PDeltaField;
-function Delta_FindFieldIndex(const D: TDelta; Name: PLChar): Int;
-procedure Delta_SetField(var D: TDelta; Name: PLChar);
-procedure Delta_UnsetField(var D: TDelta; Name: PLChar);
-procedure Delta_SetFieldByIndex(var D: TDelta; Index: UInt);
-procedure Delta_UnsetFieldByIndex(var D: TDelta; Index: UInt);
-procedure Delta_ClearFlags(var D: TDelta);
-function Delta_TestDelta(OS, NS: Pointer; var Delta: TDelta): UInt;
-function Delta_CountSendFields(var Delta: TDelta): UInt;
-procedure Delta_MarkSendFields(OS, NS: Pointer; var Delta: TDelta);
-procedure Delta_WriteMarkedFields(OS, NS: Pointer; const Delta: TDelta);
-function Delta_CheckDelta(OS, NS: Pointer; var Delta: TDelta): UInt;
-procedure Delta_WriteMarkedDelta(OS, NS: Pointer; ForceUpdate: Boolean; var Delta: TDelta; Fields: UInt; Func: TProcedure);
-procedure Delta_WriteDelta(OS, NS: Pointer; ForceUpdate: Boolean; var Delta: TDelta; Func: TProcedure);
-function Delta_ParseDelta(OS, NS: Pointer; var Delta: TDelta): Int;
-procedure Delta_FreeDescription(var D: PDelta);
+type
+  TDeltaFuncs = record helper for TDelta
+    class function FindField(const D: TDelta; Name: PLChar): PDeltaField; static;
+    class function FindFieldIndex(const D: TDelta; Name: PLChar): Int; static;
+    class procedure SetField(var D: TDelta; Name: PLChar); static;
+    class procedure UnsetField(var D: TDelta; Name: PLChar); static;
+    class procedure SetFieldByIndex(var D: TDelta; Index: UInt); static;
+    class procedure UnsetFieldByIndex(var D: TDelta; Index: UInt); static;
+    class procedure ClearFlags(var D: TDelta); static;
+    class function TestDelta(OS, NS: Pointer; var Delta: TDelta): UInt; static;
+    class function CountSendFields(var Delta: TDelta): UInt; static;
+    class procedure MarkSendFields(OS, NS: Pointer; var Delta: TDelta); static;
+    class procedure SetSendFlagBits(const Delta: TDelta; Dest: Pointer; out BytesWritten: UInt); static;
+    class procedure WriteMarkedFields(OS, NS: Pointer; const Delta: TDelta); static;
+    class function CheckDelta(OS, NS: Pointer; var Delta: TDelta): UInt; static;
+    class procedure WriteMarkedDelta(OS, NS: Pointer; ForceUpdate: Boolean; var Delta: TDelta; Fields: UInt; Func: TProcedure); static;
+    class procedure WriteDelta(OS, NS: Pointer; ForceUpdate: Boolean; var Delta: TDelta; Func: TProcedure); static;
+    class function ParseDelta(OS, NS: Pointer; var Delta: TDelta): Int; static;
+    class procedure FreeDescription(var D: PDelta); static;
+    class function FindDefinition(Name: PLChar; out Count: UInt): PDeltaOffsetArray; static;
+    class procedure AddDefinition(Name: PLChar; Data: PDeltaOffsetArray; Count: UInt); static;
+    class procedure ClearDefinitions; static;
+    class procedure SkipDescription(var F: Pointer); static;
+    class function ParseOneField(var F: Pointer; out LinkBase: PDeltaLinkedField; Count: UInt; Base: PDeltaOffsetArray): Boolean; static;
+    class function ParseDescription(Name: PLChar; var Delta: PDelta; F: Pointer): Boolean; static;
+    class procedure AddEncoder(Name: PLChar; Func: TDeltaEncoder); static;
+    class procedure ClearEncoders; static;
+    class function LookupEncoder(Name: PLChar): TDeltaEncoder; static;
+    class function CountLinks(P: PDeltaLinkedField): UInt; static;
+    class procedure ReverseLinks(var P: PDeltaLinkedField); static;
+    class procedure ClearLinks(var P: PDeltaLinkedField); static;
+    class function BuildFromLinks(var LF: PDeltaLinkedField): PDelta; static;
+    class function FindOffset(Count: UInt; Base: PDeltaOffsetArray; Name: PLChar): UInt32; static;
+    class function ParseType(var FieldType: UInt32; var F: Pointer): Boolean; static;
+    class function ParseField(Count: UInt; Base: PDeltaOffsetArray; LF: PDeltaLinkedField; var F: Pointer): Boolean; static;
+    class procedure InitEncoders; static;
+    class function Load(Name: PLChar; var Delta: PDelta; FileName: PLChar): Boolean; static;
+    class function LookupRegistration(Name: PLChar): PDelta; static;
+    class function Register(Name, FileName: PLChar): PDelta; static;
+    class procedure ClearRegistrations; static;
 
-procedure Delta_AddEncoder(Name: PLChar; Func: TDeltaEncoder);
-function Delta_LookupEncoder(Name: PLChar): TDeltaEncoder;
-procedure Delta_InitEncoders;
+    class procedure ClearStats_F; cdecl; static;
+    class procedure DumpStats_F; cdecl; static;
 
-function Delta_Load(Name: PLChar; var Delta: PDelta; FileName: PLChar): Boolean;
+    class procedure Init; static;
+    class procedure Shutdown; static;
+  end;
 
-function Delta_Register(Name, FileName: PLChar): PDelta;
-procedure Delta_ClearRegistrations;
-
-procedure Delta_Init;
-procedure Delta_Shutdown;
 
 var
  RegList: PDeltaReg = nil;
@@ -47,7 +67,7 @@ var
  EncoderList: PDeltaEncoderEntry = nil;
  DefList: PDeltaDefinition = nil;
 
-function Delta_FindField(const D: TDelta; Name: PLChar): PDeltaField;
+class function TDeltaFuncs.FindField(const D: TDelta; Name: PLChar): PDeltaField;
 var
  I: Int;
 begin
@@ -62,7 +82,7 @@ Print(['Delta_FindField: Warning - couldn''t find "', Name, '".']);
 Result := nil;
 end;
 
-function Delta_FindFieldIndex(const D: TDelta; Name: PLChar): Int;
+class function TDeltaFuncs.FindFieldIndex(const D: TDelta; Name: PLChar): Int;
 var
  I: Int;
 begin
@@ -77,35 +97,35 @@ Print(['Delta_FindFieldIndex: Warning - couldn''t find "', Name, '".']);
 Result := -1;
 end;
 
-procedure Delta_SetField(var D: TDelta; Name: PLChar);
+class procedure TDeltaFuncs.SetField(var D: TDelta; Name: PLChar);
 var
  F: PDeltaField;
 begin
-F := Delta_FindField(D, Name);
+F := TDelta.FindField(D, Name);
 if F <> nil then
  Include(F.Flags, ffReady);
 end;
 
-procedure Delta_UnsetField(var D: TDelta; Name: PLChar);
+class procedure TDeltaFuncs.UnsetField(var D: TDelta; Name: PLChar);
 var
  F: PDeltaField;
 begin
-F := Delta_FindField(D, Name);
+F := TDelta.FindField(D, Name);
 if F <> nil then
  Exclude(F.Flags, ffReady);
 end;
 
-procedure Delta_SetFieldByIndex(var D: TDelta; Index: UInt);
+class procedure TDeltaFuncs.SetFieldByIndex(var D: TDelta; Index: UInt);
 begin
 Include(D.Fields[Index].Flags, ffReady);
 end;
 
-procedure Delta_UnsetFieldByIndex(var D: TDelta; Index: UInt);
+class procedure TDeltaFuncs.UnsetFieldByIndex(var D: TDelta; Index: UInt);
 begin
 Exclude(D.Fields[Index].Flags, ffReady);
 end;
 
-procedure Delta_ClearFlags(var D: TDelta);
+class procedure TDeltaFuncs.ClearFlags(var D: TDelta);
 var
  I: Int;
 begin
@@ -113,7 +133,7 @@ for I := 0 to D.NumFields - 1 do
  D.Fields[I].Flags := [];
 end;
 
-function Delta_TestDelta(OS, NS: Pointer; var Delta: TDelta): UInt;
+class function TDeltaFuncs.TestDelta(OS, NS: Pointer; var Delta: TDelta): UInt;
 var
  I, LastIndex: Int;
  F: PDeltaField;
@@ -159,7 +179,7 @@ if LastIndex <> -1 then
 Result := Bits;
 end;
 
-function Delta_CountSendFields(var Delta: TDelta): UInt;
+class function TDeltaFuncs.CountSendFields(var Delta: TDelta): UInt;
 var
  I: Int;
 begin
@@ -173,7 +193,7 @@ for I := 0 to Delta.NumFields - 1 do
   end;
 end;
 
-procedure Delta_MarkSendFields(OS, NS: Pointer; var Delta: TDelta);
+class procedure TDeltaFuncs.MarkSendFields(OS, NS: Pointer; var Delta: TDelta);
 var
  I: Int;
  F: PDeltaField;
@@ -206,7 +226,7 @@ if @Delta.ConditionalEncoder <> nil then
  Delta.ConditionalEncoder(@Delta, OS, NS);
 end;
 
-procedure Delta_SetSendFlagBits(const Delta: TDelta; Dest: Pointer; out BytesWritten: UInt);
+class procedure TDeltaFuncs.SetSendFlagBits(const Delta: TDelta; Dest: Pointer; out BytesWritten: UInt);
 var
  ID, I: Int;
  P: PUInt32;
@@ -228,7 +248,7 @@ else
  BytesWritten := (UInt(ID) shr 3) + 1;
 end;
 
-procedure Delta_WriteMarkedFields(OS, NS: Pointer; const Delta: TDelta);
+class procedure TDeltaFuncs.WriteMarkedFields(OS, NS: Pointer; const Delta: TDelta);
 var
  I: Int;
  F: PDeltaField;
@@ -288,14 +308,14 @@ for I := 0 to Delta.NumFields - 1 do
  end;
 end;
 
-function Delta_CheckDelta(OS, NS: Pointer; var Delta: TDelta): UInt;
+class function TDeltaFuncs.CheckDelta(OS, NS: Pointer; var Delta: TDelta): UInt;
 begin
-Delta_ClearFlags(Delta);
-Delta_MarkSendFields(OS, NS, Delta);
-Result := Delta_CountSendFields(Delta);
+TDelta.ClearFlags(Delta);
+TDelta.MarkSendFields(OS, NS, Delta);
+Result := TDelta.CountSendFields(Delta);
 end;
 
-procedure Delta_WriteMarkedDelta(OS, NS: Pointer; ForceUpdate: Boolean; var Delta: TDelta; Fields: UInt; Func: TProcedure);
+class procedure TDeltaFuncs.WriteMarkedDelta(OS, NS: Pointer; ForceUpdate: Boolean; var Delta: TDelta; Fields: UInt; Func: TProcedure);
 var
  I: Int;
  BytesWritten: UInt;
@@ -303,22 +323,22 @@ var
 begin
 if (Fields > 0) or ForceUpdate then
  begin
-  Delta_SetSendFlagBits(Delta, @C, BytesWritten);
+  TDelta.SetSendFlagBits(Delta, @C, BytesWritten);
   if @Func <> nil then
    Func;
   MSG_WriteBits(BytesWritten, 3);
   for I := 1 to BytesWritten do
    MSG_WriteBits(C[I], 8);
-  Delta_WriteMarkedFields(OS, NS, Delta);
+  TDelta.WriteMarkedFields(OS, NS, Delta);
  end;
 end;
 
-procedure Delta_WriteDelta(OS, NS: Pointer; ForceUpdate: Boolean; var Delta: TDelta; Func: TProcedure);
+class procedure TDeltaFuncs.WriteDelta(OS, NS: Pointer; ForceUpdate: Boolean; var Delta: TDelta; Func: TProcedure);
 begin
-Delta_WriteMarkedDelta(OS, NS, ForceUpdate, Delta, Delta_CheckDelta(OS, NS, Delta), Func);
+TDelta.WriteMarkedDelta(OS, NS, ForceUpdate, Delta, TDelta.CheckDelta(OS, NS, Delta), Func);
 end;
 
-function Delta_ParseDelta(OS, NS: Pointer; var Delta: TDelta): Int;
+class function TDeltaFuncs.ParseDelta(OS, NS: Pointer; var Delta: TDelta): Int;
 var
  CB, ByteCount: UInt;
  I: Int;
@@ -408,7 +428,7 @@ for I := 0 to Delta.NumFields - 1 do
 Result := MSG_CurrentBit - CB;
 end;
 
-procedure Delta_AddEncoder(Name: PLChar; Func: TDeltaEncoder);
+class procedure TDeltaFuncs.AddEncoder(Name: PLChar; Func: TDeltaEncoder);
 var
  P: PDeltaEncoderEntry;
 begin
@@ -419,7 +439,7 @@ P.Func := @Func;
 EncoderList := P;
 end;
 
-procedure Delta_ClearEncoders;
+class procedure TDeltaFuncs.ClearEncoders;
 var
  P, P2: PDeltaEncoderEntry;
 begin
@@ -435,7 +455,7 @@ while P <> nil do
 EncoderList := nil;
 end;
 
-function Delta_LookupEncoder(Name: PLChar): TDeltaEncoder;
+class function TDeltaFuncs.LookupEncoder(Name: PLChar): TDeltaEncoder;
 var
  P: PDeltaEncoderEntry;
 begin
@@ -452,7 +472,7 @@ while P <> nil do
 Result := nil;
 end;
 
-function Delta_CountLinks(P: PDeltaLinkedField): UInt;
+class function TDeltaFuncs.CountLinks(P: PDeltaLinkedField): UInt;
 begin
 Result := 0;
 
@@ -463,7 +483,7 @@ while P <> nil do
  end;
 end;
 
-procedure Delta_ReverseLinks(var P: PDeltaLinkedField);
+class procedure TDeltaFuncs.ReverseLinks(var P: PDeltaLinkedField);
 var
  L, P2, P3: PDeltaLinkedField;
 begin
@@ -480,7 +500,7 @@ while P2 <> nil do
 P := L;
 end;
 
-procedure Delta_ClearLinks(var P: PDeltaLinkedField);
+class procedure TDeltaFuncs.ClearLinks(var P: PDeltaLinkedField);
 var
  P2, P3: PDeltaLinkedField;
 begin
@@ -496,15 +516,15 @@ while P2 <> nil do
 P := nil;
 end;
 
-function Delta_BuildFromLinks(var LF: PDeltaLinkedField): PDelta;
+class function TDeltaFuncs.BuildFromLinks(var LF: PDeltaLinkedField): PDelta;
 var
  D: PDelta;
  I: Int;
  P: PDeltaLinkedField;
 begin
 D := Mem_ZeroAlloc(SizeOf(TDelta));
-Delta_ReverseLinks(LF);
-D.NumFields := Delta_CountLinks(LF);
+TDelta.ReverseLinks(LF);
+D.NumFields := TDelta.CountLinks(LF);
 D.Fields := Mem_ZeroAlloc(D.NumFields * SizeOf(TDeltaField));
 
 P := LF;
@@ -514,12 +534,12 @@ for I := 0 to D.NumFields - 1 do
   P := P.Prev;
  end;
 
-Delta_ClearLinks(LF);
+TDelta.ClearLinks(LF);
 D.Active := True;
 Result := D;
 end;
 
-function Delta_FindOffset(Count: UInt; Base: PDeltaOffsetArray; Name: PLChar): UInt32;
+class function TDeltaFuncs.FindOffset(Count: UInt; Base: PDeltaOffsetArray; Name: PLChar): UInt32;
 var
  I: Int;
 begin
@@ -534,7 +554,7 @@ Sys_Error(['Delta_FindOffset: Couldn''t find offset for "', Name, '".']);
 Result := 0;
 end;
 
-function Delta_ParseType(var FieldType: UInt32; var F: Pointer): Boolean;
+class function TDeltaFuncs.ParseType(var FieldType: UInt32; var F: Pointer): Boolean;
 begin
 while True do
  begin
@@ -584,7 +604,7 @@ while True do
 Result := True;
 end;
 
-function Delta_ParseField(Count: UInt; Base: PDeltaOffsetArray; LF: PDeltaLinkedField; var F: Pointer): Boolean;
+class function TDeltaFuncs.ParseField(Count: UInt; Base: PDeltaOffsetArray; LF: PDeltaLinkedField; var F: Pointer): Boolean;
 var
  Post: Boolean;
  DF: PDeltaField;
@@ -605,13 +625,13 @@ if StrComp(@COM_Token, '(') <> 0 then
 F := COM_Parse(F);
 if COM_Token[Low(COM_Token)] = #0 then
  Sys_Error('Delta_ParseField: Expecting fieldname.');
- 
+
 DF := LF.Field;
 StrLCopy(@DF.Name, @COM_Token, SizeOf(DF.Name) - 1);
-DF.Offset := Delta_FindOffset(Count, Base, @COM_Token);
+DF.Offset := TDelta.FindOffset(Count, Base, @COM_Token);
 
 F := COM_Parse(F);
-if Delta_ParseType(DF.FieldType, F) then
+if TDelta.ParseType(DF.FieldType, F) then
  begin
   F := COM_Parse(F);
   DF.FieldSize := 1;
@@ -649,7 +669,7 @@ else
  Result := False;
 end;
 
-procedure Delta_FreeDescription(var D: PDelta);
+class procedure TDeltaFuncs.FreeDescription(var D: PDelta);
 begin
 if D <> nil then
  begin
@@ -660,7 +680,7 @@ if D <> nil then
  end;
 end;
 
-function Delta_FindDefinition(Name: PLChar; out Count: UInt): PDeltaOffsetArray;
+class function TDeltaFuncs.FindDefinition(Name: PLChar; out Count: UInt): PDeltaOffsetArray;
 var
  P: PDeltaDefinition;
 begin
@@ -679,7 +699,7 @@ Result := nil;
 Count := 0;
 end;
 
-procedure Delta_AddDefinition(Name: PLChar; Data: PDeltaOffsetArray; Count: UInt);
+class procedure TDeltaFuncs.AddDefinition(Name: PLChar; Data: PDeltaOffsetArray; Count: UInt);
 var
  D: PDeltaDefinition;
 begin
@@ -699,7 +719,7 @@ D.Count := Count;
 D.Offsets := Data;
 end;
 
-procedure Delta_ClearDefinitions;
+class procedure TDeltaFuncs.ClearDefinitions;
 var
  P, P2: PDeltaDefinition;
 begin
@@ -715,7 +735,7 @@ while P <> nil do
 DefList := nil;
 end;
 
-procedure Delta_SkipDescription(var F: Pointer);
+class procedure TDeltaFuncs.SkipDescription(var F: Pointer);
 begin
 F := COM_Parse(F);
 repeat
@@ -725,7 +745,7 @@ repeat
 until StrComp(@COM_Token, '}') = 0;
 end;
 
-function Delta_ParseOneField(var F: Pointer; out LinkBase: PDeltaLinkedField; Count: UInt; Base: PDeltaOffsetArray): Boolean;
+class function TDeltaFuncs.ParseOneField(var F: Pointer; out LinkBase: PDeltaLinkedField; Count: UInt; Base: PDeltaOffsetArray): Boolean;
 var
  X: TDeltaLinkedField;
  P: PDeltaLinkedField;
@@ -743,10 +763,10 @@ while True do
   F := COM_Parse(F);
   if COM_Token[Low(COM_Token)] = #0 then
    Exit;
-  
+
   X.Prev := nil;
   X.Field := Mem_ZeroAlloc(SizeOf(X.Field^));
-  if not Delta_ParseField(Count, Base, @X, F) then
+  if not TDelta.ParseField(Count, Base, @X, F) then
    Break;
 
   P := Mem_ZeroAlloc(SizeOf(P^));
@@ -758,7 +778,7 @@ while True do
 Result := False;
 end;
 
-function Delta_ParseDescription(Name: PLChar; var Delta: PDelta; F: Pointer): Boolean;
+class function TDeltaFuncs.ParseDescription(Name: PLChar; var Delta: PDelta; F: Pointer): Boolean;
 var
  Def: PDeltaOffsetArray;
  DefCount: UInt;
@@ -782,10 +802,10 @@ while True do
    Break
   else
    if StrIComp(@COM_Token, Name) <> 0 then
-    Delta_SkipDescription(F)
+    TDelta.SkipDescription(F)
    else
     begin
-     Def := Delta_FindDefinition(@COM_Token, DefCount);
+     Def := TDelta.FindDefinition(@COM_Token, DefCount);
      if Def = nil then
       Sys_Error(['Delta_ParseDescription: Unknown data type - "', PLChar(@COM_Token), '".']);
 
@@ -816,7 +836,7 @@ while True do
           Exit;
          end
         else
-         if not Delta_ParseOneField(F, LinkBase, DefCount, Def) then
+         if not TDelta.ParseOneField(F, LinkBase, DefCount, Def) then
           begin
            Result := False;
            Exit;
@@ -825,7 +845,7 @@ while True do
     end;
  end;
 
-Delta := Delta_BuildFromLinks(LinkBase);
+Delta := TDelta.BuildFromLinks(LinkBase);
 if Encoder[Low(Encoder)] > #0 then
  begin
   StrCopy(@Delta.Name, @Encoder);
@@ -835,7 +855,7 @@ if Encoder[Low(Encoder)] > #0 then
 Result := True;
 end;
 
-function Delta_Load(Name: PLChar; var Delta: PDelta; FileName: PLChar): Boolean;
+class function TDeltaFuncs.Load(Name: PLChar; var Delta: PDelta; FileName: PLChar): Boolean;
 var
  P: Pointer;
 begin
@@ -847,12 +867,12 @@ if P = nil then
  end
 else
  begin
-  Result := Delta_ParseDescription(Name, Delta, P);
+  Result := TDelta.ParseDescription(Name, Delta, P);
   COM_FreeFile(P);
  end;
 end;
 
-function Delta_LookupRegistration(Name: PLChar): PDelta;
+class function TDeltaFuncs.LookupRegistration(Name: PLChar): PDelta;
 var
  P: PDeltaReg;
 begin
@@ -869,12 +889,12 @@ while P <> nil do
 Result := nil;
 end;
 
-function Delta_Register(Name, FileName: PLChar): PDelta;
+class function TDeltaFuncs.Register(Name, FileName: PLChar): PDelta;
 var
  D: PDelta;
  P: PDeltaReg;
 begin
-if not Delta_Load(Name, D, FileName) then
+if not TDelta.Load(Name, D, FileName) then
  Sys_Error(['Delta_Register: Error parsing "', Name, '" in "', FileName, '".']);
 
 P := Mem_Alloc(SizeOf(P^));
@@ -886,7 +906,7 @@ RegList := P;
 Result := D;
 end;
 
-procedure Delta_InitEncoders;
+class procedure TDeltaFuncs.InitEncoders;
 var
  P: PDeltaReg;
  D: PDelta;
@@ -896,13 +916,13 @@ while P <> nil do
  begin
   D := P.Delta;
   if D.Name[Low(D.Name)] > #0 then
-   D.ConditionalEncoder := Delta_LookupEncoder(@D.Name);
+   D.ConditionalEncoder := TDelta.LookupEncoder(@D.Name);
 
   P := P.Prev;
  end;
 end;
 
-procedure Delta_ClearRegistrations;
+class procedure TDeltaFuncs.ClearRegistrations;
 var
  P, P2: PDeltaReg;
 begin
@@ -911,7 +931,7 @@ while P <> nil do
  begin
   P2 := P.Prev;
   if P.Delta <> nil then
-   Delta_FreeDescription(P.Delta);
+   TDelta.FreeDescription(P.Delta);
 
   Mem_Free(P.Name);
   Mem_Free(P.FileName);
@@ -922,7 +942,7 @@ while P <> nil do
 RegList := nil;
 end;
 
-procedure Delta_ClearStats_F; cdecl;
+class procedure TDeltaFuncs.ClearStats_F; cdecl;
 var
  P: PDeltaReg;
  D: PDelta;
@@ -945,11 +965,11 @@ while P <> nil do
 Print('Delta stats cleared.');
 end;
 
-procedure Delta_DumpStats_F; cdecl;
+class procedure TDeltaFuncs.DumpStats_F; cdecl;
 var
  P: PDeltaReg;
  D: PDelta;
- F: PDeltaField; 
+ F: PDeltaField;
  I: Int;
  S: PLChar;
  L: UInt;
@@ -984,24 +1004,24 @@ while P <> nil do
  end;
 end;
 
-procedure Delta_Init;
+class procedure TDeltaFuncs.Init;
 begin
-Cmd_AddCommand('delta_stats', @Delta_DumpStats_F);
-Cmd_AddCommand('delta_clear', @Delta_ClearStats_F);
-Delta_AddDefinition('clientdata_t', @DT_ClientData_T, High(DT_ClientData_T));
-Delta_AddDefinition('weapon_data_t', @DT_WeaponData_T, High(DT_WeaponData_T));
-Delta_AddDefinition('usercmd_t', @DT_UserCmd_T, High(DT_UserCmd_T));
-Delta_AddDefinition('entity_state_t', @DT_EntityState_T, High(DT_EntityState_T));
-Delta_AddDefinition('entity_state_player_t', @DT_EntityState_T, High(DT_EntityState_T));
-Delta_AddDefinition('custom_entity_state_t', @DT_EntityState_T, High(DT_EntityState_T));
-Delta_AddDefinition('event_t', @DT_Event_T, High(DT_Event_T));
+  Cmd_AddCommand('delta_stats', @TDelta.DumpStats_F);
+  Cmd_AddCommand('delta_clear', @TDelta.ClearStats_F);
+  TDelta.AddDefinition('clientdata_t', @DT_ClientData_T, High(DT_ClientData_T));
+  TDelta.AddDefinition('weapon_data_t', @DT_WeaponData_T, High(DT_WeaponData_T));
+  TDelta.AddDefinition('usercmd_t', @DT_UserCmd_T, High(DT_UserCmd_T));
+  TDelta.AddDefinition('entity_state_t', @DT_EntityState_T, High(DT_EntityState_T));
+  TDelta.AddDefinition('entity_state_player_t', @DT_EntityState_T, High(DT_EntityState_T));
+  TDelta.AddDefinition('custom_entity_state_t', @DT_EntityState_T, High(DT_EntityState_T));
+  TDelta.AddDefinition('event_t', @DT_Event_T, High(DT_Event_T));
 end;
 
-procedure Delta_Shutdown;
+class procedure TDeltaFuncs.Shutdown;
 begin
-Delta_ClearEncoders;
-Delta_ClearDefinitions;
-Delta_ClearRegistrations;
+  TDelta.ClearEncoders;
+  TDelta.ClearDefinitions;
+  TDelta.ClearRegistrations;
 end;
 
 end.
