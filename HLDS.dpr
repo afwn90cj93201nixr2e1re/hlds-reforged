@@ -36,6 +36,7 @@ uses
   Model in 'src/Model.pas',
   MsgBuf in 'src/MsgBuf.pas',
   Network in 'src/Network.pas',
+  NetchanMain in 'src/NetchanMain.pas',
   ParseLib in 'src/ParseLib.pas',
   PMove in 'src/PMove.pas',
   Renderer in 'src/Renderer.pas',

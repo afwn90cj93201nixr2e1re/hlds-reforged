@@ -94,7 +94,7 @@ var
 implementation
 
 uses Common, CoreUI, FileSys, Info, HostMain, Memory, Network, SVClient,
-  SVCmds, SVMain, SVRcon, SysArgs, SysMain;
+  SVCmds, SVMain, SVRcon, SysArgs, SysMain, NetchanMain;
  
 var
  FirstToken: array[1..204] of LChar;

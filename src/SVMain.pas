@@ -164,7 +164,8 @@ implementation
 
 uses Common, Console, Edict, Encode, GameLib, HostMain, HPAK, Memory, Model,
   Network, PMove, Resource, SVClient, SVCmds, SVDelta, SVEdict, SVEvent,
-  SVMove, SVPacket, SVPhys, SVRcon, SVSend, SVWorld, SysArgs, SysClock;
+  SVMove, SVPacket, SVPhys, SVRcon, SVSend, SVWorld, SysArgs, SysClock,
+  NetchanMain;
 
 var
  VoiceCodec: array[1..128] of LChar;

@@ -108,7 +108,7 @@ implementation
 
 uses Common, Console, Delta, Edict, Encode, GameLib, Info, HostMain, Memory,
   MsgBuf, Network, PMove, Resource, SVMain, SVAuth, SVDelta, SVEdict, SVEvent,
-  SVMove, SVPacket, SVSend, SysArgs, SysMain;
+  SVMove, SVPacket, SVSend, SysArgs, SysMain, NetchanMain;
 
 const
  CLCommands: array[1..19] of PLChar =

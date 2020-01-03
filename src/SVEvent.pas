@@ -17,7 +17,8 @@ procedure SV_ClearClientEvents(var C: TClient);
 
 implementation
 
-uses Common, Console, Delta, Edict, HostMain, MathLib, Memory, MsgBuf, Network, SVDelta, SVMain, SVMove, SVSend;
+uses Common, Console, Delta, Edict, HostMain, MathLib, Memory, MsgBuf, Network,
+  SVDelta, SVMain, SVMove, SVSend, NetchanMain;
 
 procedure EV_PlayReliableEvent(var C: TClient; Index: Int; EventIndex: UInt16; Delay: Single; const Event: TEvent);
 var

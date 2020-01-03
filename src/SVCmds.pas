@@ -32,7 +32,7 @@ var
 implementation
 
 uses Common, Console, FileSys, GameLib, Info, Memory, MsgBuf, HostMain,
-  Network, SVAuth, SVClient, SVDelta, SVMain, SVRcon, SVSend;
+  Network, SVAuth, SVClient, SVDelta, SVMain, SVRcon, SVSend, NetchanMain;
 
 procedure SV_FreeLogNodes;
 var
