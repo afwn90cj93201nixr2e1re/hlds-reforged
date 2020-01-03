@@ -63,7 +63,7 @@ while P <> nil do
   MSG_StartBitWriting(SB);
   MSG_WriteBits(P.Delta.NumFields, 16);
   for I := 0 to P.Delta.NumFields - 1 do
-   TDelta.WriteDelta(@OS, @P.Delta.Fields[I], True, MetaDelta, nil);
+   MetaDelta.WriteDelta(@OS, @P.Delta.Fields[I], True, nil);
   MSG_EndBitWriting;
 
   P := P.Prev;

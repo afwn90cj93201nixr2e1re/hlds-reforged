@@ -792,7 +792,7 @@ end;
 procedure MSG_ReadUserCmd(Dest, Source: PUserCmd);
 begin
 MSG_StartBitReading(gNetMessage);
-TDelta.ParseDelta(Source, Dest, UserCmdDelta^);
+UserCmdDelta.ParseDelta(Source, Dest);
 MSG_EndBitReading(gNetMessage);
 COM_NormalizeAngles(Dest.ViewAngles);
 end;

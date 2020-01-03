@@ -167,14 +167,14 @@ for I := 0 to SV.NumEdicts - 1 do
      else
       D := EntityDelta;
 
-    TDelta.WriteDelta(@OS, NS, True, D^, nil);
+    D.WriteDelta(@OS, NS, True, nil);
    end;
  end;
 
 MSG_WriteBits(65535, 16);
 MSG_WriteBits(SV.Baseline.NumEnts, 6);
 for I := 0 to SV.Baseline.NumEnts - 1 do
- TDelta.WriteDelta(@OS, @SV.Baseline.ES[I], True, EntityDelta^, nil);
+ EntityDelta.WriteDelta(@OS, @SV.Baseline.ES[I], True, nil);
 
 MSG_EndBitWriting;
 end;
@@ -306,7 +306,7 @@ else
 
 OS := Best;
 NS := @ESPack[PackNum];
-BestScore := TDelta.TestDelta(OS, NS, D^) - 6; // how many bits should be sent
+BestScore := D.TestDelta(OS, NS) - 6; // how many bits should be sent
 BestIndex := PackNum;
 
 J := 1;
@@ -318,7 +318,7 @@ for I := PackNum - 1 downto 0 do
   OS := @ESPack[I];
   if OS.EntityType = NS.EntityType then
    begin
-    K := TDelta.TestDelta(OS, NS, D^);
+    K := D.TestDelta(OS, NS);
     if K < BestScore then
      begin
       BestScore := K;
@@ -387,7 +387,7 @@ while (I < DstPack.NumEnts) or (J < SrcNumEnts) do
      else
       D := EntityDelta;
 
-    TDelta.WriteDelta(@SrcPack.Ents[J], @DstPack.Ents[I], False, D^, SV_InvokeCallback);
+    D.WriteDelta(@SrcPack.Ents[J], @DstPack.Ents[I], False, SV_InvokeCallback);
     Inc(J);
     Inc(I);
    end
@@ -432,7 +432,7 @@ while (I < DstPack.NumEnts) or (J < SrcNumEnts) do
       else
        D := EntityDelta;
 
-     TDelta.WriteDelta(Best, @DstPack.Ents[I], True, D^, SV_InvokeCallback);
+     D.WriteDelta(Best, @DstPack.Ents[I], True, SV_InvokeCallback);
      Inc(I);
     end;
  end;
