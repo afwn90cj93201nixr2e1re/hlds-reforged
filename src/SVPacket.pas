@@ -82,12 +82,12 @@ end;
 
 procedure SV_RejectConnection(const Addr: TNetAdr; Msg: PLChar);
 begin
-SZ_Clear(NetMessage);
-MSG_WriteLong(NetMessage, OUTOFBAND_TAG);
-MSG_WriteChar(NetMessage, S2C_ERROR);
-MSG_WriteString(NetMessage, Msg);
-NET_SendPacket(NS_SERVER, NetMessage.CurrentSize, NetMessage.Data, Addr);
-SZ_Clear(NetMessage);
+SZ_Clear(gNetMessage);
+MSG_WriteLong(gNetMessage, OUTOFBAND_TAG);
+MSG_WriteChar(gNetMessage, S2C_ERROR);
+MSG_WriteString(gNetMessage, Msg);
+NET_SendPacket(NS_SERVER, gNetMessage.CurrentSize, gNetMessage.Data, Addr);
+SZ_Clear(gNetMessage);
 end;
 
 procedure SV_RejectConnection(const Addr: TNetAdr; const Msg: array of const);
@@ -97,12 +97,12 @@ end;
 
 procedure SV_RejectConnectionForPassword(const Addr: TNetAdr);
 begin
-SZ_Clear(NetMessage);
-MSG_WriteLong(NetMessage, OUTOFBAND_TAG);
-MSG_WriteChar(NetMessage, S2C_PASSWORD);
-MSG_WriteString(NetMessage, 'BADPASSWORD');
-NET_SendPacket(NS_SERVER, NetMessage.CurrentSize, NetMessage.Data, Addr);
-SZ_Clear(NetMessage);
+SZ_Clear(gNetMessage);
+MSG_WriteLong(gNetMessage, OUTOFBAND_TAG);
+MSG_WriteChar(gNetMessage, S2C_PASSWORD);
+MSG_WriteString(gNetMessage, 'BADPASSWORD');
+NET_SendPacket(NS_SERVER, gNetMessage.CurrentSize, gNetMessage.Data, Addr);
+SZ_Clear(gNetMessage);
 end;
 
 function SV_GetFragmentSize(C: Pointer): UInt32; cdecl;
@@ -456,7 +456,7 @@ else
     C.Entity.V.NetName := UInt(@C.NetName) - PRStrings;
     C.Protocol := Protocol;
 
-    Netchan.Setup(NS_SERVER, C.Netchan, NetFrom, ClientIndex, C, SV_GetFragmentSize);
+    C.Netchan.Setup(NS_SERVER, NetFrom, ClientIndex, C, SV_GetFragmentSize);
 
     C.UpdateRate := 0.05;
     C.NextUpdateTime := RealTime + 0.05;
@@ -1136,7 +1136,7 @@ while NET_GetPacket(NS_SERVER) do
  if SV_FilterPacket then
   SV_SendBan
  else
-  if PInt32(NetMessage.Data)^ = OUTOFBAND_TAG then
+  if PInt32(gNetMessage.Data)^ = OUTOFBAND_TAG then
    SV_ConnectionlessPacket
   else
    for I := 0 to SVS.MaxClients - 1 do
@@ -1144,7 +1144,7 @@ while NET_GetPacket(NS_SERVER) do
      C := @SVS.Clients[I];
      if (C.Active or C.Spawned or C.Connected) and NET_CompareAdr(NetFrom, C.Netchan.Addr) then
       begin
-       if Netchan.Process(C.Netchan) then
+       if C.Netchan.Process then
         begin
          if (SVS.MaxClients = 1) or not C.Active or not C.Spawned or not C.SendInfo then
           C.NeedUpdate := True;

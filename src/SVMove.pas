@@ -1508,7 +1508,7 @@ else
   Size := MSG_ReadByte;
   Checksum := MSG_ReadByte;
   RC := MSG_ReadCount;
-  COM_UnMunge(Pointer(UInt(NetMessage.Data) + RC), Size, C.Netchan.IncomingSequence);
+  COM_UnMunge(Pointer(UInt(gNetMessage.Data) + RC), Size, C.Netchan.IncomingSequence);
 
   Flags := MSG_ReadByte;
   Loss := Flags and $7F;
@@ -1544,7 +1544,7 @@ else
      if MSG_BadRead then
       Print(['SV_ParseMove: Client "', PLChar(@C.NetName), '" (', NET_AdrToString(C.Netchan.Addr, AdrBuf, SizeOf(AdrBuf)), ') sent a bogus command packet.'])
      else
-      if Byte(COM_BlockSequenceCRCByte(Pointer(UInt(NetMessage.Data) + RC), MSG_ReadCount - RC, C.Netchan.IncomingSequence)) <> Checksum then
+      if Byte(COM_BlockSequenceCRCByte(Pointer(UInt(gNetMessage.Data) + RC), MSG_ReadCount - RC, C.Netchan.IncomingSequence)) <> Checksum then
        begin
         Print(['SV_ParseMove: Failed command checksum for client "', PLChar(@C.NetName), '" (', NET_AdrToString(C.Netchan.Addr, AdrBuf, SizeOf(AdrBuf)), ').']);
         MSG_BadRead := True;

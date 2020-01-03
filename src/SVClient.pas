@@ -356,7 +356,7 @@ if TimePlaying > 0 then
  SV_RecordPlayingTime(TimePlaying);
 
 if @C = HostClient then
- MSG_ReadCount := NetMessage.CurrentSize;
+ MSG_ReadCount := gNetMessage.CurrentSize;
 
 MemSet(C.UserInfo, SizeOf(C.UserInfo), 0);
 
@@ -941,12 +941,12 @@ end;
 
 procedure SV_SendBan;
 begin
-SZ_Clear(NetMessage);
-MSG_WriteLong(NetMessage, OUTOFBAND_TAG);
-MSG_WriteChar(NetMessage, S2C_PRINT);
-MSG_WriteString(NetMessage, 'You have been banned from this server.'#10);
-NET_SendPacket(NS_SERVER, NetMessage.CurrentSize, NetMessage.Data, NetFrom);
-SZ_Clear(NetMessage);
+SZ_Clear(gNetMessage);
+MSG_WriteLong(gNetMessage, OUTOFBAND_TAG);
+MSG_WriteChar(gNetMessage, S2C_PRINT);
+MSG_WriteString(gNetMessage, 'You have been banned from this server.'#10);
+NET_SendPacket(NS_SERVER, gNetMessage.CurrentSize, gNetMessage.Data, NetFrom);
+SZ_Clear(gNetMessage);
 end;
 
 procedure SV_WriteMoveVarsToClient(var SB: TSizeBuf);

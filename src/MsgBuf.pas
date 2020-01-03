@@ -637,98 +637,98 @@ end;
 
 function MSG_ReadChar: LChar;
 begin
-if MSG_ReadCount + SizeOf(Result) > NetMessage.CurrentSize then
+if MSG_ReadCount + SizeOf(Result) > gNetMessage.CurrentSize then
  begin
   MSG_BadRead := True;
   Result := LChar(-1);
  end
 else
  begin
-  Result := PLChar(UInt(NetMessage.Data) + MSG_ReadCount)^;
+  Result := PLChar(UInt(gNetMessage.Data) + MSG_ReadCount)^;
   Inc(MSG_ReadCount, SizeOf(Result));
  end;
 end;
 
 function MSG_ReadByte: Byte;
 begin
-if MSG_ReadCount + SizeOf(Result) > NetMessage.CurrentSize then
+if MSG_ReadCount + SizeOf(Result) > gNetMessage.CurrentSize then
  begin
   MSG_BadRead := True;
   Result := Byte(-1);
  end
 else
  begin
-  Result := PByte(UInt(NetMessage.Data) + MSG_ReadCount)^;
+  Result := PByte(UInt(gNetMessage.Data) + MSG_ReadCount)^;
   Inc(MSG_ReadCount, SizeOf(Result));
  end;
 end;
 
 function MSG_ReadShort: Int16;
 begin
-if MSG_ReadCount + SizeOf(Result) > NetMessage.CurrentSize then
+if MSG_ReadCount + SizeOf(Result) > gNetMessage.CurrentSize then
  begin
   MSG_BadRead := True;
   Result := -1;
  end
 else
  begin
-  Result := LittleShort(PInt16(UInt(NetMessage.Data) + MSG_ReadCount)^);
+  Result := LittleShort(PInt16(UInt(gNetMessage.Data) + MSG_ReadCount)^);
   Inc(MSG_ReadCount, SizeOf(Result));
  end;
 end;
 
 function MSG_ReadWord: UInt16;
 begin
-if MSG_ReadCount + SizeOf(Result) > NetMessage.CurrentSize then
+if MSG_ReadCount + SizeOf(Result) > gNetMessage.CurrentSize then
  begin
   MSG_BadRead := True;
   Result := UInt16(-1);
  end
 else
  begin
-  Result := LittleShort(PUInt16(UInt(NetMessage.Data) + MSG_ReadCount)^);
+  Result := LittleShort(PUInt16(UInt(gNetMessage.Data) + MSG_ReadCount)^);
   Inc(MSG_ReadCount, SizeOf(Result));
  end;
 end;
 
 function MSG_ReadLong: Int32;
 begin
-if MSG_ReadCount + SizeOf(Result) > NetMessage.CurrentSize then
+if MSG_ReadCount + SizeOf(Result) > gNetMessage.CurrentSize then
  begin
   MSG_BadRead := True;
   Result := -1;
  end
 else
  begin
-  Result := LittleLong(PInt32(UInt(NetMessage.Data) + MSG_ReadCount)^);
+  Result := LittleLong(PInt32(UInt(gNetMessage.Data) + MSG_ReadCount)^);
   Inc(MSG_ReadCount, SizeOf(Result));
  end;
 end;
 
 function MSG_ReadFloat: Single;
 begin
-if MSG_ReadCount + SizeOf(Result) > NetMessage.CurrentSize then
+if MSG_ReadCount + SizeOf(Result) > gNetMessage.CurrentSize then
  begin
   MSG_BadRead := True;
   Result := -1;
  end
 else
  begin
-  Result := LittleFloat(PSingle(UInt(NetMessage.Data) + MSG_ReadCount)^);
+  Result := LittleFloat(PSingle(UInt(gNetMessage.Data) + MSG_ReadCount)^);
   Inc(MSG_ReadCount, SizeOf(Result));
  end;
 end;
 
 function MSG_ReadBuffer(Size: UInt; Buffer: Pointer): Int32;
 begin
-if MSG_ReadCount + Size > NetMessage.CurrentSize then
+if MSG_ReadCount + Size > gNetMessage.CurrentSize then
  begin
   MSG_BadRead := True;
   Result := -1;
  end
 else
  begin
-  Move(Pointer(UInt(NetMessage.Data) + MSG_ReadCount)^, Buffer^, Size);
+  Move(Pointer(UInt(gNetMessage.Data) + MSG_ReadCount)^, Buffer^, Size);
   Inc(MSG_ReadCount, Size);
   Result := 1;
  end;
@@ -791,9 +791,9 @@ end;
 
 procedure MSG_ReadUserCmd(Dest, Source: PUserCmd);
 begin
-MSG_StartBitReading(NetMessage);
+MSG_StartBitReading(gNetMessage);
 Delta_ParseDelta(Source, Dest, UserCmdDelta^);
-MSG_EndBitReading(NetMessage);
+MSG_EndBitReading(gNetMessage);
 COM_NormalizeAngles(Dest.ViewAngles);
 end;
 

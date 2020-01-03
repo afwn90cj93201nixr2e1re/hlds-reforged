@@ -28,7 +28,7 @@ procedure NET_Init;
 procedure NET_Shutdown;
 
 var
- InMessage, NetMessage: TSizeBuf;
+ InMessage, gNetMessage: TSizeBuf;
  InFrom, NetFrom, LocalIP: TNetAdr;
 
  NoIP: Boolean = False;
@@ -912,8 +912,8 @@ else
 
 if B then
  begin
-  NetMessage.CurrentSize := InMessage.CurrentSize;
-  Move(InMessage.Data^, NetMessage.Data^, NetMessage.CurrentSize);
+  gNetMessage.CurrentSize := InMessage.CurrentSize;
+  Move(InMessage.Data^, gNetMessage.Data^, gNetMessage.CurrentSize);
   NetFrom := InFrom;
   Result := True;
  end
@@ -923,8 +923,8 @@ else
   if P <> nil then
    begin
     NetMessages[Source] := P.Prev;
-    NetMessage.CurrentSize := P.Size;
-    Move(P.Data^, NetMessage.Data^, NetMessage.CurrentSize);
+    gNetMessage.CurrentSize := P.Size;
+    Move(P.Data^, gNetMessage.Data^, gNetMessage.CurrentSize);
     NetFrom := P.Addr;
     NET_FreeMsg(P);
     Result := True;
@@ -1235,11 +1235,11 @@ I := COM_CheckParm('-clockwindow');
 if I > 0 then
  CVar_DirectSet(clockwindow, COM_ParmValueByIndex(I));
 
-NetMessage.Name := 'net_message';
-NetMessage.AllowOverflow := [FSB_ALLOWOVERFLOW];
-NetMessage.Data := @NetMsgBuffer;
-NetMessage.MaxSize := SizeOf(NetMsgBuffer);
-NetMessage.CurrentSize := 0;
+gNetMessage.Name := 'net_message';
+gNetMessage.AllowOverflow := [FSB_ALLOWOVERFLOW];
+gNetMessage.Data := @NetMsgBuffer;
+gNetMessage.MaxSize := SizeOf(NetMsgBuffer);
+gNetMessage.CurrentSize := 0;
 
 InMessage.Name := 'in_message';
 InMessage.AllowOverflow := [];

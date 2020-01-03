@@ -633,8 +633,8 @@ MemSet(FailedRes, SizeOf(FailedRes), 0);
 Failed := False;
 NumConsistency := 0;
 
-COM_UnMunge(Pointer(UInt(NetMessage.Data) + MSG_ReadCount), Size, SVS.SpawnCount);
-MSG_StartBitReading(NetMessage);
+COM_UnMunge(Pointer(UInt(gNetMessage.Data) + MSG_ReadCount), Size, SVS.SpawnCount);
+MSG_StartBitReading(gNetMessage);
 repeat
  if MSG_ReadBits(1) = 0 then
   Break;
@@ -696,7 +696,7 @@ repeat
 
 until Failed;
 
-MSG_EndBitReading(NetMessage);
+MSG_EndBitReading(gNetMessage);
 if Failed or (NumConsistency <> SV.NumConsistency) then
  SV_DropClient(C, False, 'Bad file data in consistency response.')
 else
@@ -843,7 +843,7 @@ if (CmdSource = csClient) and (Cmd_Argc = 2) then
         if HPAK_ResourceForHash('custom.hpk', @Hash, @Res) and
            HPAK_GetDataPointer('custom.hpk', Res, @Buffer, @Size) and (Buffer <> nil) and (Size > 0) then
          begin
-          Netchan.CreateFileFragmentsFromBuffer(HostClient.Netchan, S, Buffer, Size);
+          HostClient.Netchan.CreateFileFragmentsFromBuffer(S, Buffer, Size);
           HostClient.Netchan.FragSend;
           Mem_Free(Buffer);
           Exit;
@@ -854,7 +854,7 @@ if (CmdSource = csClient) and (Cmd_Argc = 2) then
        end
       else
      else
-      if (sv_send_resources.Value <> 0) and Netchan.CreateFileFragments(HostClient.Netchan, S) then
+      if (sv_send_resources.Value <> 0) and HostClient.Netchan.CreateFileFragments(S) then
        begin
         HostClient.Netchan.FragSend;
         Exit;
