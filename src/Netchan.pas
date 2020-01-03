@@ -132,7 +132,7 @@ begin
   SB.CurrentSize := 0;
 
   MSG_WriteLong(SB, OUTOFBAND_TAG);
-  SZ_Write(SB, S, StrLen(S) + 1);
+  SB.Write(S, StrLen(S) + 1);
   if not (FSB_OVERFLOWED in SB.AllowOverflow) then
    NET_SendPacket(Source, SB.CurrentSize, SB.Data, Addr);
 end;
@@ -219,7 +219,7 @@ if ReliableLength > 0 then
   ReliableSequence := ReliableSequence xor 1;
  end;
 
-SZ_Clear(NetMessage);
+NetMessage.Clear;
 ClearTime := 0;
 
 for I := Low(I) to High(I) do
@@ -461,7 +461,7 @@ else
       else
        MSG_WriteByte(SB, 0);
 
-    SZ_Write(SB, @ReliableBuf, ReliableLength);
+    SB.Write(@ReliableBuf, ReliableLength);
     LastReliableSequence := OutgoingSequence;
    end;
 
@@ -476,7 +476,7 @@ else
    DPrint('Netchan_Transmit: Unreliable message would overflow, ignoring.')
   else
    if (Buffer <> nil) and (Size > 0) then
-    SZ_Write(SB, Buffer, Size);
+    SB.Write(Buffer, Size);
 
   for J := SB.CurrentSize to 15 do
    MSG_WriteByte(SB, SVC_NOP);
@@ -691,8 +691,8 @@ if Seq > IncomingSequence then
           DPrint(['Netchan_Process: Couldn''t allocate or find buffer #', FragSeq[I] shr 16, '.'])
          else
           begin
-           SZ_Clear(P.FragMessage);
-           SZ_Write(P.FragMessage, Pointer(UInt(gNetMessage.Data) + MSG_ReadCount + FragOffset[I]), FragSize[I]);
+           P.FragMessage.Clear;
+           P.FragMessage.Write(Pointer(UInt(gNetMessage.Data) + MSG_ReadCount + FragOffset[I]), FragSize[I]);
            if FSB_OVERFLOWED in P.FragMessage.AllowOverflow then
             begin
              DPrint('Fragment buffer overflowed.');
@@ -817,8 +817,8 @@ if (net_compress.Value = 1) or (net_compress.Value >= 3) then
    begin
     PUInt32(@Buf)^ := BZIP2_TAG;
     DPrint(['Compressing split packet (', SB.CurrentSize, ' -> ', DstLen, ' bytes).']);
-    SZ_Clear(SB);
-    SZ_Write(SB, @Buf, DstLen);
+    SB.Clear;
+    SB.Write(@Buf, DstLen);
    end;
  end;
 
@@ -854,7 +854,7 @@ while RemainingSize > 0 do
 
   FB.Index := FragIndex;
   Inc(FragIndex);
-  SZ_Write(FB.FragMessage, Pointer(UInt(SB.Data) + DataOffset), ThisSize);
+  FB.FragMessage.Write(Pointer(UInt(SB.Data) + DataOffset), ThisSize);
   Inc(DataOffset, ThisSize);
   Dec(RemainingSize, ThisSize);
 
@@ -1135,7 +1135,7 @@ procedure TNetchan.FlushIncoming(Stream: TNetStream);
 var
  P, P2: PFragBuf;
 begin
-SZ_Clear(gNetMessage);
+gNetMessage.Clear;
 MSG_ReadCount := 0;
 
 P := IncomingBuf[Stream];
@@ -1161,13 +1161,13 @@ Result := False;
 if IncomingReady[NS_NORMAL] then
  if IncomingBuf[NS_NORMAL] <> nil then
   begin
-   SZ_Clear(gNetMessage);
+   gNetMessage.Clear;
 
    P := IncomingBuf[NS_NORMAL];
    while P <> nil do
     begin
      P2 := P.Next;
-     SZ_Write(gNetMessage, P.FragMessage.Data, P.FragMessage.CurrentSize);
+     gNetMessage.Write(P.FragMessage.Data, P.FragMessage.CurrentSize);
      Mem_Free(P);
      P := P2;
     end;
@@ -1178,7 +1178,7 @@ if IncomingReady[NS_NORMAL] then
    if FSB_OVERFLOWED in gNetMessage.AllowOverflow then
     begin
      DPrint('Netchan_CopyNormalFragments: Fragment buffer overflowed, ignoring.');
-     SZ_Clear(gNetMessage);
+     gNetMessage.Clear;
     end
    else
     if PUInt32(gNetMessage.Data)^ <> BZIP2_TAG then
@@ -1193,7 +1193,7 @@ if IncomingReady[NS_NORMAL] then
         Result := True;
        end
       else
-       SZ_Clear(gNetMessage);
+       gNetMessage.Clear;
      end;
   end
  else
@@ -1242,7 +1242,7 @@ Result := False;
 if IncomingReady[NS_FILE] then
  if IncomingBuf[NS_FILE] <> nil then
   begin
-   SZ_Clear(gNetMessage);
+   gNetMessage.Clear;
    MSG_BeginReading;
 
    P := IncomingBuf[NS_FILE];
@@ -1251,7 +1251,7 @@ if IncomingReady[NS_FILE] then
    else
     begin
      if P.FragMessage.CurrentSize > 0 then
-      SZ_Write(gNetMessage, P.FragMessage.Data, P.FragMessage.CurrentSize);
+      gNetMessage.Write(P.FragMessage.Data, P.FragMessage.CurrentSize);
 
      StrLCopy(@FileName, MSG_ReadString, SizeOf(FileName) - 1);
      Compressed := StrIComp(MSG_ReadString, 'bz2') = 0;
@@ -1347,7 +1347,7 @@ if IncomingReady[NS_FILE] then
                 Mem_Free(Src);
                end;
 
-              SZ_Clear(gNetMessage);
+              gNetMessage.Clear;
               MSG_BeginReading;
               IncomingBuf[NS_FILE] := nil;
               IncomingReady[NS_FILE] := False;

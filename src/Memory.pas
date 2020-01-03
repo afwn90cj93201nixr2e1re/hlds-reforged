@@ -40,12 +40,14 @@ function Cache_TotalUsed: UInt;
 function Cache_Check(var C: TCacheUser): Pointer;
 function Cache_Alloc(var C: TCacheUser; Size: UInt; Name: PLChar): Pointer;
 
-procedure SZ_Alloc(Name: PLChar; var Buffer: TSizeBuf; Size: UInt);
-procedure SZ_Clear(var Buffer: TSizeBuf);
-function SZ_WouldOverflow(const Buffer: TSizeBuf; Length: UInt): Boolean;
-function SZ_GetSpace(var Buffer: TSizeBuf; Length: UInt): Pointer;
-procedure SZ_Write(var Buffer: TSizeBuf; Data: Pointer; Length: UInt);
-procedure SZ_Print(var Buffer: TSizeBuf; Data: PLChar);
+type
+  TSzFuncs = record helper for TSizeBuf
+    procedure Alloc(AName: PLChar; ASize: UInt);
+    procedure Clear;
+    function GetSpace(Length: UInt): Pointer;
+    procedure Write(Data: Pointer; Length: UInt);
+  end;
+
 
 function Mem_Alloc(Size: UInt): Pointer;
 function Mem_ZeroAlloc(Size: UInt): Pointer;
@@ -826,87 +828,60 @@ FS_FPrintF(F, ['Total bytes in cache used by sounds: ', Total, '.']);
 FS_Close(F);
 end;
 
-procedure SZ_Alloc(Name: PLChar; var Buffer: TSizeBuf; Size: UInt);
+procedure TSzFuncs.Alloc(AName: PLChar; ASize: UInt);
 begin
-if Size < 32 then
- Size := 32;
+if ASize < 32 then
+ ASize := 32;
 
-Buffer.Name := Name;
-Buffer.AllowOverflow := [];
-Buffer.Data := Hunk_AllocName(Size, Name);
-Buffer.MaxSize := Size;
-Buffer.CurrentSize := 0;
+Name := AName;
+AllowOverflow := [];
+Data := Hunk_AllocName(ASize, Name);
+MaxSize := ASize;
+CurrentSize := 0;
 end;
 
-procedure SZ_Clear(var Buffer: TSizeBuf);
+procedure TSzFuncs.Clear;
 begin
-Buffer.CurrentSize := 0;
-Exclude(Buffer.AllowOverflow, FSB_OVERFLOWED);
+CurrentSize := 0;
+Exclude(AllowOverflow, FSB_OVERFLOWED);
 end;
 
-function SZ_WouldOverflow(const Buffer: TSizeBuf; Length: UInt): Boolean;
-begin
-Result := Buffer.CurrentSize + Length > Buffer.MaxSize;
-end;
-
-function SZ_GetSpace(var Buffer: TSizeBuf; Length: UInt): Pointer;
+function TSzFuncs.GetSpace(Length: UInt): Pointer;
 var
  P: PLChar;
 begin
-if Buffer.CurrentSize + Length > Buffer.MaxSize then
+if CurrentSize + Length > MaxSize then
  begin
-  if Buffer.Name <> nil then
-   P := Buffer.Name
+  if Name <> nil then
+   P := Name
   else
    P := '???';
 
-  if not (FSB_ALLOWOVERFLOW in Buffer.AllowOverflow) then
-   if Buffer.MaxSize >= 1 then
+  if not (FSB_ALLOWOVERFLOW in AllowOverflow) then
+   if MaxSize >= 1 then
     Sys_Error(['SZ_GetSpace: Overflow without FSB_ALLOWOVERFLOW set on "', P, '".'])
    else
     Sys_Error(['SZ_GetSpace: Tried to write to an uninitialized sizebuf: "', P, '".']);
 
-  if Length > Buffer.MaxSize then
-   if FSB_ALLOWOVERFLOW in Buffer.AllowOverflow then
+  if Length > MaxSize then
+   if FSB_ALLOWOVERFLOW in AllowOverflow then
     DPrint(['SZ_GetSpace: ', Length ,' is > full buffer size on "', P, '", ignoring.'])
    else
     Sys_Error(['SZ_GetSpace: ', Length ,' is > full buffer size on "', P, '".']);
 
   DPrint(['SZ_GetSpace: overflow on "', P , '".']);
-  Buffer.CurrentSize := 0;
-  Include(Buffer.AllowOverflow, FSB_OVERFLOWED);
+  CurrentSize := 0;
+  Include(AllowOverflow, FSB_OVERFLOWED);
  end;
 
-Result := Pointer(UInt(Buffer.Data) + Buffer.CurrentSize);
-Inc(Buffer.CurrentSize, Length);
+Result := Pointer(UInt(Data) + CurrentSize);
+Inc(CurrentSize, Length);
 end;
 
-procedure SZ_Write(var Buffer: TSizeBuf; Data: Pointer; Length: UInt);
+procedure TSzFuncs.Write(Data: Pointer; Length: UInt);
 begin
 if (Data <> nil) and (Length > 0) then
- Move(Data^, SZ_GetSpace(Buffer, Length)^, Length);
-end;
-
-procedure SZ_Print(var Buffer: TSizeBuf; Data: PLChar);
-var
- L: UInt;
- P: Pointer;
-begin
-if Data <> nil then
- L := StrLen(Data) + SizeOf(Data^)
-else
- L := SizeOf(Data^);
-
-if (Buffer.CurrentSize = 0) or
-   (PLChar(UInt(Buffer.Data) + Buffer.CurrentSize - 1)^ > #0) then
- Move(Data^, SZ_GetSpace(Buffer, L)^, L)
-else
- if L > 1 then
-  begin
-   P := SZ_GetSpace(Buffer, L - 1);
-   if UInt(P) > UInt(Buffer.Data) then // prevent writing before the buffer
-    Move(Data^, Pointer(UInt(P) - SizeOf(LChar))^, L);
-  end;
+ Move(Data^, GetSpace(Length)^, Length);
 end;
 
 function Mem_Alloc(Size: UInt): Pointer;

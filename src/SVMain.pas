@@ -207,7 +207,7 @@ else
       C := @SVS.Clients[I];
       if C.Connected and not C.FakeClient then
        if SB.CurrentSize + C.Netchan.NetMessage.CurrentSize <= C.Netchan.NetMessage.MaxSize then
-        SZ_Write(C.Netchan.NetMessage, SB.Data, SB.CurrentSize)
+        C.Netchan.NetMessage.Write(SB.Data, SB.CurrentSize)
        else
         begin
          C.Netchan.CreateFragments(SB);
@@ -414,7 +414,7 @@ for I := 0 to SVS.MaxClients - 1 do
       C.Netchan .FragSend;
      end;
     
-    SZ_Clear(SB);
+    SB.Clear;
    end;
  end;
 

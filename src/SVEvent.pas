@@ -53,7 +53,7 @@ if not C.FakeClient then
 
   if not (FSB_OVERFLOWED in SB.AllowOverflow) then
    if SB.CurrentSize + C.Netchan.NetMessage.CurrentSize < C.Netchan.NetMessage.MaxSize then
-    SZ_Write(C.Netchan.NetMessage, SB.Data, SB.CurrentSize)
+    C.Netchan.NetMessage.Write(SB.Data, SB.CurrentSize)
    else
     C.Netchan.CreateFragments(SB);
  end;

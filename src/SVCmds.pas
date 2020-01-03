@@ -477,7 +477,7 @@ HostClient.ConnectTime := RealTime;
 HostClient.ConnectSeq := SVS.SpawnCount;
 HostClient.NewCmdTime := RealTime + 1.5;
 
-SZ_Clear(HostClient.UnreliableMessage);
+HostClient.UnreliableMessage.Clear;
 HostClient.Netchan.Clear;
 
 SV_SendServerInfo(SB, HostClient^);
@@ -550,7 +550,7 @@ if (CmdSource = csClient) and (Cmd_Argc = 3) then
     SB.CurrentSize := 0;
     SB.MaxSize := SizeOf(SBData);
 
-    SZ_Write(SB, SV.Signon.Data, SV.Signon.CurrentSize);
+    SB.Write(SV.Signon.Data, SV.Signon.CurrentSize);
     SV_WriteSpawn(HostClient^, SB);
     SV_WriteVoiceCodec(SB);
 

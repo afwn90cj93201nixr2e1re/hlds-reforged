@@ -82,12 +82,12 @@ end;
 
 procedure SV_RejectConnection(const Addr: TNetAdr; Msg: PLChar);
 begin
-SZ_Clear(gNetMessage);
+gNetMessage.Clear;
 MSG_WriteLong(gNetMessage, OUTOFBAND_TAG);
 MSG_WriteChar(gNetMessage, S2C_ERROR);
 MSG_WriteString(gNetMessage, Msg);
 NET_SendPacket(NS_SERVER, gNetMessage.CurrentSize, gNetMessage.Data, Addr);
-SZ_Clear(gNetMessage);
+gNetMessage.Clear;
 end;
 
 procedure SV_RejectConnection(const Addr: TNetAdr; const Msg: array of const);
@@ -97,12 +97,12 @@ end;
 
 procedure SV_RejectConnectionForPassword(const Addr: TNetAdr);
 begin
-SZ_Clear(gNetMessage);
+gNetMessage.Clear;
 MSG_WriteLong(gNetMessage, OUTOFBAND_TAG);
 MSG_WriteChar(gNetMessage, S2C_PASSWORD);
 MSG_WriteString(gNetMessage, 'BADPASSWORD');
 NET_SendPacket(NS_SERVER, gNetMessage.CurrentSize, gNetMessage.Data, Addr);
-SZ_Clear(gNetMessage);
+gNetMessage.Clear;
 end;
 
 function SV_GetFragmentSize(C: Pointer): UInt32; cdecl;

@@ -181,7 +181,7 @@ procedure SV_ClearClient(var C: TClient);
 begin
 SV_ClearCustomizationList(C.Customization);
 SV_ClearResourceLists(C);
-SZ_Clear(C.UnreliableMessage);
+C.UnreliableMessage.Clear;
 SV_ClearClientEvents(C);
 C.Netchan.Clear;
 
@@ -368,7 +368,7 @@ SB.CurrentSize := 0;
 
 SV_FullClientUpdate(C, SB);
 if SV.ReliableDatagram.CurrentSize + SB.CurrentSize < SV.ReliableDatagram.MaxSize then
- SZ_Write(SV.ReliableDatagram, SB.Data, SB.CurrentSize);
+ SV.ReliableDatagram.Write(SB.Data, SB.CurrentSize);
 SV_ClearClient(C);
 SV_ClearFrames(C);
 C.ConnectTime := RealTime;
@@ -840,8 +840,8 @@ var
  SRD: TSaveRestoreData;
  Buf: array[1..MAX_PATH_A] of LChar;
 begin
-SZ_Clear(C.Netchan.NetMessage);
-SZ_Clear(C.UnreliableMessage);
+C.Netchan.NetMessage.Clear;
+C.UnreliableMessage.Clear;
 E := C.Entity;
 
 if SV.SavedGame then
@@ -941,12 +941,12 @@ end;
 
 procedure SV_SendBan;
 begin
-SZ_Clear(gNetMessage);
+gNetMessage.Clear;
 MSG_WriteLong(gNetMessage, OUTOFBAND_TAG);
 MSG_WriteChar(gNetMessage, S2C_PRINT);
 MSG_WriteString(gNetMessage, 'You have been banned from this server.'#10);
 NET_SendPacket(NS_SERVER, gNetMessage.CurrentSize, gNetMessage.Data, NetFrom);
-SZ_Clear(gNetMessage);
+gNetMessage.Clear;
 end;
 
 procedure SV_WriteMoveVarsToClient(var SB: TSizeBuf);
@@ -1183,7 +1183,7 @@ for I := 0 to SVS.MaxClients - 1 do
      C.SendInfo := False;
      C.Connected := True;
      C.Netchan.Clear;
-     SZ_Clear(C.UnreliableMessage);
+     C.UnreliableMessage.Clear;
      SV_ClearCustomizationList(C.Customization);
      MemSet(C.PhysInfo, SizeOf(C.PhysInfo), 0);
      C.SendResTime := 0;
@@ -1478,14 +1478,14 @@ for I := 0 to SVS.MaxClients - 1 do
       else
        if SV.ReliableDatagram.CurrentSize + SB.CurrentSize < SV.ReliableDatagram.MaxSize then
         begin
-         SZ_Write(SV.ReliableDatagram, SB.Data, SB.CurrentSize);
+         SV.ReliableDatagram.Write(SB.Data, SB.CurrentSize);
          C.UpdateInfo := False;
          C.UpdateInfoTime := RealTime + sv_updatetime.Value;
         end
        else
         C.UpdateInfoTime := RealTime + sv_updatetime.Value / (4 / 3);
 
-      SZ_Clear(SB);
+      SB.Clear;
      end;
 
     if (NewUserMsgs <> nil) and not C.FakeClient then
@@ -1498,14 +1498,14 @@ SV_LinkNewUserMsgs;
 if FSB_OVERFLOWED in SV.Datagram.AllowOverflow then
  begin
   Print('SV_UpdateToReliableMessages: Server datagram buffer overflowed.');
-  SZ_Clear(SV.Datagram);
+  SV.Datagram.Clear;
  end;
 
 if FSB_OVERFLOWED in SV.Spectator.AllowOverflow then
  begin
   Print('SV_UpdateToReliableMessages: Server spectator buffer overflowed.');
-  SZ_Clear(SV.Spectator);
- end; 
+  SV.Spectator.Clear;
+ end;
 
 for I := 0 to SVS.MaxClients - 1 do
  begin
@@ -1513,30 +1513,30 @@ for I := 0 to SVS.MaxClients - 1 do
   if C.Active and not C.FakeClient then
    begin
     if SV.ReliableDatagram.CurrentSize + C.Netchan.NetMessage.CurrentSize < C.Netchan.NetMessage.MaxSize then
-     SZ_Write(C.Netchan.NetMessage, SV.ReliableDatagram.Data, SV.ReliableDatagram.CurrentSize)
+     C.Netchan.NetMessage.Write(SV.ReliableDatagram.Data, SV.ReliableDatagram.CurrentSize)
     else
      begin
-      SZ_Clear(SB);
-      SZ_Write(SB, SV.ReliableDatagram.Data, SV.ReliableDatagram.CurrentSize);
+      SB.Clear;
+      SB.Write(SV.ReliableDatagram.Data, SV.ReliableDatagram.CurrentSize);
       C.Netchan.CreateFragments(SB);
      end;
 
     if SV.Datagram.CurrentSize + C.UnreliableMessage.CurrentSize < C.UnreliableMessage.MaxSize then
-     SZ_Write(C.UnreliableMessage, SV.Datagram.Data, SV.Datagram.CurrentSize)
+     C.UnreliableMessage.Write(SV.Datagram.Data, SV.Datagram.CurrentSize)
     else
      DPrint(['Ignoring unreliable datagram for "', PLChar(@C.NetName), '", would overflow.']);
 
     if C.HLTV then
      if SV.Spectator.CurrentSize + C.UnreliableMessage.CurrentSize < C.UnreliableMessage.MaxSize then
-      SZ_Write(C.UnreliableMessage, SV.Spectator.Data, SV.Spectator.CurrentSize)
+      C.UnreliableMessage.Write(SV.Spectator.Data, SV.Spectator.CurrentSize)
      else
       DPrint(['Ignoring unreliable spectator datagram for "', PLChar(@C.NetName), '", would overflow.']);
    end;
  end;
 
-SZ_Clear(SV.ReliableDatagram);
-SZ_Clear(SV.Datagram);
-SZ_Clear(SV.Spectator);
+SV.ReliableDatagram.Clear;
+SV.Datagram.Clear;
+SV.Spectator.Clear;
 end;
 
 procedure SV_EmitPings(var SB: TSizeBuf);
@@ -1580,8 +1580,8 @@ SV_WriteEntitiesToClient(C, SB);
 if FSB_OVERFLOWED in C.UnreliableMessage.AllowOverflow then
  DPrint(['Warning: Unreliable datagram overflowed for "', PLChar(@C.NetName), '".'])
 else
- SZ_Write(SB, C.UnreliableMessage.Data, C.UnreliableMessage.CurrentSize);
-SZ_Clear(C.UnreliableMessage);
+ SB.Write(C.UnreliableMessage.Data, C.UnreliableMessage.CurrentSize);
+C.UnreliableMessage.Clear;
 
 if FSB_OVERFLOWED in SB.AllowOverflow then
  DPrint(['Warning: Message overflowed for "', PLChar(@C.NetName), '".'])
@@ -1616,8 +1616,8 @@ for I := 0 to SVS.MaxClients - 1 do
 
      if FSB_OVERFLOWED in C.Netchan.NetMessage.AllowOverflow then
       begin
-       SZ_Clear(C.Netchan.NetMessage);
-       SZ_Clear(C.UnreliableMessage);
+       C.Netchan.NetMessage.Clear;
+       C.UnreliableMessage.Clear;
        SV_BroadcastPrint(['"', PLChar(@C.NetName), '" overflowed.'#10]);
        DPrint(['Warning: Reliable channel overflowed for "', PLChar(@C.NetName), '".']);
        SV_DropClient(C^, False, 'Reliable channel overflowed.');

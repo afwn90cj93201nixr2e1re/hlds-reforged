@@ -378,7 +378,7 @@ for I := 0 to SVS.MaxClients - 1 do
      SB := @Dst.UnreliableMessage;
 
     if SV.Multicast.CurrentSize + SB.CurrentSize <= SB.MaxSize then
-     SZ_Write(SB^, SV.Multicast.Data, SV.Multicast.CurrentSize)
+     SB.Write(SV.Multicast.Data, SV.Multicast.CurrentSize)
     else
      Inc(SV.MulticastOverflowed, SV.Multicast.CurrentSize);
    end
@@ -386,7 +386,7 @@ for I := 0 to SVS.MaxClients - 1 do
    Inc(SV.MulticastSuppressed, SV.Multicast.CurrentSize);
  end;
 
-SZ_Clear(SV.Multicast);
+SV.Multicast.Clear;
 end;
 
 end.

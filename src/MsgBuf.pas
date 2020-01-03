@@ -125,46 +125,46 @@ var
 
 procedure MSG_WriteChar(var Buffer: TSizeBuf; Value: LChar);
 begin
-PLChar(SZ_GetSpace(Buffer, SizeOf(Value)))^ := Value;
+PLChar(Buffer.GetSpace(SizeOf(Value)))^ := Value;
 end;
 
 procedure MSG_WriteByte(var Buffer: TSizeBuf; Value: Byte);
 begin
-PByte(SZ_GetSpace(Buffer, SizeOf(Value)))^ := Value;
+PByte(Buffer.GetSpace(SizeOf(Value)))^ := Value;
 end;
 
 procedure MSG_WriteShort(var Buffer: TSizeBuf; Value: Int16);
 begin
-PInt16(SZ_GetSpace(Buffer, SizeOf(Value)))^ := LittleShort(Value);
+PInt16(Buffer.GetSpace(SizeOf(Value)))^ := LittleShort(Value);
 end;
 
 procedure MSG_WriteWord(var Buffer: TSizeBuf; Value: UInt16);
 begin
-PUInt16(SZ_GetSpace(Buffer, SizeOf(Value)))^ := LittleShort(Value);
+PUInt16(Buffer.GetSpace(SizeOf(Value)))^ := LittleShort(Value);
 end;
 
 procedure MSG_WriteLong(var Buffer: TSizeBuf; Value: Int32);
 begin
-PInt32(SZ_GetSpace(Buffer, SizeOf(Value)))^ := LittleLong(Value);
+PInt32(Buffer.GetSpace(SizeOf(Value)))^ := LittleLong(Value);
 end;
 
 procedure MSG_WriteFloat(var Buffer: TSizeBuf; Value: Single);
 begin
-PSingle(SZ_GetSpace(Buffer, SizeOf(Value)))^ := LittleFloat(Value);
+PSingle(Buffer.GetSpace(SizeOf(Value)))^ := LittleFloat(Value);
 end;
 
 procedure MSG_WriteString(var Buffer: TSizeBuf; S: PLChar);
 begin
 if S <> nil then
- SZ_Write(Buffer, S, StrLen(S) + 1)
+ Buffer.Write(S, StrLen(S) + 1)
 else
- SZ_Write(Buffer, EmptyString, 1)
+ Buffer.Write(EmptyString, 1)
 end;
 
 procedure MSG_WriteBuffer(var Buffer: TSizeBuf; Size: UInt; Data: Pointer);
 begin
 if Data <> nil then
- SZ_Write(Buffer, Data, Size);
+ Buffer.Write(Data, Size);
 end;
 
 procedure MSG_WriteAngle(var Buffer: TSizeBuf; F: Single);
@@ -181,7 +181,7 @@ procedure MSG_WriteOneBit(B: Byte);
 begin
 if BFWrite.Count >= 8 then
  begin
-  SZ_GetSpace(BFWrite.Buffer^, 1);
+  BFWrite.Buffer.GetSpace(1);
   BFWrite.Count := 0;
   Inc(UInt(BFWrite.Data));
  end;
@@ -214,7 +214,7 @@ begin
 if not (FSB_OVERFLOWED in BFWrite.Buffer.AllowOverflow) then
  begin
   PByte(BFWrite.Data)^ := PByte(BFWrite.Data)^ and (255 shr (8 - BFWrite.Count));
-  SZ_GetSpace(BFWrite.Buffer^, 1);
+  BFWrite.Buffer.GetSpace(1);
  end;
 
 MemSet(BFWrite, SizeOf(BFWrite), 0);
@@ -248,7 +248,7 @@ if BitCount <= 32 then
   if BitCount = 0 then
    Dec(ByteCount);
 
-  SZ_GetSpace(BFWrite.Buffer^, ByteCount + UInt32(NextRow));
+  BFWrite.Buffer.GetSpace(ByteCount + UInt32(NextRow));
   PUInt32(BFWrite.Data)^ := (PUInt32(BFWrite.Data)^ and RowBitTable[BFWrite.Count]) or (BitMask shl BFWrite.Count);
 
   if BitCount > 0 then
@@ -260,7 +260,7 @@ if BitCount <= 32 then
  end
 else
  begin
-  SZ_GetSpace(BFWrite.Buffer^, UInt32(NextRow) + 4);
+  BFWrite.Buffer.GetSpace(UInt32(NextRow) + 4);
   PUInt32(BFWrite.Data)^ := (PUInt32(BFWrite.Data)^ and RowBitTable[BFWrite.Count]) or (BitMask shl BFWrite.Count);
 
   BitsLeft := 32 - BFWrite.Count;

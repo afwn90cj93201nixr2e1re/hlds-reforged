@@ -661,7 +661,7 @@ var
 
 procedure CBuf_Init;
 begin
-SZ_Alloc('cmd_text', CmdText, 16*1024);
+CmdText.Alloc('cmd_text', 16*1024);
 end;
 
 procedure CBuf_AddText(Text: PLChar);
@@ -672,7 +672,7 @@ if Text <> nil then
  begin
   L := StrLen(Text);
   if CmdText.CurrentSize + L < CmdText.MaxSize then
-   SZ_Write(CmdText, Text, L)
+   CmdText.Write(Text, L)
   else
    Print('CBuf_AddText: Buffer overflow.');
  end
@@ -703,7 +703,7 @@ else
     begin
      P := Z_MAlloc(Size);
      Move(CmdText.Data^, P^, Size);
-     SZ_Clear(CmdText);
+     CmdText.Clear;
     end
    else
     P := nil;
@@ -712,7 +712,7 @@ else
    
    if Size >= 1 then
     begin
-     SZ_Write(CmdText, P, Size);
+     CmdText.Write(P, Size);
      Z_Free(P);
     end;
   end;
@@ -736,7 +736,7 @@ else
     begin
      P := Z_MAlloc(Size);
      Move(CmdText.Data^, P^, Size);
-     SZ_Clear(CmdText);
+     CmdText.Clear;
     end
    else
     P := nil;
@@ -747,7 +747,7 @@ else
    
    if Size >= 1 then
     begin
-     SZ_Write(CmdText, P, Size);
+     CmdText.Write(P, Size);
      Z_Free(P);
     end;
   end;
