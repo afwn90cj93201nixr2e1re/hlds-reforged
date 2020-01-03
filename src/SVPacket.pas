@@ -41,7 +41,7 @@ implementation
 
 uses Common, Console, Edict, FilterIP, GameLib, HostMain, Info, Memory, MsgBuf,
   Network, Resource, SVAuth, SVClient, SVDelta, SVEvent, SVMain, SVRcon,
-  NetchanMain, SVSend;
+  Netchan, SVSend;
 
 const
  MAX_CHALLENGES = 1024;

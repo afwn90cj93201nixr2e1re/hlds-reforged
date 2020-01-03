@@ -1,4 +1,4 @@
-unit NetchanMain;
+unit Netchan;
 
 interface
 

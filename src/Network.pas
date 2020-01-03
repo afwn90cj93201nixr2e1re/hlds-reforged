@@ -40,7 +40,7 @@ var
 implementation
 
 uses BZip2, Common, Console, FileSys, Memory, MsgBuf, HostMain, HostCmds,
-  Resource, SVClient, SVMain, SysArgs, SysMain, NetchanMain;
+  Resource, SVClient, SVMain, SysArgs, SysMain, Netchan;
 
 const
  IPTOS_LOWDELAY = 16;
