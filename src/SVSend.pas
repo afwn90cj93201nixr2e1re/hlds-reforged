@@ -64,7 +64,7 @@ while P <> nil do
   SB.Write<UInt8>(SVC_NEWUSERMSG);
   SB.Write<UInt8>(P.Index);
   SB.Write<UInt8>(P.Size);
-  SB.WriteBuffer(SizeOf(P.Name), @P.Name);
+  SB.Write(@P.Name, SizeOf(P.Name));
   P := P.Prev;
  end;
 end;

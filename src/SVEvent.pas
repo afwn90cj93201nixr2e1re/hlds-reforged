@@ -29,7 +29,6 @@ var
 begin
 if not C.FakeClient then
  begin
-  SB.Name := 'Reliable Event';
   SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
   SB.Data := @SBData;
   SB.CurrentSize := 0;

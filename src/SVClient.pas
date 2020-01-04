@@ -360,7 +360,6 @@ if @C = HostClient then
 
 MemSet(C.UserInfo, SizeOf(C.UserInfo), 0);
 
-SB.Name := 'dropclient tempbuf';
 SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
 SB.Data := @Buf;
 SB.MaxSize := SizeOf(Buf);
@@ -676,7 +675,7 @@ SB.WriteString(@Buf);
 MD5Init(MD5C);
 MD5Update(MD5C, @C.CDKey, SizeOf(C.CDKey));
 MD5Final(Hash, MD5C);
-SB.WriteBuffer(SizeOf(Hash), @Hash);
+SB.Write(@Hash, SizeOf(Hash));
 end;
 
 procedure SV_ForceFullClientsUpdate;
@@ -686,7 +685,6 @@ var
  I: Int;
  C: PClient;
 begin
-SB.Name := 'Force Update';
 SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
 SB.Data := @SBData;
 SB.CurrentSize := 0;
@@ -720,7 +718,7 @@ if not C.FakeClient then
   C.Netchan.NetMessage.Write<UInt8>(SVC_PRINT);
   if LineBreak then
    begin
-    C.Netchan.NetMessage.WriteBuffer(StrLen(Msg), Msg);
+    C.Netchan.NetMessage.Write(Msg, StrLen(Msg));
     C.Netchan.NetMessage.Write<LChar>(#10);
     C.Netchan.NetMessage.Write<LChar>(#0);
    end
@@ -1017,7 +1015,7 @@ Index := (UInt(@C) - UInt(SVS.Clients)) div SizeOf(TClient);
 CRC := SV.WorldModelCRC;
 COM_Munge3(@CRC, SizeOf(CRC), Byte(not Index));
 SB.Write<Int32>(CRC);
-SB.WriteBuffer(SizeOf(SV.ClientDLLHash), @SV.ClientDLLHash);
+SB.Write(@SV.ClientDLLHash, SizeOf(SV.ClientDLLHash));
 
 SB.Write<UInt8>(SVS.MaxClients);
 SB.Write<UInt8>(Index);
@@ -1334,7 +1332,7 @@ else
          P.UnreliableMessage.Write<UInt8>(SVC_VOICEDATA);
          P.UnreliableMessage.Write<UInt8>(Index);
          P.UnreliableMessage.Write<Int16>(Size);
-         P.UnreliableMessage.WriteBuffer(Size, @Buf);
+         P.UnreliableMessage.Write(@Buf, Size);
         end;
      end;
   end;
@@ -1454,7 +1452,6 @@ var
  SB: TSizeBuf;
  SBData: array[1..MAX_DATAGRAM] of Byte;
 begin
-SB.Name := 'Reliable tempbuffer';
 SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
 SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);
@@ -1567,7 +1564,6 @@ var
  SB: TSizeBuf;
  SBData: array[1..MAX_DATAGRAM] of Byte;
 begin
-SB.Name := 'Client Datagram';
 SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
 SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);

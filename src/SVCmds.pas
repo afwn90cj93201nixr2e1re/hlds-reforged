@@ -466,7 +466,6 @@ else
    Exit;
   end;
 
-SB.Name := 'New Connection';
 SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
 SB.Data := @SBData;
 SB.CurrentSize := 0;
@@ -544,7 +543,6 @@ if (CmdSource = csClient) and (Cmd_Argc = 3) then
    SV_New_F
   else
    begin
-    SB.Name := 'Spawning';
     SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
     SB.Data := @SBData;
     SB.CurrentSize := 0;
@@ -572,7 +570,6 @@ var
 begin
 if (CmdSource <> csServer) and (HostClient.Active or not HostClient.Spawned) and (RealTime > HostClient.SendResTime) then
  begin
-  SB.Name := 'SendResources';
   SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
   SB.Data := @SBData;
   SB.CurrentSize := 0;

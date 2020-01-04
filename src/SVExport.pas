@@ -409,7 +409,7 @@ var
  MsgEntity: PEdict;
  MsgOrigin: TVec3;
  MsgData: array[1..512] of Byte;
- MsgBuffer: TSizeBuf = (Name: 'MessageBegin/End'; AllowOverflow: []; Data: @MsgData; MaxSize: SizeOf(MsgData); CurrentSize: 0);
+ MsgBuffer: TSizeBuf = (AllowOverflow: []; Data: @MsgData; MaxSize: SizeOf(MsgData); CurrentSize: 0);
 
 function PF_PrecacheModel(Name: PLChar): UInt32; cdecl;
 var
@@ -1642,7 +1642,7 @@ SB.Write<UInt8>(MsgType);
 if NeedSize then
  SB.Write<UInt8>(MsgBuffer.CurrentSize);
 if MsgBuffer.CurrentSize > 0 then
- SB.WriteBuffer(MsgBuffer.CurrentSize, MsgBuffer.Data);
+ SB.Write(MsgBuffer.Data, MsgBuffer.CurrentSize);
 case MsgDest of
  MSG_PVS: SV_Multicast(MsgEntity^, MsgOrigin, MULTICAST_PVS, False);
  MSG_PAS: SV_Multicast(MsgEntity^, MsgOrigin, MULTICAST_PAS, False);

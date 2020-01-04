@@ -193,7 +193,6 @@ else
    StrLCopy(@VoiceCodec, sv_voicecodec.Data, SizeOf(VoiceCodec) - 1);
    VoiceQuality := Trunc(sv_voicequality.Value);
 
-   SB.Name := 'Voice';
    SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
    SB.Data := @SBData;
    SB.MaxSize := SizeOf(SBData);
@@ -351,7 +350,6 @@ var
  SBData: array[1..MAX_NETBUFLEN] of Byte;
  I: Int;
 begin
-SB.Name := 'Activate Server';
 SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
 SB.Data := @SBData;
 SB.CurrentSize := 0;
@@ -526,23 +524,22 @@ GlobalVars.MaxClients := SVS.MaxClients;
 SV.Edicts := Hunk_AllocName(SizeOf(TEdict) * SV.MaxEdicts, 'edicts');
 SV.EntityState := Hunk_AllocName(SizeOf(TEntityState) * SV.MaxEdicts, 'baselines');
 
-SV.Datagram.Name := 'Server Datagram';
 SV.Datagram.AllowOverflow := [FSB_ALLOWOVERFLOW];
 SV.Datagram.Data := @SV.DatagramData;
 SV.Datagram.MaxSize := SizeOf(SV.DatagramData);
-SV.ReliableDatagram.Name := 'Server Reliable Datagram';
+
 SV.ReliableDatagram.AllowOverflow := [];
 SV.ReliableDatagram.Data := @SV.ReliableDatagramData;
 SV.ReliableDatagram.MaxSize := SizeOf(SV.ReliableDatagramData);
-SV.Multicast.Name := 'Server Multicast Buffer';
+
 SV.Multicast.AllowOverflow := [];
 SV.Multicast.Data := @SV.MulticastData;
 SV.Multicast.MaxSize := SizeOf(SV.MulticastData);
-SV.Spectator.Name := 'Server Spectator Buffer';
+
 SV.Spectator.AllowOverflow := [FSB_ALLOWOVERFLOW];
 SV.Spectator.Data := @SV.SpectatorData;
 SV.Spectator.MaxSize := SizeOf(SV.SpectatorData);
-SV.Signon.Name := 'Server Signon Buffer';
+
 SV.Signon.AllowOverflow := [];
 SV.Signon.Data := @SV.SignonData;
 SV.Signon.MaxSize := SizeOf(SV.SignonData);

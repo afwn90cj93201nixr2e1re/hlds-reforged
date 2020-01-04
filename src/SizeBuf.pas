@@ -8,7 +8,6 @@ uses
 type
   PSizeBuf = ^TSizeBuf;
   TSizeBuf = record
-    Name: PLChar;
     AllowOverflow: set of (FSB_ALLOWOVERFLOW = 0, FSB_OVERFLOWED); // 16 bit boundary
     Data: Pointer;
     MaxSize: UInt32;
@@ -21,7 +20,6 @@ type
     procedure Write(AData: Pointer; ASize: UInt); overload;
     procedure Write<T>(Value: T); overload;
     procedure WriteString(S: PLChar);
-    procedure WriteBuffer(Size: UInt; Data: Pointer);
     procedure WriteAngle(F: Single);
     procedure WriteHiResAngle(F: Single);
     procedure WriteCoord(F: Single);
@@ -37,9 +35,8 @@ begin
 if ASize < 32 then
  ASize := 32;
 
-Name := AName;
 AllowOverflow := [];
-Data := Hunk_AllocName(ASize, Name);
+Data := Hunk_AllocName(ASize, AName);
 MaxSize := ASize;
 CurrentSize := 0;
 end;
@@ -56,9 +53,6 @@ var
 begin
 if CurrentSize + Length > MaxSize then
  begin
-  if Name <> nil then
-   P := Name
-  else
    P := '???';
 
   if not (FSB_ALLOWOVERFLOW in AllowOverflow) then
@@ -99,12 +93,6 @@ if S <> nil then
  Write(S, StrLen(S) + 1)
 else
  Write(EmptyString, 1)
-end;
-
-procedure TSizeBuf.WriteBuffer(Size: UInt; Data: Pointer);
-begin
-if Data <> nil then
- Write(Data, Size);
 end;
 
 procedure TSizeBuf.WriteAngle(F: Single);

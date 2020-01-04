@@ -125,7 +125,6 @@ var
   SB: TSizeBuf;
   Buf: array[1..MAX_PACKETLEN] of Byte;
 begin
-  SB.Name := 'Netchan_OutOfBand';
   SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
   SB.Data := @Buf;
   SB.MaxSize := SizeOf(Buf);
@@ -254,7 +253,6 @@ OutgoingSequence := 1;
 Client := ClientPtr;
 FragmentFunc := @Func;
 
-NetMessage.Name := 'netchan->message';
 NetMessage.AllowOverflow := [FSB_ALLOWOVERFLOW];
 NetMessage.Data := @NetMessageBuf;
 NetMessage.MaxSize := SizeOf(NetMessageBuf);
@@ -421,7 +419,6 @@ var
  FP: PNetchanFlowStats;
  TempRate: Double;
 begin
-SB.Name := 'Netchan_Transmit';
 SB.AllowOverflow := [];
 SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData) - 3;
@@ -516,7 +513,6 @@ begin
 P := Mem_ZeroAlloc(SizeOf(TFragBuf));
 if P <> nil then
  begin
-  P.FragMessage.Name := 'Frag Buffer Alloc''d';
   P.FragMessage.AllowOverflow := [FSB_ALLOWOVERFLOW];
   P.FragMessage.Data := @P.Data;
   P.FragMessage.MaxSize := SizeOf(P.Data);
@@ -969,7 +965,7 @@ while RemainingSize > 0 do
   FB.FileFrag := True;
   FB.FileBuffer := True;
 
-  FB.FragMessage.WriteBuffer(ThisSize, Pointer(UInt(DstBuf) + FileOffset));
+  FB.FragMessage.Write(Pointer(UInt(DstBuf) + FileOffset), ThisSize);
   Inc(FileOffset, ThisSize);
   Dec(RemainingSize, ThisSize);
 

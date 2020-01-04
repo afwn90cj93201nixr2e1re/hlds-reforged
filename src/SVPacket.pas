@@ -484,7 +484,6 @@ else
 
     Info_SetValueForStarKey(@C.UserInfo, '*sid', PLChar(IntToStr(C.Auth.UniqueID)), MAX_USERINFO_STRING);
     
-    C.UnreliableMessage.Name := PLChar(@C.NetName);
     C.UnreliableMessage.AllowOverflow := [FSB_ALLOWOVERFLOW];
     C.UnreliableMessage.Data := @C.UnreliableMessageData;
     C.UnreliableMessage.MaxSize := SizeOf(C.UnreliableMessageData);
@@ -595,7 +594,6 @@ var
  NetAdrBuf: array[1..64] of LChar;
  SB: TSizeBuf;
 begin
-SB.Name := 'SVC_Info';
 SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
 SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);
@@ -663,7 +661,6 @@ var
  C: PClient;
  S: PLChar;
 begin
-SB.Name := 'SVC_InfoString';
 SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
 SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);
@@ -771,7 +768,6 @@ var
  I: Int;
  C: PClient;
 begin
-SB.Name := 'SVC_PlayerInfo';
 SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
 SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);
@@ -820,7 +816,6 @@ var
  Num: UInt;
  P: PCVar;
 begin
-SB.Name := 'SVC_RuleInfo';
 SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
 SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);
@@ -864,7 +859,6 @@ var
  SBData: array[1..32] of Byte;
  SB: TSizeBuf;
 begin
-SB.Name := 'SVC_GetChallenge_New';
 SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
 SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);
@@ -888,7 +882,6 @@ Payload := MSG_ReadString;
 if MSG_BadRead or (StrComp(Payload, 'Source Engine Query') <> 0) then
  Exit;
 
-SB.Name := 'SVC_Info_New';
 SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
 SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);

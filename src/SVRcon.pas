@@ -58,7 +58,6 @@ begin
 if RedirectBuf[Low(RedirectBuf)] > #0 then
  if RedirectType = srRemote then
   begin
-   SB.Name := 'Redirected Text';
    SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
    SB.Data := @Buf;
    SB.MaxSize := SizeOf(Buf);

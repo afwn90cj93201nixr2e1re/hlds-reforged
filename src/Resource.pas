@@ -272,7 +272,7 @@ for I := 0 to SVS.MaxClients - 1 do
         Dest.Netchan.NetMessage.Write<Int32>(P.Resource.DownloadSize);
         Dest.Netchan.NetMessage.Write<UInt8>(Byte(P.Resource.Flags));
         if RES_CUSTOM in P.Resource.Flags then
-         Dest.Netchan.NetMessage.WriteBuffer(SizeOf(P.Resource.MD5Hash), @P.Resource.MD5Hash);
+         Dest.Netchan.NetMessage.Write(@P.Resource.MD5Hash, SizeOf(P.Resource.MD5Hash));
        end;
        
       P := P.Next;
@@ -302,7 +302,7 @@ for I := 0 to SVS.MaxClients - 1 do
     P.Netchan.NetMessage.Write<Int32>(Res.DownloadSize);
     P.Netchan.NetMessage.Write<UInt8>(Byte(Res.Flags));
     if RES_CUSTOM in Res.Flags then
-     P.Netchan.NetMessage.WriteBuffer(SizeOf(Res.MD5Hash), @Res.MD5Hash);
+     P.Netchan.NetMessage.Write(@Res.MD5Hash, SizeOf(Res.MD5Hash));
    end;
  end;
 end;
