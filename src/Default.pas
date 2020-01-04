@@ -13,6 +13,8 @@ type
  PUInt32 = ^UInt32;
  PUInt64 = ^UInt64;
 
+ Float = Single;
+
  LChar = System.AnsiChar;
  WChar = System.WideChar;
 

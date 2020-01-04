@@ -83,8 +83,8 @@ end;
 procedure SV_RejectConnection(const Addr: TNetAdr; Msg: PLChar);
 begin
 gNetMessage.Clear;
-gNetMessage.WriteLong(OUTOFBAND_TAG);
-gNetMessage.WriteChar(S2C_ERROR);
+gNetMessage.Write<Int32>(OUTOFBAND_TAG);
+gNetMessage.Write<LChar>(S2C_ERROR);
 gNetMessage.WriteString(Msg);
 NET_SendPacket(NS_SERVER, gNetMessage.CurrentSize, gNetMessage.Data, Addr);
 gNetMessage.Clear;
@@ -98,8 +98,8 @@ end;
 procedure SV_RejectConnectionForPassword(const Addr: TNetAdr);
 begin
 gNetMessage.Clear;
-gNetMessage.WriteLong(OUTOFBAND_TAG);
-gNetMessage.WriteChar(S2C_PASSWORD);
+gNetMessage.Write<Int32>(OUTOFBAND_TAG);
+gNetMessage.Write<LChar>(S2C_PASSWORD);
 gNetMessage.WriteString('BADPASSWORD');
 NET_SendPacket(NS_SERVER, gNetMessage.CurrentSize, gNetMessage.Data, Addr);
 gNetMessage.Clear;
@@ -601,8 +601,8 @@ SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);
 SB.CurrentSize := 0;
 
-SB.WriteLong(OUTOFBAND_TAG);
-SB.WriteChar(S2C_INFO);
+SB.Write<Int32>(OUTOFBAND_TAG);
+SB.Write<LChar>(S2C_INFO);
 if NoIP then
  SB.WriteString('LOOPBACK')
 else
@@ -617,37 +617,37 @@ else
 SB.WriteString(GameDir);
 SB.WriteString(DLLFunctions.GetGameDescription);
 
-SB.WriteByte(Min(SV_CountPlayers, High(Byte)));
+SB.Write<UInt8>(Min(SV_CountPlayers, High(Byte)));
 if sv_visiblemaxplayers.Value < 0 then
- SB.WriteByte(Min(SVS.MaxClients, High(Byte)))
+ SB.Write<UInt8>(Min(SVS.MaxClients, High(Byte)))
 else
- SB.WriteByte(Min(Trunc(sv_visiblemaxplayers.Value), High(Byte)));
+ SB.Write<UInt8>(Min(Trunc(sv_visiblemaxplayers.Value), High(Byte)));
 
-SB.WriteByte(48);
-SB.WriteChar('d');
-SB.WriteChar({$IFDEF MSWINDOWS}'w'{$ELSE}'l'{$ENDIF});
+SB.Write<UInt8>(48);
+SB.Write<LChar>('d');
+SB.Write<LChar>({$IFDEF MSWINDOWS}'w'{$ELSE}'l'{$ENDIF});
 
-if (sv_password.Data^ > #0) and (StrComp(sv_password.Data, 'none') <> 0) then 
- SB.WriteByte(1)
+if (sv_password.Data^ > #0) and (StrComp(sv_password.Data, 'none') <> 0) then
+ SB.Write<UInt8>(1)
 else
- SB.WriteByte(0);
+ SB.Write<UInt8>(0);
 
 if ModInfo.CustomGame then
  begin
-  SB.WriteByte(1);
+  SB.Write<UInt8>(1);
   SB.WriteString(@ModInfo.URLInfo);
   SB.WriteString(@ModInfo.URLDownload);
   SB.WriteString(EmptyString);
-  SB.WriteLong(ModInfo.Version);
-  SB.WriteLong(ModInfo.Size);
-  SB.WriteByte(UInt(ModInfo.SVOnly));
-  SB.WriteByte(UInt(ModInfo.ClientDLL));
+  SB.Write<Int32>(ModInfo.Version);
+  SB.Write<Int32>(ModInfo.Size);
+  SB.Write<UInt8>(UInt(ModInfo.SVOnly));
+  SB.Write<UInt8>(UInt(ModInfo.ClientDLL));
  end
 else
- SB.WriteByte(0);
+ SB.Write<UInt8>(0);
 
-SB.WriteByte(UInt(sv_secureflag.Value <> 0));
-SB.WriteByte(Min(SV_CountFakeClients, High(Byte)));
+SB.Write<UInt8>(UInt(sv_secureflag.Value <> 0));
+SB.Write<UInt8>(Min(SV_CountFakeClients, High(Byte)));
 
 if not (FSB_OVERFLOWED in SB.AllowOverflow) then
  NET_SendPacket(NS_SERVER, SB.CurrentSize, SB.Data, NetFrom);
@@ -686,7 +686,7 @@ for I := 0 to SVS.MaxClients - 1 do
      Inc(Players);
  end;
 
-SB.WriteLong(OUTOFBAND_TAG);
+SB.Write<Int32>(OUTOFBAND_TAG);
 SB.WriteString('infostringresponse');
 
 S := PLChar(UInt(@SBData) + SB.CurrentSize);
@@ -777,11 +777,11 @@ SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);
 SB.CurrentSize := 0;
 
-SB.WriteLong(OUTOFBAND_TAG);
-SB.WriteChar(S2C_PLAYERS);
+SB.Write<Int32>(OUTOFBAND_TAG);
+SB.Write<LChar>(S2C_PLAYERS);
 
 if not SV.Active then
- SB.WriteByte(0)
+ SB.Write<UInt8>(0)
 else
  begin
   Players := 0;
@@ -792,7 +792,7 @@ else
      Inc(Players);
    end;
 
-  SB.WriteByte(Min(Players, High(Byte)));
+  SB.Write<UInt8>(Min(Players, High(Byte)));
 
   Players := 0;
   for I := 0 to SVS.MaxClients - 1 do
@@ -800,10 +800,10 @@ else
     C := @SVS.Clients[I];
     if (C.Active or C.Spawned or C.Connected) and (C.Entity <> nil) then
      begin
-      SB.WriteByte(Players);
+      SB.Write<UInt8>(Players);
       SB.WriteString(@C.NetName);
-      SB.WriteLong(Trunc(C.Entity.V.Frags));
-      SB.WriteFloat(RealTime - C.ConnectTime);
+      SB.Write<Int32>(Trunc(C.Entity.V.Frags));
+      SB.Write<Float>(RealTime - C.ConnectTime);
       Inc(Players);
      end;
    end;
@@ -826,15 +826,15 @@ SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);
 SB.CurrentSize := 0;
 
-SB.WriteLong(OUTOFBAND_TAG);
-SB.WriteChar(S2C_RULES);
+SB.Write<Int32>(OUTOFBAND_TAG);
+SB.Write<LChar>(S2C_RULES);
 
 if not SV.Active then
- SB.WriteShort(0)
+ SB.Write<Int16>(0)
 else
  begin
   Num := CVar_CountServerVariables;
-  SB.WriteShort(Num);
+  SB.Write<Int16>(Num);
 
   P := CVarBase;
   while P <> nil do
@@ -870,9 +870,9 @@ SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);
 SB.CurrentSize := 0;
 
-SB.WriteLong(OUTOFBAND_TAG);
-SB.WriteChar(S2C_CHALLENGE);
-SB.WriteLong(SV_DispatchChallenge(NetFrom).Challenge);
+SB.Write<Int32>(OUTOFBAND_TAG);
+SB.Write<LChar>(S2C_CHALLENGE);
+SB.Write<Int32>(SV_DispatchChallenge(NetFrom).Challenge);
 
 if not (FSB_OVERFLOWED in SB.AllowOverflow) then
  NET_SendPacket(NS_SERVER, SB.CurrentSize, SB.Data, NetFrom);
@@ -894,9 +894,9 @@ SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);
 SB.CurrentSize := 0;
 
-SB.WriteLong(OUTOFBAND_TAG);
-SB.WriteChar(S2C_INFO_NEW);
-SB.WriteByte(48);
+SB.Write<Int32>(OUTOFBAND_TAG);
+SB.Write<LChar>(S2C_INFO_NEW);
+SB.Write<UInt8>(48);
 
 SB.WriteString(hostname.Data);
 if PLChar(@SV.Map)^ > #0 then
@@ -906,24 +906,24 @@ else
 
 SB.WriteString(GameDir);
 SB.WriteString(DLLFunctions.GetGameDescription);
-SB.WriteShort(GetGameAppID);
+SB.Write<Int16>(GetGameAppID);
 
-SB.WriteByte(Min(SV_CountPlayers, High(Byte)));
+SB.Write<UInt8>(Min(SV_CountPlayers, High(Byte)));
 if sv_visiblemaxplayers.Value < 0 then
- SB.WriteByte(Min(SVS.MaxClients, High(Byte)))
+ SB.Write<UInt8>(Min(SVS.MaxClients, High(Byte)))
 else
- SB.WriteByte(Min(Trunc(sv_visiblemaxplayers.Value), High(Byte)));
+ SB.Write<UInt8>(Min(Trunc(sv_visiblemaxplayers.Value), High(Byte)));
 
-SB.WriteByte(Min(SV_CountFakeClients, High(Byte)));
-SB.WriteChar('d');
-SB.WriteChar({$IFDEF MSWINDOWS}'w'{$ELSE}'l'{$ENDIF});
+SB.Write<UInt8>(Min(SV_CountFakeClients, High(Byte)));
+SB.Write<LChar>('d');
+SB.Write<LChar>({$IFDEF MSWINDOWS}'w'{$ELSE}'l'{$ENDIF});
 
 if (sv_password.Data^ > #0) and (StrComp(sv_password.Data, 'none') <> 0) then
- SB.WriteByte(1)
+ SB.Write<UInt8>(1)
 else
- SB.WriteByte(0);
+ SB.Write<UInt8>(0);
 
-SB.WriteByte(UInt(sv_secureflag.Value <> 0));
+SB.Write<UInt8>(UInt(sv_secureflag.Value <> 0));
 
 if not (FSB_OVERFLOWED in SB.AllowOverflow) then
  NET_SendPacket(NS_SERVER, SB.CurrentSize, SB.Data, NetFrom);

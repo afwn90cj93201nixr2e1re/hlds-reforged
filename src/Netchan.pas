@@ -131,7 +131,7 @@ begin
   SB.MaxSize := SizeOf(Buf);
   SB.CurrentSize := 0;
 
-  SB.WriteLong(OUTOFBAND_TAG);
+  SB.Write<Int32>(OUTOFBAND_TAG);
   SB.Write(S, StrLen(S) + 1);
   if not (FSB_OVERFLOWED in SB.AllowOverflow) then
    NET_SendPacket(Source, SB.CurrentSize, SB.Data, Addr);
@@ -444,8 +444,8 @@ else
   if SendReliable and Fragmented then
    Seq := Seq or $40000000;
 
-  SB.WriteLong(Seq);
-  SB.WriteLong(Seq2);
+  SB.Write<Int32>(Seq);
+  SB.Write<Int32>(Seq2);
 
   if SendReliable then
    begin
@@ -453,13 +453,13 @@ else
      for I := Low(I) to High(I) do
       if FragBufActive[I] then
        begin
-        SB.WriteByte(1);
-        SB.WriteLong(FragBufSequence[I]);
-        SB.WriteShort(FragBufOffset[I]);
-        SB.WriteShort(FragBufSize[I]);
+        SB.Write<UInt8>(1);
+        SB.Write<Int32>(FragBufSequence[I]);
+        SB.Write<Int16>(FragBufOffset[I]);
+        SB.Write<Int16>(FragBufSize[I]);
        end
       else
-       SB.WriteByte(0);
+       SB.Write<UInt8>(0);
 
     SB.Write(@ReliableBuf, ReliableLength);
     LastReliableSequence := OutgoingSequence;
@@ -479,7 +479,7 @@ else
     SB.Write(Buffer, Size);
 
   for J := SB.CurrentSize to 15 do
-   SB.WriteByte(SVC_NOP);
+   SB.Write<UInt8>(SVC_NOP);
 
   FP := @Flow[FS_TX].Stats[Flow[FS_TX].InSeq and (MAX_LATENT - 1)];
   FP.Bytes := SB.CurrentSize + UDP_OVERHEAD;
@@ -956,7 +956,7 @@ while RemainingSize > 0 do
      FB.FragMessage.WriteString('bz2')
     else
      FB.FragMessage.WriteString('uncompressed');
-    FB.FragMessage.WriteLong(Size);
+    FB.FragMessage.Write<Int32>(Size);
 
     if ThisSize > FB.FragMessage.CurrentSize then
      Dec(ThisSize, FB.FragMessage.CurrentSize)
@@ -1107,7 +1107,7 @@ while RemainingSize > 0 do
      FB.FragMessage.WriteString('bz2')
     else
      FB.FragMessage.WriteString('uncompressed');
-    FB.FragMessage.WriteLong(Size);
+    FB.FragMessage.Write<Int32>(Size);
 
     if ThisSize > FB.FragMessage.CurrentSize then
      Dec(ThisSize, FB.FragMessage.CurrentSize)

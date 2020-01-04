@@ -146,7 +146,7 @@ for I := 0 to SV.NumEdicts - 1 do
 DLLFunctions.CreateInstancedBaselines;
 
 MemSet(OS, SizeOf(OS), 0);
-SV.Signon.WriteByte(SVC_SPAWNBASELINE);
+SV.Signon.Write<UInt8>(SVC_SPAWNBASELINE);
 MSG_StartBitWriting(SV.Signon);
 for I := 0 to SV.NumEdicts - 1 do
  begin
@@ -348,16 +348,16 @@ if DeltaCompression then
  begin
   SrcPack := @C.Frames[SVUpdateMask and C.UpdateMask].Pack;
   SrcNumEnts := SrcPack.NumEnts;
-  SB.WriteByte(SVC_DELTAPACKETENTITIES);
-  SB.WriteShort(DstPack.NumEnts);
-  SB.WriteByte(C.UpdateMask);
+  SB.Write<UInt8>(SVC_DELTAPACKETENTITIES);
+  SB.Write<Int16>(DstPack.NumEnts);
+  SB.Write<UInt8>(C.UpdateMask);
  end
 else
  begin
   SrcPack := nil;
   SrcNumEnts := 0;
-  SB.WriteByte(SVC_PACKETENTITIES);
-  SB.WriteShort(DstPack.NumEnts);
+  SB.Write<UInt8>(SVC_PACKETENTITIES);
+  SB.Write<Int16>(DstPack.NumEnts);
  end;
 MSG_StartBitWriting(SB);
 

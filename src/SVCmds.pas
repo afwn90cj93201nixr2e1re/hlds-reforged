@@ -491,7 +491,7 @@ NET_AdrToString(HostClient.Netchan.Addr, Address, SizeOf(Address));
 StrCopy(@RejectReason, 'Connection rejected by game.'#10);
 if DLLFunctions.ClientConnect(HostClient.Entity^, @Name, @Address, @RejectReason) <> 0 then
  begin
-  SB.WriteByte(SVC_STUFFTEXT);
+  SB.Write<UInt8>(SVC_STUFFTEXT);
   S := StrECopy(@Buf, 'fullserverinfo "');
   S := StrECopy(S, @ServerInfo);
   StrCopy(S, '"'#10);

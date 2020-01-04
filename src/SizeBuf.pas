@@ -18,15 +18,8 @@ type
     procedure Alloc(AName: PLChar; ASize: UInt);
     procedure Clear;
     function GetSpace(Length: UInt): Pointer;
-    procedure Write(Data: Pointer; Length: UInt);
-
-  public
-    procedure WriteChar(Value: LChar);
-    procedure WriteByte(Value: Byte);
-    procedure WriteShort(Value: Int16);
-    procedure WriteWord(Value: UInt16);
-    procedure WriteLong(Value: Int32);
-    procedure WriteFloat(Value: Single);
+    procedure Write(AData: Pointer; ASize: UInt); overload;
+    procedure Write<T>(Value: T); overload;
     procedure WriteString(S: PLChar);
     procedure WriteBuffer(Size: UInt; Data: Pointer);
     procedure WriteAngle(F: Single);
@@ -89,40 +82,15 @@ Result := Pointer(UInt(Data) + CurrentSize);
 Inc(CurrentSize, Length);
 end;
 
-procedure TSizeBuf.Write(Data: Pointer; Length: UInt);
+procedure TSizeBuf.Write(AData: Pointer; ASize: UInt);
 begin
-if (Data <> nil) and (Length > 0) then
- Move(Data^, GetSpace(Length)^, Length);
+if (AData <> nil) and (ASize > 0) then
+ Move(AData^, GetSpace(ASize)^, ASize);
 end;
 
-procedure TSizeBuf.WriteChar(Value: LChar);
+procedure TSizeBuf.Write<T>(Value: T);
 begin
-PLChar(GetSpace(SizeOf(Value)))^ := Value;
-end;
-
-procedure TSizeBuf.WriteByte(Value: Byte);
-begin
-PByte(GetSpace(SizeOf(Value)))^ := Value;
-end;
-
-procedure TSizeBuf.WriteShort(Value: Int16);
-begin
-PInt16(GetSpace(SizeOf(Value)))^ := LittleShort(Value);
-end;
-
-procedure TSizeBuf.WriteWord(Value: UInt16);
-begin
-PUInt16(GetSpace(SizeOf(Value)))^ := LittleShort(Value);
-end;
-
-procedure TSizeBuf.WriteLong(Value: Int32);
-begin
-PInt32(GetSpace(SizeOf(Value)))^ := LittleLong(Value);
-end;
-
-procedure TSizeBuf.WriteFloat(Value: Single);
-begin
-PSingle(GetSpace(SizeOf(Value)))^ := LittleFloat(Value);
+  Write(@Value, SizeOf(T));
 end;
 
 procedure TSizeBuf.WriteString(S: PLChar);
@@ -141,17 +109,17 @@ end;
 
 procedure TSizeBuf.WriteAngle(F: Single);
 begin
-WriteByte(Trunc(F * 256 / 360));
+  Write<UInt8>(Trunc(F * 256 / 360));
 end;
 
 procedure TSizeBuf.WriteHiResAngle(F: Single);
 begin
-WriteShort(Trunc(F * 65536 / 360));
+  Write<Int16>(Trunc(F * 65536 / 360));
 end;
 
 procedure TSizeBuf.WriteCoord(F: Single);
 begin
-WriteShort(Trunc(F * 8));
+  Write<Int16>(Trunc(F * 8));
 end;
 
 end.
