@@ -2,7 +2,7 @@ unit HPAK;
 
 interface
 
-uses SysUtils, Default, SDK;
+uses SysUtils, Default, SDK, Math;
 
 function HPAK_GetDataPointer(Name: PLChar; const Res: TResource; Buffer: PPointer; Size: PUInt32): Boolean;
 function HPAK_FindResource(const DH: THPAKDirectoryHeader; Hash: Pointer; Res: PResource): Boolean;

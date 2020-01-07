@@ -2,7 +2,7 @@ unit Model;
 
 interface
 
-uses SysUtils, Default, SDK;
+uses SysUtils, Default, SDK, Math;
 
 procedure Mod_Init;
 

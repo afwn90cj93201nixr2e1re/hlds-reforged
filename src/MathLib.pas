@@ -60,7 +60,7 @@ const
 
 implementation
 
-uses SysMain;
+uses SysMain, Math;
 
 function AngleMod(X: Single): Single;
 begin

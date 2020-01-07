@@ -3,7 +3,7 @@ unit Resource;    // rename to SVRes
 interface
 
 uses
-  SysUtils, Default, SDK, Client, SizeBuf;
+  SysUtils, Default, SDK, Client, SizeBuf, Math;
 
 procedure SV_SetResourceLists(var C: TClient);
 procedure SV_ClearResourceLists(var C: TClient);

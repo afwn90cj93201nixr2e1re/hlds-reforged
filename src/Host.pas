@@ -4,7 +4,7 @@ unit Host;
 
 interface
 
-uses SysUtils, Default, SDK;
+uses SysUtils, Default, SDK, Math;
 
 type
   THost = class

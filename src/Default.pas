@@ -189,7 +189,7 @@ function StrComp(S1, S2: PLChar): Int;
 function StrIComp(S1, S2: PLChar): Int;
 function StrLComp(S1, S2: PLChar; L: UInt): Int;
 function StrLIComp(S1, S2: PLChar; L: UInt): Int;
-function StrLScan(S: PLChar; C: LChar; MaxLen: UInt): PLChar;
+function StrLScan(S: PLChar; C: LChar): PLChar;
 
 function ExpandIntStr(const S: LStr; MinLength, MaxLength: UInt): LStr;
 
@@ -207,12 +207,6 @@ procedure UpperCase(S: PLChar); overload;
 procedure AppendSlash(S: PLChar);
 procedure CorrectPath(S: PLChar; AppendSlash: Boolean = True);
 
-function RoundTo(const X: Double; Digit: Int): Double;
-
-function ArcSin(const X: Double): Double;
-function ArcCos(const X: Double): Double;
-function ArcTan2(const Y, X: Double): Double;
-
 function HexToByte(S: PLChar): Byte;
 
 function IntToStr(X: Int; out Buf; L: UInt): PLChar; overload;
@@ -222,11 +216,6 @@ function UIntToStr(X: UInt; out Buf; L: UInt): PLChar;
 function UIntToStrE(X: UInt; out Buf; L: UInt): PLChar;
 
 procedure ByteToHex(B: Byte; S: PLChar);
-
-function Log10(const X: Double): Double;
-
-function Ceil(const X: Double): Int;
-function Floor(const X: Double): Int;
 
 function StrToIntDef(S: PLChar; Def: Int): Int;
 function StrToInt(S: PLChar): Int;
@@ -242,7 +231,7 @@ function VarArgsToString(S: PLChar; SP: Pointer; out Buf; BufSize: UInt): PLChar
 
 implementation
 
-uses SysUtils {$IFDEF MSWINDOWS}, Windows{$ENDIF};
+uses SysUtils {$IFDEF MSWINDOWS}, Windows{$ENDIF}, Math;
 
 function Swap16(Value: Int16): Int16;
 begin
@@ -452,24 +441,9 @@ begin
   Result := SysUtils.StrLIComp(S1, S2, L);
 end;
 
-function StrLScan(S: PLChar; C: LChar; MaxLen: UInt): PLChar;
+function StrLScan(S: PLChar; C: LChar): PLChar;
 begin
-while (S^ > #0) and (MaxLen > 0) do
- if S^ = C then
-  begin
-   Result := S;
-   Exit;
-  end
- else
-  begin
-   Inc(UInt(S));
-   Dec(MaxLen);
-  end;
-
-if (MaxLen > 0) and (C = #0) then
- Result := S
-else
- Result := nil;
+  Result := SysUtils.StrScan(S, C);
 end;
 
 procedure StrTrim(var S: PLChar);
@@ -591,77 +565,6 @@ if (S <> nil) and (S^ > #0) then
   end;
 end;
 
-function RoundTo(const X: Double; Digit: Int): Double;
-type
- T = array[1..2] of Double;
-var
- P: ^T;
- CW: UInt16;
-const
- Factors : array[-20..20] of T =
-  ((1E-20, 1E20), (1E-19, 1E19), (1E-18, 1E18), (1E-17, 1E17), (1E-16, 1E16),
-   (1E-15, 1E15), (1E-14, 1E14), (1E-13, 1E13), (1E-12, 1E12), (1E-11, 1E11),
-   (1E-10, 1E10), (1E-09, 1E09), (1E-08, 1E08), (1E-07, 1E07), (1E-06, 1E06),
-   (1E-05, 1E05), (1E-04, 1E04), (1E-03, 1E03), (1E-02, 1E02), (1E-01, 1E01),
-   (1, 1),
-   (1E01, 1E-01), (1E02, 1E-02), (1E03, 1E-03), (1E04, 1E-04), (1E05, 1E-05),
-   (1E06, 1E-06), (1E07, 1E-07), (1E08, 1E-08), (1E09, 1E-09), (1E10, 1E-10),
-   (1E11, 1E-11), (1E12, 1E-12), (1E13, 1E-13), (1E14, 1E-14), (1E15, 1E-15),
-   (1E16, 1E-16), (1E17, 1E-17), (1E18, 1E-18), (1E19, 1E-19), (1E20, 1E-20));
-begin
-if Abs(Digit) > 20 then
- Result := X
-else
- begin
-  CW := Get8087CW;
-  Set8087CW(4978);
-  if Digit = 0 then
-   Result := Round(X)
-  else
-   begin
-    P := @Factors[Digit];
-    Result := Round(X * P[2]) * P[1];
-   end;
-  Set8087CW(CW);
- end;
-end;
-
-function ArcTan2(const Y, X: Double): Double;
-var
- I: Double;
-begin
-I := 32 * X * X + 9 * Y * Y;
-if I = 0 then
- if X > 0 then
-  Result := 90
- else
-  Result := 270
-else
- begin
-  I := 32 * (X * Y) / I;
-  if X >= 0 then
-   if Y >= 0 then
-    Result := I
-   else
-    Result := 360 - I
-  else
-   if Y >= 0 then
-    Result := 90 + I
-   else
-    Result := 270 - I;
- end;
-end;
-
-function ArcCos(const X: Double): Double;
-begin
-Result := ArcTan2(Sqrt(1 - X * X), X);
-end;
-
-function ArcSin(const X: Double): Double;
-begin
-Result := ArcTan2(X, Sqrt(1 - X * X));
-end;
-
 function HexToByte(S: PLChar): Byte;
 var
  C: LChar;
@@ -692,11 +595,6 @@ for I := 1 to 2 do
   Inc(UInt(S));
   Result := Result shl 4 + B;
  end;
-end;
-
-function Log10(const X: Double): Double;
-begin
-  Result := Ln(X) / Ln(10);
 end;
 
 function IntToStr(X: Int; out Buf; L: UInt): PLChar;
@@ -885,20 +783,6 @@ end;
 function StrEnd(S: PLChar): PLChar;
 begin
 Result := PLChar(UInt(S) + StrLen(S));
-end;
-
-function Ceil(const X: Double): Int;
-begin
-Result := Trunc(X);
-if Frac(X) > 0 then
- Inc(Result);
-end;
-
-function Floor(const X: Double): Int;
-begin
-Result := Trunc(X);
-if Frac(X) < 0 then
- Dec(Result);
 end;
 
 function StrToIntDef(S: PLChar; Def: Int): Int;

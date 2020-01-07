@@ -2,7 +2,7 @@ unit SVCmds;
 
 interface
 
-uses SysUtils, Default, SDK, SizeBuf;
+uses SysUtils, Default, SDK, SizeBuf, Math;
 
 procedure SV_FreeLogNodes;
 

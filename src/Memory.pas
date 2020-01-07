@@ -2,7 +2,7 @@ unit Memory;
 
 interface
 
-uses SysUtils, Default, SDK, SizeBuf;
+uses SysUtils, Default, SDK, SizeBuf, Math;
 
 procedure Z_ClearZone(var Zone: TMemoryZone; Size: UInt);
 procedure Z_Free(P: Pointer);
