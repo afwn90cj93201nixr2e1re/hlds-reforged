@@ -2,7 +2,8 @@ unit FSNative;
 
 interface
 
-uses {$IFDEF MSWINDOWS} Windows, {$ELSE} Libc, {$ENDIF} SysUtils, Default, SDK;
+uses {$IFDEF MSWINDOWS} Windows, {$ELSE} Libc, {$ENDIF} SysUtils, Default, SDK,
+  Math;
 
 function FS_SetupInterface(const Input: TFileSystemInput): PFileSystem;
 

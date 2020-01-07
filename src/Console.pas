@@ -2,7 +2,7 @@ unit Console;
 
 interface
 
-uses SysUtils, Default, SDK, SizeBuf;
+uses SysUtils, Default, SDK, SizeBuf, Math;
 
 procedure Con_PrintF(Msg: PLChar; LB: Boolean = True);
 

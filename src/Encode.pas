@@ -2,7 +2,8 @@ unit Encode;
 
 interface
 
-uses Default, SDK;
+uses
+  Default, SDK, Math;
 
 procedure CRC32_Init(out CRC: TCRC);
 function CRC32_Final(CRC: TCRC): TCRC;

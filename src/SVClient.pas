@@ -3,7 +3,7 @@ unit SVClient;
 interface
 
 uses
-  SysUtils, Default, SDK, Client, SizeBuf;
+  SysUtils, Default, SDK, Client, SizeBuf, Math;
 
 function SV_CountPlayers: UInt;
 function SV_CountProxies: UInt;

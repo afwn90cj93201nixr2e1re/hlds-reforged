@@ -2,6 +2,9 @@ unit Default;
 
 interface
 
+uses
+  Math, AnsiStrings;
+
 type
  PInt8 = ^Int8;
  PInt16 = ^Int16;
@@ -121,8 +124,6 @@ type
  LCharSet = set of LChar;
 
 const
-
-
  MinInt16 = Low(Int16);
  MaxInt16 = High(Int16);
  MinUInt16 = Low(UInt16);
@@ -161,13 +162,6 @@ function Swap16(Value: Int16): Int16;
 function Swap32(Value: Int32): Int32;
 function Swap64(Value: Int64): Int64;
 
-function Min32(X1, X2: Int32): Int32;
-function Max32(X1, X2: Int32): Int32;
-function Min64(X1, X2: Int64): Int64;
-function Max64(X1, X2: Int64): Int64;
-function Min(X1, X2: UInt): UInt;
-function Max(X1, X2: UInt): UInt;
-
 procedure StringFromVarRec(const Data: array of const; var S: LStr); overload;
 function StringFromVarRec(const Data: array of const): LStr; overload;
 
@@ -199,8 +193,6 @@ function NextPowerOf2(Value: UInt32): UInt32;
 function LowerC(C: LChar): LChar; overload;
 function UpperC(C: LChar): LChar; overload;
 
-procedure StrTrim(var S: PLChar); overload;
-
 procedure LowerCase(S: PLChar); overload;
 procedure UpperCase(S: PLChar); overload;
 
@@ -214,8 +206,6 @@ function IntToStrE(X: Int; out Buf; L: UInt): PLChar;
 
 function UIntToStr(X: UInt; out Buf; L: UInt): PLChar;
 function UIntToStrE(X: UInt; out Buf; L: UInt): PLChar;
-
-procedure ByteToHex(B: Byte; S: PLChar);
 
 function StrToIntDef(S: PLChar; Def: Int): Int;
 function StrToInt(S: PLChar): Int;
@@ -231,7 +221,7 @@ function VarArgsToString(S: PLChar; SP: Pointer; out Buf; BufSize: UInt): PLChar
 
 implementation
 
-uses SysUtils {$IFDEF MSWINDOWS}, Windows{$ENDIF}, Math;
+uses SysUtils {$IFDEF MSWINDOWS}, Windows{$ENDIF};
 
 function Swap16(Value: Int16): Int16;
 begin
@@ -247,54 +237,6 @@ end;
 function Swap64(Value: Int64): Int64;
 begin
   Result := Swap32(TInt64Rec(Value).High) + (Int64(Swap32(TInt64Rec(Value).Low)) shl 32);
-end;
-
-function Min32(X1, X2: Int32): Int32;
-begin
-if X1 < X2 then
- Result := X1
-else
- Result := X2;
-end;
-
-function Max32(X1, X2: Int32): Int32;
- begin
-  if X1 > X2 then
-   Result := X1
-  else
-   Result := X2;
- end;
-
-function Min64(X1, X2: Int64): Int64;
-begin
-if X1 > X2 then
- Result := X2
-else
- Result := X1;
-end;
-
-function Max64(X1, X2: Int64): Int64;
-begin
-if X1 < X2 then
- Result := X2
-else
- Result := X1;
-end;
-
-function Min(X1, X2: UInt): UInt;
-begin
-if X1 > X2 then
- Result := X2
-else
- Result := X1;
-end;
-
-function Max(X1, X2: UInt): UInt;
-begin
-if X1 < X2 then
- Result := X2
-else
- Result := X1;
 end;
 
 procedure StringFromVarRec(const Data: array of const; var S: LStr);
@@ -444,12 +386,6 @@ end;
 function StrLScan(S: PLChar; C: LChar): PLChar;
 begin
   Result := SysUtils.StrScan(S, C);
-end;
-
-procedure StrTrim(var S: PLChar);
-begin
-while S^ = ' ' do
- Inc(UInt(S));
 end;
 
 function ExpandIntStr(const S: LStr; MinLength, MaxLength: UInt): LStr;
@@ -729,12 +665,6 @@ else
  end;
 end;
 
-procedure ByteToHex(B: Byte; S: PLChar);
-begin
-PUInt16(S)^ := Byte(HexLookupTable[B shr 4]) + (Byte(HexLookupTable[B and $F]) shl 8);
-PLChar(UInt(S) + SizeOf(UInt16))^ := #0;
-end;
-
 procedure MemSet(out Dest; Size: UInt; Value: Byte);
 begin
   FillChar(Dest, Size, Value);
@@ -927,7 +857,7 @@ else
   RemBuf := BufSize;
   TmpBuf[2] := #0;
 
-  S2 := StrScan(S, '%');
+  S2 := SysUtils.StrScan(S, '%');
   while S2 <> nil do
    begin
     Append(S, UInt(S2) - UInt(S));
@@ -961,7 +891,7 @@ else
     end;
 
     S := PLChar(UInt(S2) + 1);
-    S2 := StrScan(S, '%');
+    S2 := SysUtils.StrScan(S, '%');
    end;
 
   Append(S);

@@ -3,7 +3,7 @@ unit SVPacket;
 interface
 
 uses
-  SysUtils, Default, SDK, Client, SizeBuf;
+  SysUtils, Default, SDK, Client, SizeBuf, Math;
 
 function SV_CheckChallenge(const Addr: TNetAdr; Challenge: UInt32; Reject: Boolean): Boolean;
 

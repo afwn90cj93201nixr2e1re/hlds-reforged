@@ -2,7 +2,8 @@ unit Common;
 
 interface
 
-uses SysUtils, {$IFDEF MSWINDOWS} Windows, {$ELSE} Libc, {$ENDIF} Default, SDK;
+uses SysUtils, {$IFDEF MSWINDOWS} Windows, {$ELSE} Libc, {$ENDIF} Default, SDK,
+  Math;
 
 function BuildNumber: UInt;
 function GetGameAppID: UInt;
