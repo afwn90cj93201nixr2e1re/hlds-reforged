@@ -633,7 +633,7 @@ MemSet(FailedRes, SizeOf(FailedRes), 0);
 Failed := False;
 NumConsistency := 0;
 
-COM_UnMunge(Pointer(UInt(gNetMessage.Data) + MSG_ReadCount), Size, SVS.SpawnCount);
+TEncode.UnMunge1(Pointer(UInt(gNetMessage.Data) + MSG_ReadCount), Size, SVS.SpawnCount);
 MSG_StartBitReading(gNetMessage);
 repeat
  if MSG_ReadBits(1) = 0 then
@@ -657,7 +657,7 @@ repeat
       MSG_ReadBitData(@InMinS, SizeOf(InMinS));
       MSG_ReadBitData(@InMaxS, SizeOf(InMaxS));
       Move(Res.Reserved, Reserved, SizeOf(Reserved));
-      COM_UnMunge(@Reserved, SizeOf(Reserved), SVS.SpawnCount);
+      TEncode.UnMunge1(@Reserved, SizeOf(Reserved), SVS.SpawnCount);
       P := @Reserved;
 
       case TForceType(P.ForceType) of
@@ -785,7 +785,7 @@ for I := 0 to SV.NumResources - 1 do
            P.ForceType := Byte(C.ForceType);
            P.MinS := MinS;
            P.MaxS := MaxS;
-           COM_Munge(@Res.Reserved, SizeOf(Res.Reserved), SVS.SpawnCount);
+           TEncode.Munge1(@Res.Reserved, SizeOf(Res.Reserved), SVS.SpawnCount);
           end;
 
          ftModelSpecifyBounds, ftModelSpecifyBoundsIfAvail:
@@ -793,7 +793,7 @@ for I := 0 to SV.NumResources - 1 do
            P.ForceType := Byte(C.ForceType);
            P.MinS := C.MinS;
            P.MaxS := C.MaxS;
-           COM_Munge(@Res.Reserved, SizeOf(Res.Reserved), SVS.SpawnCount);
+           TEncode.Munge1(@Res.Reserved, SizeOf(Res.Reserved), SVS.SpawnCount);
           end;
         end;
        end;

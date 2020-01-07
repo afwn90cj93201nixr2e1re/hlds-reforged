@@ -103,7 +103,7 @@ var
 implementation
 
 uses BZip2, Common, Console, FileSys, Memory, MsgBuf, Host,
-  Resource, SVClient, SVMain, SysArgs, SysMain, Network, Client;
+  Resource, SVClient, SVMain, SysArgs, SysMain, Network, Client, Encode;
 
 var
  // netchan stuff
@@ -484,7 +484,7 @@ else
   Inc(Flow[FS_TX].InSeq);
   UpdateFlow;
 
-  COM_Munge2(Pointer(UInt(SB.Data) + 8), SB.CurrentSize - 8, Byte(OutgoingSequence - 1));
+  TEncode.Munge2(Pointer(UInt(SB.Data) + 8), SB.CurrentSize - 8, Byte(OutgoingSequence - 1));
   NET_SendPacket(Source, SB.CurrentSize, SB.Data, Addr);
 
   if SV.Active and (sv_lan.Value <> 0) and (sv_lan_rate.Value > MIN_CLIENT_RATE) then
@@ -615,7 +615,7 @@ Ack := Ack and $3FFFFFFF;
 if MSG_BadRead or Security then
  Exit;
 
-COM_UnMunge2(Pointer(UInt(gNetMessage.Data) + 8), gNetMessage.CurrentSize - 8, Byte(Seq));
+TEncode.UnMunge2(Pointer(UInt(gNetMessage.Data) + 8), gNetMessage.CurrentSize - 8, Byte(Seq));
 if Fragmented then
  begin
   for I := Low(I) to High(I) do

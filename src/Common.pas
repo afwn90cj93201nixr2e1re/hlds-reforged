@@ -55,13 +55,6 @@ procedure COM_ListMaps(SubStr: PLChar);
 function FilterMapName(Src, Dst: PLChar): Boolean;
 function HashString(S: PLChar; MaxEntries: UInt): UInt;
 
-procedure COM_Munge(Data: Pointer; Length: UInt; Sequence: Int32);
-procedure COM_UnMunge(Data: Pointer; Length: UInt; Sequence: Int32);
-procedure COM_Munge2(Data: Pointer; Length: UInt; Sequence: Int32);
-procedure COM_UnMunge2(Data: Pointer; Length: UInt; Sequence: Int32);
-procedure COM_Munge3(Data: Pointer; Length: UInt; Sequence: Int32);
-procedure COM_UnMunge3(Data: Pointer; Length: UInt; Sequence: Int32);
-
 procedure ClearLink(var L: TLink);
 procedure RemoveLink(var L: TLink);
 procedure InsertLinkBefore(var L, L2: TLink);
@@ -108,8 +101,6 @@ implementation
 
 uses Console, Encode, FileSys, Host, Memory, MsgBuf, SysArgs, SysMain, SVWorld;
 
-type
- TPacketEncodeTable = packed array[0..15] of Byte;
 
 var
  IR: Int32 = 0;
@@ -953,92 +944,6 @@ for I := 0 to 2 do
    Angles[I] := Angles[I] + 360;
 end;
 
-procedure COM_Munge_Internal(Data: Pointer; Length: UInt; Sequence: Int32; const ET: TPacketEncodeTable);
-type
- T = array[0..3] of Byte;
-var
- I: UInt;
- P: PInt32;
- C: Int32;
-begin
-Length := (Length and not 3) shr 2;
-
-if Length > 0 then
- for I := 0 to Length - 1 do
-  begin
-   P := Pointer(UInt(Data) + (I shl 2));
-   C := Swap32(P^ xor not Sequence);
-
-   T(C)[0] := T(C)[0] xor ($A5 or ET[I and High(ET)]);
-   T(C)[1] := T(C)[1] xor ($A7 or ET[(I + 1) and High(ET)]);
-   T(C)[2] := T(C)[2] xor ($AF or ET[(I + 2) and High(ET)]);
-   T(C)[3] := T(C)[3] xor ($BF or ET[(I + 3) and High(ET)]);
-
-   C := C xor Sequence;
-   P^ := C;
-  end;
-end;
-
-procedure COM_UnMunge_Internal(Data: Pointer; Length: UInt; Sequence: Int32; const DT: TPacketEncodeTable);
-type
- T = array[0..3] of Byte;
-var
- I: UInt;
- P: PInt32;
- C: Int32;
-begin
-Length := (Length and not 3) shr 2;
-
-if Length > 0 then
- for I := 0 to Length - 1 do
-  begin
-   P := Pointer(UInt(Data) + (I shl 2));
-   C := P^ xor Sequence;
-
-   T(C)[0] := T(C)[0] xor ($A5 or DT[I and High(DT)]);
-   T(C)[1] := T(C)[1] xor ($A7 or DT[(I + 1) and High(DT)]);
-   T(C)[2] := T(C)[2] xor ($AF or DT[(I + 2) and High(DT)]);
-   T(C)[3] := T(C)[3] xor ($BF or DT[(I + 3) and High(DT)]);
-
-   C := Swap32(C) xor not Sequence;
-   P^ := C;
-  end;
-end;
-
-const
- EncodeTable1: TPacketEncodeTable = ($7A, $64, $05, $F1, $1B, $9B, $A0, $B5, $CA, $ED, $61, $0D, $4A, $DF, $8E, $C7);
- EncodeTable2: TPacketEncodeTable = ($05, $61, $7A, $ED, $1B, $CA, $0D, $9B, $4A, $F1, $64, $C7, $B5, $8E, $DF, $A0);
- EncodeTable3: TPacketEncodeTable = ($20, $07, $13, $61, $03, $45, $17, $72, $0A, $2D, $48, $0C, $4A, $12, $A9, $B5);
-
-procedure COM_Munge(Data: Pointer; Length: UInt; Sequence: Int32);
-begin
-COM_Munge_Internal(Data, Length, Sequence, EncodeTable1);
-end;
-
-procedure COM_UnMunge(Data: Pointer; Length: UInt; Sequence: Int32);
-begin
-COM_UnMunge_Internal(Data, Length, Sequence, EncodeTable1);
-end;
-
-procedure COM_Munge2(Data: Pointer; Length: UInt; Sequence: Int32);
-begin
-COM_Munge_Internal(Data, Length, Sequence, EncodeTable2);
-end;
-
-procedure COM_UnMunge2(Data: Pointer; Length: UInt; Sequence: Int32);
-begin
-COM_UnMunge_Internal(Data, Length, Sequence, EncodeTable2);
-end;
-
-procedure COM_Munge3(Data: Pointer; Length: UInt; Sequence: Int32);
-begin
-COM_Munge_Internal(Data, Length, Sequence, EncodeTable3);
-end;
-
-procedure COM_UnMunge3(Data: Pointer; Length: UInt; Sequence: Int32);
-begin
-COM_UnMunge_Internal(Data, Length, Sequence, EncodeTable3);
-end;
 
 function COM_GetApproxWavePlayLength(Name: PLChar): UInt;
 type

@@ -1508,7 +1508,7 @@ else
   Size := MSG_ReadByte;
   Checksum := MSG_ReadByte;
   RC := MSG_ReadCount;
-  COM_UnMunge(Pointer(UInt(gNetMessage.Data) + RC), Size, C.Netchan.IncomingSequence);
+  TEncode.UnMunge1(Pointer(UInt(gNetMessage.Data) + RC), Size, C.Netchan.IncomingSequence);
 
   Flags := MSG_ReadByte;
   Loss := Flags and $7F;

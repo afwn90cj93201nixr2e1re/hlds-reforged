@@ -33,7 +33,7 @@ implementation
 
 uses Common, Console, FileSys, GameLib, Info, Memory, MsgBuf, Host,
   Network, SVAuth, SVClient, SVDelta, SVMain, SVRcon, SVSend, Netchan,
-  Client;
+  Client, Encode;
 
 procedure SV_FreeLogNodes;
 var
@@ -537,7 +537,7 @@ if (CmdSource = csClient) and (Cmd_Argc = 3) then
   
   CRC := @HostClient.MapCRC;
   CRC^ := StrToInt(Cmd_Argv(2));
-  COM_UnMunge2(CRC, SizeOf(TCRC), Byte(not SVS.SpawnCount));
+  TEncode.UnMunge2(CRC, SizeOf(TCRC), Byte(not SVS.SpawnCount));
 
   if UInt(StrToInt(Cmd_Argv(1))) <> SVS.SpawnCount then
    SV_New_F

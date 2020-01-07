@@ -22,6 +22,29 @@ function MD5_IsValid(S: PLChar): Boolean;
 
 function COM_BlockSequenceCRCByte(Input: Pointer; Size: UInt; Sequence: UInt32): TCRC;
 
+type
+  TEncode = class
+  private type
+    TPacketEncodeTable = packed array[0..15] of Byte;
+
+  private const
+      EncodeTable1: TPacketEncodeTable = ($7A, $64, $05, $F1, $1B, $9B, $A0, $B5, $CA, $ED, $61, $0D, $4A, $DF, $8E, $C7);
+      EncodeTable2: TPacketEncodeTable = ($05, $61, $7A, $ED, $1B, $CA, $0D, $9B, $4A, $F1, $64, $C7, $B5, $8E, $DF, $A0);
+      EncodeTable3: TPacketEncodeTable = ($20, $07, $13, $61, $03, $45, $17, $72, $0A, $2D, $48, $0C, $4A, $12, $A9, $B5);
+
+  private
+    class procedure Munge(Data: Pointer; Length: UInt; Sequence: Int32; const ET: TPacketEncodeTable);
+    class procedure UnMunge(Data: Pointer; Length: UInt; Sequence: Int32; const DT: TPacketEncodeTable);
+
+  public
+    class procedure Munge1(Data: Pointer; Length: UInt; Sequence: Int32);
+    class procedure UnMunge1(Data: Pointer; Length: UInt; Sequence: Int32);
+    class procedure Munge2(Data: Pointer; Length: UInt; Sequence: Int32);
+    class procedure UnMunge2(Data: Pointer; Length: UInt; Sequence: Int32);
+    class procedure Munge3(Data: Pointer; Length: UInt; Sequence: Int32);
+    class procedure UnMunge3(Data: Pointer; Length: UInt; Sequence: Int32);
+  end;
+
 implementation
 
 uses Common, Console, FileSys, Host, SysMain;
@@ -497,6 +520,88 @@ if S <> nil then
    Inc(UInt(S));
 
 Result := UInt(S) - UInt(S2) = 32;
+end;
+
+class procedure TEncode.Munge(Data: Pointer; Length: UInt; Sequence: Int32; const ET: TPacketEncodeTable);
+type
+ T = array[0..3] of Byte;
+var
+ I: UInt;
+ P: PInt32;
+ C: Int32;
+begin
+Length := (Length and not 3) shr 2;
+
+if Length > 0 then
+ for I := 0 to Length - 1 do
+  begin
+   P := Pointer(UInt(Data) + (I shl 2));
+   C := Swap32(P^ xor not Sequence);
+
+   T(C)[0] := T(C)[0] xor ($A5 or ET[I and High(ET)]);
+   T(C)[1] := T(C)[1] xor ($A7 or ET[(I + 1) and High(ET)]);
+   T(C)[2] := T(C)[2] xor ($AF or ET[(I + 2) and High(ET)]);
+   T(C)[3] := T(C)[3] xor ($BF or ET[(I + 3) and High(ET)]);
+
+   C := C xor Sequence;
+   P^ := C;
+  end;
+end;
+
+class procedure TEncode.UnMunge(Data: Pointer; Length: UInt; Sequence: Int32; const DT: TPacketEncodeTable);
+type
+ T = array[0..3] of Byte;
+var
+ I: UInt;
+ P: PInt32;
+ C: Int32;
+begin
+Length := (Length and not 3) shr 2;
+
+if Length > 0 then
+ for I := 0 to Length - 1 do
+  begin
+   P := Pointer(UInt(Data) + (I shl 2));
+   C := P^ xor Sequence;
+
+   T(C)[0] := T(C)[0] xor ($A5 or DT[I and High(DT)]);
+   T(C)[1] := T(C)[1] xor ($A7 or DT[(I + 1) and High(DT)]);
+   T(C)[2] := T(C)[2] xor ($AF or DT[(I + 2) and High(DT)]);
+   T(C)[3] := T(C)[3] xor ($BF or DT[(I + 3) and High(DT)]);
+
+   C := Swap32(C) xor not Sequence;
+   P^ := C;
+  end;
+end;
+
+class procedure TEncode.Munge1(Data: Pointer; Length: UInt; Sequence: Int32);
+begin
+  Munge(Data, Length, Sequence, EncodeTable1);
+end;
+
+class procedure TEncode.UnMunge1(Data: Pointer; Length: UInt; Sequence: Int32);
+begin
+  UnMunge(Data, Length, Sequence, EncodeTable1);
+end;
+
+class procedure TEncode.Munge2(Data: Pointer; Length: UInt; Sequence: Int32);
+begin
+  Munge(Data, Length, Sequence, EncodeTable2);
+end;
+
+class procedure TEncode.UnMunge2(Data: Pointer; Length: UInt; Sequence: Int32);
+begin
+  UnMunge(Data, Length, Sequence, EncodeTable2);
+end;
+
+class procedure TEncode.Munge3(Data: Pointer; Length: UInt; Sequence: Int32);
+begin
+  Munge(Data, Length, Sequence, EncodeTable3);
+end;
+
+class procedure TEncode.UnMunge3(Data: Pointer; Length: UInt; Sequence: Int32);
+begin
+  UnMunge(Data, Length, Sequence, EncodeTable3);
 end;
 
 end.

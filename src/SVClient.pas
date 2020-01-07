@@ -1013,7 +1013,7 @@ SB.Write<Int32>(SVS.SpawnCount);
 
 Index := (UInt(@C) - UInt(SVS.Clients)) div SizeOf(TClient);
 CRC := SV.WorldModelCRC;
-COM_Munge3(@CRC, SizeOf(CRC), Byte(not Index));
+TEncode.Munge3(@CRC, SizeOf(CRC), Byte(not Index));
 SB.Write<Int32>(CRC);
 SB.Write(@SV.ClientDLLHash, SizeOf(SV.ClientDLLHash));
 
