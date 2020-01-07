@@ -123,7 +123,7 @@ if BFWrite.Count >= 8 then
   Inc(UInt(BFWrite.Data));
  end;
 
-if not (FSB_OVERFLOWED in BFWrite.Buffer.AllowOverflow) then
+if not BFWrite.Buffer.Overflowed then
  begin
   if B = 0 then
    PByte(BFWrite.Data)^ := PByte(BFWrite.Data)^ and InvBitTable[BFWrite.Count]
@@ -148,7 +148,7 @@ end;
 
 procedure MSG_EndBitWriting;
 begin
-if not (FSB_OVERFLOWED in BFWrite.Buffer.AllowOverflow) then
+if not BFWrite.Buffer.Overflowed then
  begin
   PByte(BFWrite.Data)^ := PByte(BFWrite.Data)^ and (255 shr (8 - BFWrite.Count));
   BFWrite.Buffer.GetSpace(1);

@@ -193,14 +193,15 @@ else
    StrLCopy(@VoiceCodec, sv_voicecodec.Data, SizeOf(VoiceCodec) - 1);
    VoiceQuality := Trunc(sv_voicequality.Value);
 
-   SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
+   SB.AllowOverflow := True;
+   SB.Overflowed := False;
    SB.Data := @SBData;
    SB.MaxSize := SizeOf(SBData);
    SB.CurrentSize := 0;
 
    SV_WriteVoiceCodec(SB);
 
-   if not (FSB_OVERFLOWED in SB.AllowOverflow) then
+   if not SB.Overflowed then
     for I := 0 to SVS.MaxClients - 1 do
      begin
       C := @SVS.Clients[I];
@@ -350,7 +351,8 @@ var
  SBData: array[1..MAX_NETBUFLEN] of Byte;
  I: Int;
 begin
-SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
+SB.AllowOverflow := True;
+SB.Overflowed := False;
 SB.Data := @SBData;
 SB.CurrentSize := 0;
 SB.MaxSize := SizeOf(SBData);
@@ -403,7 +405,7 @@ for I := 0 to SVS.MaxClients - 1 do
     if UserMsgs <> nil then
      SV_SendUserReg(SB, UserMsgs);
 
-    if FSB_OVERFLOWED in SB.AllowOverflow then
+    if SB.Overflowed then
      SV_DropClient(C^, False, 'Message buffer overflowed.')
     else
      begin
@@ -524,23 +526,28 @@ GlobalVars.MaxClients := SVS.MaxClients;
 SV.Edicts := Hunk_AllocName(SizeOf(TEdict) * SV.MaxEdicts, 'edicts');
 SV.EntityState := Hunk_AllocName(SizeOf(TEntityState) * SV.MaxEdicts, 'baselines');
 
-SV.Datagram.AllowOverflow := [FSB_ALLOWOVERFLOW];
+SV.Datagram.AllowOverflow := True;
+SV.Datagram.Overflowed := False;
 SV.Datagram.Data := @SV.DatagramData;
 SV.Datagram.MaxSize := SizeOf(SV.DatagramData);
 
-SV.ReliableDatagram.AllowOverflow := [];
+SV.ReliableDatagram.AllowOverflow := False;
+SV.ReliableDatagram.Overflowed := False;
 SV.ReliableDatagram.Data := @SV.ReliableDatagramData;
 SV.ReliableDatagram.MaxSize := SizeOf(SV.ReliableDatagramData);
 
-SV.Multicast.AllowOverflow := [];
+SV.Multicast.AllowOverflow := False;
+SV.Multicast.Overflowed := False;
 SV.Multicast.Data := @SV.MulticastData;
 SV.Multicast.MaxSize := SizeOf(SV.MulticastData);
 
-SV.Spectator.AllowOverflow := [FSB_ALLOWOVERFLOW];
+SV.Spectator.AllowOverflow := True;
+SV.Spectator.Overflowed := False;
 SV.Spectator.Data := @SV.SpectatorData;
 SV.Spectator.MaxSize := SizeOf(SV.SpectatorData);
 
-SV.Signon.AllowOverflow := [];
+SV.Signon.AllowOverflow := False;
+SV.Signon.Overflowed := False;
 SV.Signon.Data := @SV.SignonData;
 SV.Signon.MaxSize := SizeOf(SV.SignonData);
 

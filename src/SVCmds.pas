@@ -466,7 +466,8 @@ else
    Exit;
   end;
 
-SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
+SB.AllowOverflow := True;
+SB.Overflowed := False;
 SB.Data := @SBData;
 SB.CurrentSize := 0;
 SB.MaxSize := SizeOf(SBData);
@@ -502,7 +503,7 @@ if DLLFunctions.ClientConnect(HostClient.Entity^, @Name, @Address, @RejectReason
      SV_FullClientUpdate(C^, SB);
    end;
 
-  if FSB_OVERFLOWED in SB.AllowOverflow then
+  if SB.Overflowed then
    SV_DropClient(HostClient^, False, 'Connection buffer overflow.')
   else
    begin
@@ -543,7 +544,8 @@ if (CmdSource = csClient) and (Cmd_Argc = 3) then
    SV_New_F
   else
    begin
-    SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
+    SB.AllowOverflow := True;
+    SB.Overflowed := False;
     SB.Data := @SBData;
     SB.CurrentSize := 0;
     SB.MaxSize := SizeOf(SBData);
@@ -552,7 +554,7 @@ if (CmdSource = csClient) and (Cmd_Argc = 3) then
     SV_WriteSpawn(HostClient^, SB);
     SV_WriteVoiceCodec(SB);
 
-    if FSB_OVERFLOWED in SB.AllowOverflow then
+    if SB.Overflowed then
      SV_DropClient(HostClient^, False, 'Spawn buffer overflow.')
     else
      begin
@@ -570,13 +572,14 @@ var
 begin
 if (CmdSource <> csServer) and (HostClient.Active or not HostClient.Spawned) and (RealTime > HostClient.SendResTime) then
  begin
-  SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
+  SB.AllowOverflow := True;
+  SB.Overflowed := False;
   SB.Data := @SBData;
   SB.CurrentSize := 0;
   SB.MaxSize := SizeOf(SBData);
 
   SV_SendResources(SB);
-  if FSB_OVERFLOWED in SB.AllowOverflow then
+  if SB.Overflowed then
    SV_DropClient(HostClient^, False, 'Resource buffer overflow.')
   else
    begin

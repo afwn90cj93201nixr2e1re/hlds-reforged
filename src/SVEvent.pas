@@ -29,7 +29,8 @@ var
 begin
 if not C.FakeClient then
  begin
-  SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
+  SB.AllowOverflow := True;
+  SB.Overflowed := False;
   SB.Data := @SBData;
   SB.CurrentSize := 0;
   SB.MaxSize := SizeOf(SBData);
@@ -50,7 +51,7 @@ if not C.FakeClient then
    end;
   MSG_EndBitWriting;
 
-  if not (FSB_OVERFLOWED in SB.AllowOverflow) then
+  if not SB.Overflowed then
    if SB.CurrentSize + C.Netchan.NetMessage.CurrentSize < C.Netchan.NetMessage.MaxSize then
     C.Netchan.NetMessage.Write(SB.Data, SB.CurrentSize)
    else

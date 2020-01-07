@@ -1236,12 +1236,14 @@ I := COM_CheckParm('-clockwindow');
 if I > 0 then
  CVar_DirectSet(clockwindow, COM_ParmValueByIndex(I));
 
-gNetMessage.AllowOverflow := [FSB_ALLOWOVERFLOW];
+gNetMessage.AllowOverflow := True;
+gNetMessage.Overflowed := False;
 gNetMessage.Data := @NetMsgBuffer;
 gNetMessage.MaxSize := SizeOf(NetMsgBuffer);
 gNetMessage.CurrentSize := 0;
 
-InMessage.AllowOverflow := [];
+InMessage.AllowOverflow := False;
+InMessage.Overflowed := False;
 InMessage.Data := @InMsgBuffer;
 InMessage.MaxSize := SizeOf(InMsgBuffer);
 InMessage.CurrentSize := 0;

@@ -360,7 +360,8 @@ if @C = HostClient then
 
 MemSet(C.UserInfo, SizeOf(C.UserInfo), 0);
 
-SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
+SB.AllowOverflow := True;
+SB.Overflowed := False;
 SB.Data := @Buf;
 SB.MaxSize := SizeOf(Buf);
 SB.CurrentSize := 0;
@@ -685,7 +686,8 @@ var
  I: Int;
  C: PClient;
 begin
-SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
+SB.AllowOverflow := True;
+SB.Overflowed := False;
 SB.Data := @SBData;
 SB.CurrentSize := 0;
 SB.MaxSize := SizeOf(SBData);
@@ -696,7 +698,7 @@ for I := 0 to SVS.MaxClients - 1 do
   if C.Connected or (C = HostClient) then
    begin
     SV_FullClientUpdate(C^, SB);
-    if FSB_OVERFLOWED in SB.AllowOverflow then
+    if SB.Overflowed then
      begin
       DPrint(['Client "', PLChar(@HostClient.NetName), '" (index #', (UInt(HostClient) - UInt(SVS.Clients)) div SizeOf(TClient) + 1,
               ') requested fullupdate, but the temporary buffer had overflowed. Ignoring the request.']);
@@ -1452,7 +1454,8 @@ var
  SB: TSizeBuf;
  SBData: array[1..MAX_DATAGRAM] of Byte;
 begin
-SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
+SB.AllowOverflow := True;
+SB.Overflowed := False;
 SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);
 SB.CurrentSize := 0;
@@ -1470,7 +1473,7 @@ for I := 0 to SVS.MaxClients - 1 do
       SV_ExtractFromUserInfo(C^);
       SV_FullClientUpdate(C^, SB);
 
-      if FSB_OVERFLOWED in SB.AllowOverflow then
+      if SB.Overflowed then
        C.UpdateInfoTime := RealTime + sv_updatetime.Value
       else
        if SV.ReliableDatagram.CurrentSize + SB.CurrentSize < SV.ReliableDatagram.MaxSize then
@@ -1492,13 +1495,13 @@ for I := 0 to SVS.MaxClients - 1 do
 
 SV_LinkNewUserMsgs;
 
-if FSB_OVERFLOWED in SV.Datagram.AllowOverflow then
+if SV.Datagram.Overflowed then
  begin
   Print('SV_UpdateToReliableMessages: Server datagram buffer overflowed.');
   SV.Datagram.Clear;
  end;
 
-if FSB_OVERFLOWED in SV.Spectator.AllowOverflow then
+if SV.Spectator.Overflowed then
  begin
   Print('SV_UpdateToReliableMessages: Server spectator buffer overflowed.');
   SV.Spectator.Clear;
@@ -1564,7 +1567,8 @@ var
  SB: TSizeBuf;
  SBData: array[1..MAX_DATAGRAM] of Byte;
 begin
-SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
+SB.AllowOverflow := True;
+SB.Overflowed := False;
 SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);
 SB.CurrentSize := 0;
@@ -1573,13 +1577,13 @@ SB.Write<UInt8>(SVC_TIME);
 SB.Write<Float> (SV.Time);
 SV_WriteClientDataToMessage(C, SB);
 SV_WriteEntitiesToClient(C, SB);
-if FSB_OVERFLOWED in C.UnreliableMessage.AllowOverflow then
+if C.UnreliableMessage.Overflowed then
  DPrint(['Warning: Unreliable datagram overflowed for "', PLChar(@C.NetName), '".'])
 else
  SB.Write(C.UnreliableMessage.Data, C.UnreliableMessage.CurrentSize);
 C.UnreliableMessage.Clear;
 
-if FSB_OVERFLOWED in SB.AllowOverflow then
+if SB.Overflowed then
  DPrint(['Warning: Message overflowed for "', PLChar(@C.NetName), '".'])
 else
  C.Netchan.Transmit(SB.CurrentSize, SB.Data);
@@ -1610,7 +1614,7 @@ for I := 0 to SVS.MaxClients - 1 do
         (C.Active and C.Spawned and C.SendInfo and (RealTime + HostFrameTime >= C.NextUpdateTime)) then
       C.NeedUpdate := True;
 
-     if FSB_OVERFLOWED in C.Netchan.NetMessage.AllowOverflow then
+     if C.Netchan.NetMessage.Overflowed then
       begin
        C.Netchan.NetMessage.Clear;
        C.UnreliableMessage.Clear;

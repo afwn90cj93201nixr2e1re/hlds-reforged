@@ -409,7 +409,7 @@ var
  MsgEntity: PEdict;
  MsgOrigin: TVec3;
  MsgData: array[1..512] of Byte;
- MsgBuffer: TSizeBuf = (AllowOverflow: []; Data: @MsgData; MaxSize: SizeOf(MsgData); CurrentSize: 0);
+ MsgBuffer: TSizeBuf = (Data: @MsgData; MaxSize: SizeOf(MsgData); CurrentSize: 0; AllowOverflow: False; Overflowed: False);
 
 function PF_PrecacheModel(Name: PLChar): UInt32; cdecl;
 var
@@ -1556,7 +1556,8 @@ else
 
 MsgBuffer.CurrentSize := 0;
 MsgBuffer.Data := @MsgData;
-MsgBuffer.AllowOverflow := [FSB_ALLOWOVERFLOW];
+MsgBuffer.AllowOverflow := True;
+MsgBuffer.Overflowed := False;
 end;
 
 procedure PF_MessageEnd; cdecl;
@@ -1573,7 +1574,7 @@ MsgStarted := False;
 if (MsgEntity <> nil) and ((MsgEntity.V.Flags and FL_FAKECLIENT) > 0) then
  Exit;
 
-if FSB_OVERFLOWED in MsgBuffer.AllowOverflow then
+if MsgBuffer.Overflowed then
  begin
   DPrint('PF_MessageEnd: Message buffer from game library had overflowed, ignoring.');
   Exit;

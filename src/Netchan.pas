@@ -125,14 +125,15 @@ var
   SB: TSizeBuf;
   Buf: array[1..MAX_PACKETLEN] of Byte;
 begin
-  SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
+  SB.AllowOverflow := True;
+  SB.Overflowed := False;
   SB.Data := @Buf;
   SB.MaxSize := SizeOf(Buf);
   SB.CurrentSize := 0;
 
   SB.Write<Int32>(OUTOFBAND_TAG);
   SB.Write(S, StrLen(S) + 1);
-  if not (FSB_OVERFLOWED in SB.AllowOverflow) then
+  if not SB.Overflowed then
    NET_SendPacket(Source, SB.CurrentSize, SB.Data, Addr);
 end;
 
@@ -253,7 +254,8 @@ OutgoingSequence := 1;
 Client := ClientPtr;
 FragmentFunc := @Func;
 
-NetMessage.AllowOverflow := [FSB_ALLOWOVERFLOW];
+NetMessage.AllowOverflow := True;
+NetMessage.Overflowed := False;
 NetMessage.Data := @NetMessageBuf;
 NetMessage.MaxSize := SizeOf(NetMessageBuf);
 NetMessage.CurrentSize := 0;
@@ -419,12 +421,13 @@ var
  FP: PNetchanFlowStats;
  TempRate: Double;
 begin
-SB.AllowOverflow := [];
+SB.AllowOverflow := False;
+SB.Overflowed := False;
 SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData) - 3;
 SB.CurrentSize := 0;
 
-if FSB_OVERFLOWED in NetMessage.AllowOverflow then
+if NetMessage.Overflowed then
  DPrint([NET_AdrToString(Addr, NetAdrBuf, SizeOf(NetAdrBuf)), ': Outgoing message overflow.'])
 else
  begin
@@ -513,7 +516,8 @@ begin
 P := Mem_ZeroAlloc(SizeOf(TFragBuf));
 if P <> nil then
  begin
-  P.FragMessage.AllowOverflow := [FSB_ALLOWOVERFLOW];
+  P.FragMessage.AllowOverflow := True;
+  P.FragMessage.Overflowed := False;
   P.FragMessage.Data := @P.Data;
   P.FragMessage.MaxSize := SizeOf(P.Data);
  end;
@@ -689,10 +693,10 @@ if Seq > IncomingSequence then
           begin
            P.FragMessage.Clear;
            P.FragMessage.Write(Pointer(UInt(gNetMessage.Data) + MSG_ReadCount + FragOffset[I]), FragSize[I]);
-           if FSB_OVERFLOWED in P.FragMessage.AllowOverflow then
+           if P.FragMessage.Overflowed then
             begin
              DPrint('Fragment buffer overflowed.');
-             Include(NetMessage.AllowOverflow, FSB_OVERFLOWED);
+             NetMessage.Overflowed := True;
              Exit;
             end;
           end;
@@ -1171,7 +1175,7 @@ if IncomingReady[NS_NORMAL] then
    IncomingBuf[NS_NORMAL] := nil;
    IncomingReady[NS_NORMAL] := False;
 
-   if FSB_OVERFLOWED in gNetMessage.AllowOverflow then
+   if gNetMessage.Overflowed then
     begin
      DPrint('Netchan_CopyNormalFragments: Fragment buffer overflowed, ignoring.');
      gNetMessage.Clear;

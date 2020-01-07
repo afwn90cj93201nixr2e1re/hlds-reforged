@@ -8,10 +8,12 @@ uses
 type
   PSizeBuf = ^TSizeBuf;
   TSizeBuf = record
-    AllowOverflow: set of (FSB_ALLOWOVERFLOW = 0, FSB_OVERFLOWED); // 16 bit boundary
+  public
     Data: Pointer;
     MaxSize: UInt32;
     CurrentSize: UInt32;
+    AllowOverflow: Boolean;
+    Overflowed: Boolean;
 
   public
     procedure Alloc(AName: PLChar; ASize: UInt);
@@ -35,7 +37,8 @@ begin
 if ASize < 32 then
  ASize := 32;
 
-AllowOverflow := [];
+AllowOverflow := False;
+Overflowed := False;
 Data := Hunk_AllocName(ASize, AName);
 MaxSize := ASize;
 CurrentSize := 0;
@@ -44,7 +47,7 @@ end;
 procedure TSizeBuf.Clear;
 begin
 CurrentSize := 0;
-Exclude(AllowOverflow, FSB_OVERFLOWED);
+Overflowed := False;
 end;
 
 function TSizeBuf.GetSpace(Length: UInt): Pointer;
@@ -55,21 +58,21 @@ if CurrentSize + Length > MaxSize then
  begin
    P := '???';
 
-  if not (FSB_ALLOWOVERFLOW in AllowOverflow) then
+  if not AllowOverflow then
    if MaxSize >= 1 then
     Sys_Error(['SZ_GetSpace: Overflow without FSB_ALLOWOVERFLOW set on "', P, '".'])
    else
     Sys_Error(['SZ_GetSpace: Tried to write to an uninitialized sizebuf: "', P, '".']);
 
   if Length > MaxSize then
-   if FSB_ALLOWOVERFLOW in AllowOverflow then
+   if AllowOverflow then
     DPrint(['SZ_GetSpace: ', Length ,' is > full buffer size on "', P, '", ignoring.'])
    else
     Sys_Error(['SZ_GetSpace: ', Length ,' is > full buffer size on "', P, '".']);
 
   DPrint(['SZ_GetSpace: overflow on "', P , '".']);
   CurrentSize := 0;
-  Include(AllowOverflow, FSB_OVERFLOWED);
+  Overflowed := True;
  end;
 
 Result := Pointer(UInt(Data) + CurrentSize);

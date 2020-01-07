@@ -58,7 +58,8 @@ begin
 if RedirectBuf[Low(RedirectBuf)] > #0 then
  if RedirectType = srRemote then
   begin
-   SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
+   SB.AllowOverflow := True;
+   SB.Overflowed := False;
    SB.Data := @Buf;
    SB.MaxSize := SizeOf(Buf);
    SB.CurrentSize := 0;
@@ -68,7 +69,7 @@ if RedirectBuf[Low(RedirectBuf)] > #0 then
    SB.WriteString(@RedirectBuf);
    SB.Write<UInt8>(0);
 
-   if not (FSB_OVERFLOWED in SB.AllowOverflow) then
+   if not SB.Overflowed then
     NET_SendPacket(NS_SERVER, SB.CurrentSize, SB.Data, RedirectTo);
   end
  else

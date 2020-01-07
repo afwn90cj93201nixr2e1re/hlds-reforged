@@ -484,7 +484,8 @@ else
 
     Info_SetValueForStarKey(@C.UserInfo, '*sid', PLChar(IntToStr(C.Auth.UniqueID)), MAX_USERINFO_STRING);
     
-    C.UnreliableMessage.AllowOverflow := [FSB_ALLOWOVERFLOW];
+    C.UnreliableMessage.AllowOverflow := True;
+    C.UnreliableMessage.Overflowed := False;
     C.UnreliableMessage.Data := @C.UnreliableMessageData;
     C.UnreliableMessage.MaxSize := SizeOf(C.UnreliableMessageData);
     C.UnreliableMessage.CurrentSize := 0;
@@ -594,7 +595,8 @@ var
  NetAdrBuf: array[1..64] of LChar;
  SB: TSizeBuf;
 begin
-SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
+SB.AllowOverflow := True;
+SB.Overflowed := False;
 SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);
 SB.CurrentSize := 0;
@@ -647,7 +649,7 @@ else
 SB.Write<UInt8>(UInt(sv_secureflag.Value <> 0));
 SB.Write<UInt8>(Min(SV_CountFakeClients, High(Byte)));
 
-if not (FSB_OVERFLOWED in SB.AllowOverflow) then
+if not SB.Overflowed then
  NET_SendPacket(NS_SERVER, SB.CurrentSize, SB.Data, NetFrom);
 end;
 
@@ -661,7 +663,8 @@ var
  C: PClient;
  S: PLChar;
 begin
-SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
+SB.AllowOverflow := True;
+SB.Overflowed := False;
 SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);
 SB.CurrentSize := 0;
@@ -768,7 +771,8 @@ var
  I: Int;
  C: PClient;
 begin
-SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
+SB.AllowOverflow := True;
+SB.Overflowed := False;
 SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);
 SB.CurrentSize := 0;
@@ -805,7 +809,7 @@ else
    end;
  end;
 
-if not (FSB_OVERFLOWED in SB.AllowOverflow) then
+if not SB.Overflowed then
  NET_SendPacket(NS_SERVER, SB.CurrentSize, SB.Data, NetFrom);
 end;
 
@@ -816,7 +820,8 @@ var
  Num: UInt;
  P: PCVar;
 begin
-SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
+SB.AllowOverflow := True;
+SB.Overflowed := False;
 SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);
 SB.CurrentSize := 0;
@@ -849,7 +854,7 @@ else
     P := P.Next;
    end;
 
-  if not (FSB_OVERFLOWED in SB.AllowOverflow) then
+  if not SB.Overflowed then
    NET_SendPacket(NS_SERVER, SB.CurrentSize, SB.Data, NetFrom);
  end;
 end;
@@ -859,7 +864,8 @@ var
  SBData: array[1..32] of Byte;
  SB: TSizeBuf;
 begin
-SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
+SB.AllowOverflow := True;
+SB.Overflowed := False;
 SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);
 SB.CurrentSize := 0;
@@ -868,7 +874,7 @@ SB.Write<Int32>(OUTOFBAND_TAG);
 SB.Write<LChar>(S2C_CHALLENGE);
 SB.Write<Int32>(SV_DispatchChallenge(NetFrom).Challenge);
 
-if not (FSB_OVERFLOWED in SB.AllowOverflow) then
+if not SB.Overflowed then
  NET_SendPacket(NS_SERVER, SB.CurrentSize, SB.Data, NetFrom);
 end;
 
@@ -882,7 +888,8 @@ Payload := MSG_ReadString;
 if MSG_BadRead or (StrComp(Payload, 'Source Engine Query') <> 0) then
  Exit;
 
-SB.AllowOverflow := [FSB_ALLOWOVERFLOW];
+SB.AllowOverflow := True;
+SB.Overflowed := False;
 SB.Data := @SBData;
 SB.MaxSize := SizeOf(SBData);
 SB.CurrentSize := 0;
@@ -918,7 +925,7 @@ else
 
 SB.Write<UInt8>(UInt(sv_secureflag.Value <> 0));
 
-if not (FSB_OVERFLOWED in SB.AllowOverflow) then
+if not SB.Overflowed then
  NET_SendPacket(NS_SERVER, SB.CurrentSize, SB.Data, NetFrom);
 end;
 
