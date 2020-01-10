@@ -2,16 +2,30 @@ unit MathLib;
 
 interface
 
-uses Default, SDK;
+uses Default;
 
 const M_PI = 3.14159265358979323846;
 
 type
+ PVec3 = ^TVec3;
+ TVec3 = packed array[0..2] of Single;
+
+ PVec4 = ^TVec4;
+ TVec4 = packed array[0..3] of Single;
+
  PMatrix3x3 = ^TMatrix3x3;
  TMatrix3x3 = array[1..3] of array[1..3] of Single;
 
  PMatrix3x4 = ^TMatrix3x4;
  TMatrix3x4 = array[1..3] of array[1..4] of Single;
+
+ PMPlane = ^TMPlane;
+ TMPlane = packed record
+  Normal: TVec3;
+  Distance: Single;
+  PlaneType, SignBits, Padding1, Padding2: UInt8;
+ end;
+ TMPlaneArray = array[0..0] of TMPlane;
 
 function AngleMod(X: Single): Single;
 

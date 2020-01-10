@@ -2,7 +2,7 @@ unit SVWorld;
 
 interface
 
-uses Default, SDK;
+uses Default, SDK, MathLib;
 
 procedure SV_ClearWorld;
 procedure SV_UnlinkEdict(var E: TEdict);
@@ -33,7 +33,7 @@ var
 
 implementation
 
-uses Common, Console, GameLib, Host, MathLib, Renderer, SVMain, SysMain, SVMove;
+uses Common, Console, GameLib, Host, Renderer, SVMain, SysMain, SVMove;
 
 var
  TouchLinkSemaphore: Boolean = False;

@@ -2,7 +2,7 @@ unit SVExport;
 
 interface
 
-uses {$IFDEF LINUX}Libc, {$ENDIF} Default, SDK, Delta, SizeBuf, Math;
+uses {$IFDEF LINUX}Libc, {$ENDIF} Default, SDK, Delta, SizeBuf, Math, MathLib;
 
 function PF_PrecacheModel(Name: PLChar): UInt32; cdecl;
 function PF_PrecacheSound(Name: PLChar): UInt32; cdecl;
@@ -393,7 +393,7 @@ var
 implementation
 
 uses Common, Console, Edict, Encode, FileSys, GameLib, Host, Info,
-  MathLib, Memory, Model, MsgBuf, PMove, Renderer, Resource, SVAuth, SVClient,
+  Memory, Model, MsgBuf, PMove, Renderer, Resource, SVAuth, SVClient,
   SVCmds, SVEdict, SVEvent, SVMain, SVMove, SVPhys, SVSend, SVWorld, SysArgs,
   SysClock, SysMain, Client;
 

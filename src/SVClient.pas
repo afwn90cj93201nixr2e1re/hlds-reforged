@@ -790,21 +790,21 @@ if not C.HLTV then
  begin
   NoDelta := C.UpdateMask = -1;
   SB.Write<UInt8>(SVC_CLIENTDATA);
-  MSG_StartBitWriting(SB);
+  SB.StartBitWriting;
   if NoDelta then
    begin
     MemSet(CD, SizeOf(CD), 0);  
     OS := @CD;
-    MSG_WriteBits(0, 1);
+    SB.WriteBits(0, 1);
    end
   else
    begin
     OS := @C.Frames[SVUpdateMask and C.UpdateMask].ClientData;
-    MSG_WriteBits(1, 1);
-    MSG_WriteBits(C.UpdateMask, 8);
+    SB.WriteBits(1, 1);
+    SB.WriteBits(C.UpdateMask, 8);
    end;
 
-  ClientDelta.WriteDelta(OS, @Frame.ClientData, True, nil);
+  ClientDelta.WriteDelta(SB, OS, @Frame.ClientData, True, nil);
   if C.LW and (DLLFunctions.GetWeaponData(E^, Frame.WeaponData[0]) <> 0) then
    begin
     if NoDelta then
@@ -820,15 +820,15 @@ if not C.HLTV then
       Fields := WeaponDelta.CheckDelta(OS, @Frame.WeaponData[I]);
       if Fields > 0 then
        begin
-        MSG_WriteBits(1, 1);
-        MSG_WriteBits(I, 6); // <- ?
-        WeaponDelta.WriteMarkedDelta(OS, @Frame.WeaponData[I], True, Fields, nil);
+        SB.WriteBits(1, 1);
+        SB.WriteBits(I, 6); // <- ?
+        WeaponDelta.WriteMarkedDelta(SB, OS, @Frame.WeaponData[I], True, Fields, nil);
        end;
      end;
    end;
 
-  MSG_WriteBits(0, 1);
-  MSG_EndBitWriting;
+  SB.WriteBits(0, 1);
+  SB.EndBitWriting;
  end;
 end;
 
@@ -1063,42 +1063,42 @@ begin
 Result := (I >= 1) and (I <= SVS.MaxClients);
 end;
 
-procedure SV_SendConsistencyList;
+procedure SV_SendConsistencyList(var SB: TSizeBuf);
 var
  I, J: Int;
  P: PResource;
 begin
 if (SVS.MaxClients = 1) or (mp_consistency.Value = 0) or (SV.NumConsistency = 0) or HostClient.HLTV then
  begin
-  MSG_WriteBits(0, 1);
+  SB.WriteBits(0, 1);
   HostClient.NeedConsistency := False;
  end
 else
  begin
   J := 0;
-  MSG_WriteBits(1, 1);
+  SB.WriteBits(1, 1);
   HostClient.NeedConsistency := True;
   for I := 0 to SV.NumResources - 1 do
    begin
     P := @SV.Resources[I];
     if (P <> nil) and (RES_CHECKFILE in P.Flags) then
      begin
-      MSG_WriteBits(1, 1);
+      SB.WriteBits(1, 1);
       if I - J >= 32 then
        begin
-        MSG_WriteBits(0, 1);
-        MSG_WriteBits(I, 10);
+        SB.WriteBits(0, 1);
+        SB.WriteBits(I, 10);
        end
       else
        begin
-        MSG_WriteBits(1, 1);
-        MSG_WriteBits(I - J, 5);
+        SB.WriteBits(1, 1);
+        SB.WriteBits(I - J, 5);
        end;
       J := I;
      end;
    end;
   
-  MSG_WriteBits(0, 1);
+  SB.WriteBits(0, 1);
  end;
 end;
 
@@ -1120,30 +1120,30 @@ if (sv_downloadurl.Data^ > #0) and (StrLen(sv_downloadurl.Data) < 128) then
  end;
 
 SB.Write<UInt8>(SVC_RESOURCELIST);
-MSG_StartBitWriting(SB);
-MSG_WriteBits(SV.NumResources, 12);
+SB.StartBitWriting;
+SB.WriteBits(SV.NumResources, 12);
 for I := 0 to SV.NumResources - 1 do
  begin
   P := @SV.Resources[I];
-  MSG_WriteBits(Byte(P.ResourceType), 4);
-  MSG_WriteBitString(@P.Name);
-  MSG_WriteBits(P.Index, 12);
-  MSG_WriteBits(P.DownloadSize, 24);
-  MSG_WriteBits(PByte(@P.Flags)^ and 3, 3);
+  SB.WriteBits(Byte(P.ResourceType), 4);
+  SB.WriteBitString(@P.Name);
+  SB.WriteBits(P.Index, 12);
+  SB.WriteBits(P.DownloadSize, 24);
+  SB.WriteBits(PByte(@P.Flags)^ and 3, 3);
   if RES_CUSTOM in P.Flags then
-   MSG_WriteBitData(@P.MD5Hash, SizeOf(P.MD5Hash));
+   SB.WriteBitData(@P.MD5Hash, SizeOf(P.MD5Hash));
 
   if CompareMem(@P.Reserved, @Buf, SizeOf(P.Reserved)) then
-   MSG_WriteBits(0, 1)
+   SB.WriteBits(0, 1)
   else
    begin
-    MSG_WriteBits(1, 1);
-    MSG_WriteBitData(@P.Reserved, SizeOf(P.Reserved));
+    SB.WriteBits(1, 1);
+    SB.WriteBitData(@P.Reserved, SizeOf(P.Reserved));
    end;
  end;
 
-SV_SendConsistencyList;
-MSG_EndBitWriting;
+SV_SendConsistencyList(SB);
+SB.EndBitWriting;
 end;
 
 procedure SV_ClearClientStates;
@@ -1545,21 +1545,21 @@ var
  C: PClient;
 begin
 SB.Write<UInt8>(SVC_PINGS);
-MSG_StartBitWriting(SB);
+SB.StartBitWriting;
 for I := 0 to SVS.MaxClients - 1 do
  begin
   C := @SVS.Clients[I];
   if C.Active and C.Connected then
    begin
-    MSG_WriteBits(1, 1);
-    MSG_WriteBits(I, 5); // 64?
-    MSG_WriteBits(SV_CalcPing(C^), 12);
-    MSG_WriteBits(Trunc(C.PacketLoss), 7);
+    SB.WriteBits(1, 1);
+    SB.WriteBits(I, 5); // 64?
+    SB.WriteBits(SV_CalcPing(C^), 12);
+    SB.WriteBits(Trunc(C.PacketLoss), 7);
    end;
  end;
 
-MSG_WriteBits(0, 1);
-MSG_EndBitWriting;
+SB.WriteBits(0, 1);
+SB.EndBitWriting;
 end;
 
 function SV_SendClientDatagram(var C: TClient): Boolean;

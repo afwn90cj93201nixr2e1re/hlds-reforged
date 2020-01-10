@@ -2,7 +2,7 @@ unit PMove;
 
 interface
 
-uses Default, SDK;
+uses Default, SDK, MathLib;
 
 procedure PM_Init(P: PPlayerMove);
 
@@ -25,7 +25,7 @@ var
 
 implementation
 
-uses Common, Console, Edict, Info, MathLib, Renderer, SVMain, SVMove, SVSend, SVWorld, SysClock, SysMain;
+uses Common, Console, Edict, Info, Renderer, SVMain, SVMove, SVSend, SVWorld, SysClock, SysMain;
 
 function PM_RecursiveHullCheck(const Hull: THull; Num: Int32; P1F, P2F: Single; const P1, P2: TVec3; out Trace: TPMTrace): Boolean; forward;
 

@@ -3,7 +3,7 @@ unit SDK;
 interface
                                                                                               
 uses
-  Default, Delta, SizeBuf;
+  Default, Delta, SizeBuf, MathLib;
 
 {$MinEnumSize 4}
 
@@ -160,10 +160,6 @@ const
 {$UNDEF MSMW}
 
 type
- PVec3 = ^TVec3;
- TVec3 = packed array[0..2] of Single;
- {$IF SizeOf(TVec3) <> 12} {$MESSAGE WARN 'Structure size mismatch @ TVec3.'} {$DEFINE MSME} {$IFEND}
-
  PStringOfs = ^TStringOfs;
  TStringOfs = UInt32; // 4, compatibility reasons
  {$IF SizeOf(TStringOfs) <> 4} {$MESSAGE WARN 'Structure size mismatch @ TStringOfs.'} {$DEFINE MSME} {$IFEND}
@@ -683,13 +679,6 @@ type
   Distance: Single;
   PlaneType: Int32;
  end;
- PMPlane = ^TMPlane;
- TMPlane = packed record
-  Normal: TVec3;
-  Distance: Single;
-  PlaneType, SignBits, Padding1, Padding2: UInt8;
- end;
- TMPlaneArray = array[0..0] of TMPlane;
  {$IF SizeOf(TDPlane) <> 20} {$MESSAGE WARN 'Structure size mismatch @ TDPlane.'} {$DEFINE MSME} {$IFEND}
 
  TDMiptexOffsetArray = array[0..0] of Int32; 
@@ -1321,10 +1310,6 @@ const
  MAXSTUDIOCACHE = 16;
  
 type
- PVec4 = ^TVec4;
- TVec4 = packed array[0..3] of Single;
- {$IF SizeOf(TVec4) <> 16} {$MESSAGE WARN 'Structure size mismatch @ TVec4.'} {$DEFINE MSME} {$IFEND}
-
  PStudioHeader = ^TStudioHeader; // 244 cf
  TStudioHeader = record
   FileTag, Version: Int32; // 0, 4

@@ -2,7 +2,7 @@ unit Renderer;
 
 interface
 
-uses SysUtils, Default, SDK;
+uses SysUtils, Default, SDK, MathLib;
 
 procedure R_FlushStudioCache;
 
@@ -52,7 +52,7 @@ var
 
 implementation
 
-uses Common, Console, FileSys, Host, MathLib, Memory, Model, SVMain, SVWorld;
+uses Common, Console, FileSys, Host, Memory, Model, SVMain, SVWorld;
 
 var
  VisFrameCount: Int = 0;

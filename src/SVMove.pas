@@ -2,7 +2,7 @@ unit SVMove;
 
 interface
 
-uses Default, SDK, Client;
+uses Default, SDK, Client, MathLib;
 
 function SV_CheckBottom(const E: TEdict): Boolean;
 function SV_MoveTest(var E: TEdict; const Move: TVec3; Relink: Boolean): Boolean;
@@ -53,7 +53,7 @@ var
 
 implementation
 
-uses Common, Console, Edict, Encode, Host, GameLib, MathLib, Model, MsgBuf,
+uses Common, Console, Edict, Encode, Host, GameLib, Model, MsgBuf,
   Network, PMove, SVClient, SVEdict, SVEvent, SVMain, SVPhys, SVSend, SVWorld;
 
 var

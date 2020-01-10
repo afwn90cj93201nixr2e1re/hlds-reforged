@@ -1,23 +1,9 @@
 unit MsgBuf;
 
-// - possible buffer overrun in MSG_WriteBits
-
 interface
 
 uses
-  Default, SDK, SizeBuf;
-
-
-procedure MSG_WriteOneBit(B: Byte);
-procedure MSG_StartBitWriting(var Buffer: TSizeBuf);
-function MSG_IsBitWriting: Boolean;
-procedure MSG_EndBitWriting;
-procedure MSG_WriteBits(B: UInt32; Count: UInt);
-procedure MSG_WriteSBits(B: Int32; Count: UInt);
-procedure MSG_WriteBitString(S: PLChar);
-procedure MSG_WriteBitData(Buffer: Pointer; Size: UInt);
-
-procedure MSG_WriteBitAngle(F: Single; Count: UInt);
+  Default, SDK, SizeBuf, MathLib;
 
 function MSG_ReadBitAngle(Count: UInt): Single;
 function MSG_CurrentBit: UInt;
@@ -31,12 +17,9 @@ function MSG_ReadSBits(Count: UInt): Int32;
 function MSG_ReadBitString: PLChar;
 procedure MSG_ReadBitData(Buffer: Pointer; Size: UInt);
 function MSG_ReadBitCoord: Single;
-procedure MSG_WriteBitCoord(F: Single);
 procedure MSG_ReadBitVec3Coord(out P: TVec3);
-procedure MSG_WriteBitVec3Coord(const P: TVec3);
 function MSG_ReadCoord: Single;
 procedure MSG_ReadVec3Coord(var Buffer: TSizeBuf; out P: TVec3);
-procedure MSG_WriteVec3Coord(var Buffer: TSizeBuf; const P: TVec3);
 procedure MSG_BeginReading;
 function MSG_ReadChar: LChar;
 function MSG_ReadByte: Byte;
@@ -52,12 +35,6 @@ function MSG_ReadHiResAngle: Single;
 procedure MSG_ReadUserCmd(Dest, Source: PUserCmd);
 
 var
- BFWrite: record
-  Count: UInt;
-  Data: Pointer; // +4
-  Buffer: PSizeBuf; // +8
- end = ();
-
  BFRead: record
   CurrentSize: UInt;
   Buffer: PSizeBuf; // +4
@@ -97,164 +74,12 @@ const
                1 shl 28 - 1, 1 shl 29 - 1, 1 shl 30 - 1, $80000000 - 1,
                $FFFFFFFF);
 
- InvBitTable: array[0..32] of Int32 =
-              (-(1 shl 0) - 1, -(1 shl 1) - 1, -(1 shl 2) - 1, -(1 shl 3) - 1,
-               -(1 shl 4) - 1, -(1 shl 5) - 1, -(1 shl 6) - 1, -(1 shl 7) - 1,
-               -(1 shl 8) - 1, -(1 shl 9) - 1, -(1 shl 10) - 1, -(1 shl 11) - 1,
-               -(1 shl 12) - 1, -(1 shl 13) - 1, -(1 shl 14) - 1, -(1 shl 15) - 1,
-               -(1 shl 16) - 1, -(1 shl 17) - 1, -(1 shl 18) - 1, -(1 shl 19) - 1,
-               -(1 shl 20) - 1, -(1 shl 21) - 1, -(1 shl 22) - 1, -(1 shl 23) - 1,
-               -(1 shl 24) - 1, -(1 shl 25) - 1, -(1 shl 26) - 1, -(1 shl 27) - 1,
-               -(1 shl 28) - 1, -(1 shl 29) - 1, -(1 shl 30) - 1, $80000000 - 1,
-               -1);
 
 var
  BitReadBuffer: array[1..8192] of LChar;
  StringBuffer: array[1..8192] of LChar;
  StringLineBuffer: array[1..2048] of LChar;
 
-
-procedure MSG_WriteOneBit(B: Byte);
-begin
-if BFWrite.Count >= 8 then
- begin
-  BFWrite.Buffer.GetSpace(1);
-  BFWrite.Count := 0;
-  Inc(UInt(BFWrite.Data));
- end;
-
-if not BFWrite.Buffer.Overflowed then
- begin
-  if B = 0 then
-   PByte(BFWrite.Data)^ := PByte(BFWrite.Data)^ and InvBitTable[BFWrite.Count]
-  else
-   PByte(BFWrite.Data)^ := PByte(BFWrite.Data)^ or BitTable[BFWrite.Count];
-
-  Inc(BFWrite.Count);
- end;
-end;
-
-procedure MSG_StartBitWriting(var Buffer: TSizeBuf);
-begin
-BFWrite.Count := 0;
-BFWrite.Data := Pointer(UInt(Buffer.Data) + Buffer.CurrentSize);
-BFWrite.Buffer := @Buffer;
-end;
-
-function MSG_IsBitWriting: Boolean;
-begin
-Result := BFWrite.Buffer <> nil;
-end;
-
-procedure MSG_EndBitWriting;
-begin
-if not BFWrite.Buffer.Overflowed then
- begin
-  PByte(BFWrite.Data)^ := PByte(BFWrite.Data)^ and (255 shr (8 - BFWrite.Count));
-  BFWrite.Buffer.GetSpace(1);
- end;
-
-MemSet(BFWrite, SizeOf(BFWrite), 0);
-end;
-
-procedure MSG_WriteBits(B: UInt32; Count: UInt);
-var
- BitMask: UInt32;
- BitCount, ByteCount, BitsLeft: UInt;
- NextRow: Boolean;
-begin
-if (Count <= 31) and (B >= 1 shl Count) then
- BitMask := RowBitTable[Count]
-else
- BitMask := B;
-
-if BFWrite.Count > 7 then
- begin
-  NextRow := True;
-  BFWrite.Count := 0;
-  Inc(UInt(BFWrite.Data));
- end
-else
- NextRow := False;
-
-BitCount := Count + BFWrite.Count;
-if BitCount <= 32 then
- begin
-  ByteCount := BitCount shr 3;
-  BitCount := BitCount and 7;
-  if BitCount = 0 then
-   Dec(ByteCount);
-
-  BFWrite.Buffer.GetSpace(ByteCount + UInt32(NextRow));
-  PUInt32(BFWrite.Data)^ := (PUInt32(BFWrite.Data)^ and RowBitTable[BFWrite.Count]) or (BitMask shl BFWrite.Count);
-
-  if BitCount > 0 then
-   BFWrite.Count := BitCount
-  else
-   BFWrite.Count := 8;
-
-  Inc(UInt(BFWrite.Data), ByteCount);
- end
-else
- begin
-  BFWrite.Buffer.GetSpace(UInt32(NextRow) + 4);
-  PUInt32(BFWrite.Data)^ := (PUInt32(BFWrite.Data)^ and RowBitTable[BFWrite.Count]) or (BitMask shl BFWrite.Count);
-
-  BitsLeft := 32 - BFWrite.Count;
-  BFWrite.Count := BitCount and 7;
-  Inc(UInt(BFWrite.Data), 4);
-
-  PUInt32(BFWrite.Data)^ := BitMask shr BitsLeft;
- end;
-end;
-
-procedure MSG_WriteSBits(B: Int32; Count: UInt);
-var
- I: Int32;
-begin
-if Count < 32 then
- begin
-  I := (1 shl (Count - 1)) - 1;
-  if B > I then
-   B := I
-  else
-   if B < -I then
-    B := -I;
- end;
-
-MSG_WriteOneBit(UInt(B < 0));
-MSG_WriteBits(Abs(B), Count - 1);
-end;
-
-procedure MSG_WriteBitString(S: PLChar);
-begin
-while S^ > #0 do
- begin
-  MSG_WriteBits(Byte(S^), 8);
-  Inc(UInt(S));
- end;
-
-MSG_WriteBits(0, 8);
-end;
-
-procedure MSG_WriteBitData(Buffer: Pointer; Size: UInt);
-var
- I: Int;
-begin
-for I := 0 to Size - 1 do
- MSG_WriteBits(PByte(UInt(Buffer) + UInt(I))^, 8);
-end;
-
-procedure MSG_WriteBitAngle(F: Single; Count: UInt);
-var
- B: UInt32;
-begin
-if Count >= 32 then
- Sys_Error('MSG_WriteBitAngle: Can''t write bit angle with 32 bits precision.');
-
-B := 1 shl Count;
-MSG_WriteBits((B - 1) and (Trunc(B * F) div 360), Count);
-end;
 
 function MSG_ReadBitAngle(Count: UInt): Single;
 var
@@ -468,26 +293,6 @@ else
  Result := 0;
 end;
 
-procedure MSG_WriteBitCoord(F: Single);
-var
- I, IntData, FracData: Int32;
-begin
-I := Trunc(F);
-IntData := Abs(I);
-FracData := Abs(8 * I) and 7;
-
-MSG_WriteOneBit(UInt(IntData <> 0));
-MSG_WriteOneBit(UInt(FracData <> 0));
-if (IntData <> 0) or (FracData <> 0) then
- begin
-  MSG_WriteOneBit(UInt(F <= -0.125));
-  if IntData <> 0 then
-   MSG_WriteBits(IntData, 12);
-  if FracData <> 0 then
-   MSG_WriteBits(FracData, 3);
- end;
-end;
-
 procedure MSG_ReadBitVec3Coord(out P: TVec3);
 var
  X, Y, Z: Boolean;
@@ -512,26 +317,6 @@ else
  P[2] := 0;
 end;
 
-procedure MSG_WriteBitVec3Coord(const P: TVec3);
-var
- X, Y, Z: Boolean;
-begin
-X := (P[0] >= 0.125) or (P[0] <= -0.125);
-Y := (P[1] >= 0.125) or (P[1] <= -0.125);
-Z := (P[2] >= 0.125) or (P[2] <= -0.125);
-
-MSG_WriteOneBit(UInt(X));
-MSG_WriteOneBit(UInt(Y));
-MSG_WriteOneBit(UInt(Z));
-
-if X then
- MSG_WriteBitCoord(P[0]);
-if Y then
- MSG_WriteBitCoord(P[1]);
-if Z then
- MSG_WriteBitCoord(P[2]);
-end;
-
 function MSG_ReadCoord: Single;
 begin
 Result := MSG_ReadShort / 8;
@@ -546,18 +331,6 @@ else
   MSG_StartBitReading(Buffer);
   MSG_ReadBitVec3Coord(P);
   MSG_EndBitReading(Buffer);
- end;
-end;
-
-procedure MSG_WriteVec3Coord(var Buffer: TSizeBuf; const P: TVec3);
-begin
-if MSG_IsBitWriting then
- MSG_WriteBitVec3Coord(P)
-else
- begin
-  MSG_StartBitWriting(Buffer);
-  MSG_WriteBitVec3Coord(P);
-  MSG_EndBitWriting;
  end;
 end;
 
@@ -730,7 +503,7 @@ COM_NormalizeAngles(Dest.ViewAngles);
 end;
 
 initialization
- MemSet(BFWrite, SizeOf(BFWrite), 0);
+ //MemSet(BFWrite, SizeOf(BFWrite), 0);
  MemSet(BFRead, SizeOf(BFRead), 0);
 
 finalization

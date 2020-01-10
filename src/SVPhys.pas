@@ -2,7 +2,7 @@ unit SVPhys;
 
 interface
 
-uses Default, SDK;
+uses Default, SDK, MathLib;
 
 procedure SV_CheckVelocity(var E: TEdict);
 function SV_RunThink(var E: TEdict): Boolean;
@@ -58,7 +58,7 @@ var
  
 implementation
 
-uses Common, Console, Edict, GameLib, Host, MathLib, Model, SVMain, SVMove,
+uses Common, Console, Edict, GameLib, Host, Model, SVMain, SVMove,
   SVSend, SVWorld, SysMain;
 
 procedure SV_CheckVelocity(var E: TEdict);

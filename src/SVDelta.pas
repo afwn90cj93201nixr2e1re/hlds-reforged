@@ -60,11 +60,11 @@ while P <> nil do
  begin
   SB.Write<UInt8>(SVC_DELTADESCRIPTION);
   SB.WriteString(P.Name);
-  MSG_StartBitWriting(SB);
-  MSG_WriteBits(P.Delta.NumFields, 16);
+  SB.StartBitWriting;
+  SB.WriteBits(P.Delta.NumFields, 16);
   for I := 0 to P.Delta.NumFields - 1 do
-   MetaDelta.WriteDelta(@OS, @P.Delta.Fields[I], True, nil);
-  MSG_EndBitWriting;
+   MetaDelta.WriteDelta(SB, @OS, @P.Delta.Fields[I], True, nil);
+  SB.EndBitWriting;
 
   P := P.Prev;
  end;

@@ -3,7 +3,7 @@ unit SVEvent;
 interface
 
 uses
-  SysUtils, Default, SDK, Client, SizeBuf;
+  SysUtils, Default, SDK, Client, SizeBuf, MathLib;
 
 procedure EV_PlayReliableEvent(var C: TClient; Index: Int; EventIndex: UInt16; Delay: Single; const Event: TEvent);
 procedure EV_Playback(Flags: UInt; const E: TEdict; EventIndex: UInt16; Delay: Single; const Origin, Angles: TVec3; FParam1, FParam2: Single; IParam1, IParam2, BParam1, BParam2: Int32);
@@ -18,7 +18,7 @@ procedure SV_ClearClientEvents(var C: TClient);
 
 implementation
 
-uses Common, Console, Delta, Edict, Host, MathLib, Memory, MsgBuf, Network,
+uses Common, Console, Delta, Edict, Host, Memory, MsgBuf, Network,
   SVDelta, SVMain, SVMove, SVSend, Netchan;
 
 procedure EV_PlayReliableEvent(var C: TClient; Index: Int; EventIndex: UInt16; Delay: Single; const Event: TEvent);
@@ -39,17 +39,17 @@ if not C.FakeClient then
   NewEvent.EntIndex := Index;
 
   SB.Write<UInt8>(SVC_EVENT_RELIABLE);
-  MSG_StartBitWriting(SB);
-  MSG_WriteBits(EventIndex, 10);
-  EventDelta.WriteDelta(@OldEvent, @NewEvent, True, nil);
+  SB.StartBitWriting;
+  SB.WriteBits(EventIndex, 10);
+  EventDelta.WriteDelta(SB, @OldEvent, @NewEvent, True, nil);
   if Delay = 0 then
-   MSG_WriteBits(0, 1)
+   SB.WriteBits(0, 1)
   else
    begin
-    MSG_WriteBits(1, 1);
-    MSG_WriteBits(Trunc(Delay * 100), 16);
+    SB.WriteBits(1, 1);
+    SB.WriteBits(Trunc(Delay * 100), 16);
    end;
-  MSG_EndBitWriting;
+  SB.EndBitWriting;
 
   if not SB.Overflowed then
    if SB.CurrentSize + C.Netchan.NetMessage.CurrentSize < C.Netchan.NetMessage.MaxSize then
@@ -314,8 +314,8 @@ else
 
 MemSet(OS, SizeOf(OS), 0);
 SB.Write<UInt8>(SVC_EVENT);
-MSG_StartBitWriting(SB);
-MSG_WriteBits(Count, 5);
+SB.StartBitWriting;
+SB.WriteBits(Count, 5);
 
 K := 0;
 for I := 0 to MAX_EVENT_QUEUE - 1 do
@@ -329,30 +329,30 @@ for I := 0 to MAX_EVENT_QUEUE - 1 do
   else
    if UInt(K) < Count then
     begin
-     MSG_WriteBits(E.Index, 10);
+     SB.WriteBits(E.Index, 10);
 
      if E.PacketIndex = -1 then
-      MSG_WriteBits(0, 1)
+      SB.WriteBits(0, 1)
      else
       begin
-       MSG_WriteBits(1, 1);
-       MSG_WriteBits(E.PacketIndex, 11);
+       SB.WriteBits(1, 1);
+       SB.WriteBits(E.PacketIndex, 11);
 
        if CompareMem(@OS, @E.Args, SizeOf(E.Args)) then
-        MSG_WriteBits(0, 1)
+        SB.WriteBits(0, 1)
        else
         begin
-         MSG_WriteBits(1, 1);
-         EventDelta.WriteDelta(@OS, @E.Args, True, nil);
+         SB.WriteBits(1, 1);
+         EventDelta.WriteDelta(SB, @OS, @E.Args, True, nil);
         end;
       end;
 
      if E.FireTime = 0 then
-      MSG_WriteBits(0, 1)
+      SB.WriteBits(0, 1)
      else
       begin
-       MSG_WriteBits(1, 1);
-       MSG_WriteBits(Trunc(E.FireTime * 100), 16);
+       SB.WriteBits(1, 1);
+       SB.WriteBits(Trunc(E.FireTime * 100), 16);
       end;
 
      E.Index := 0;
@@ -363,7 +363,7 @@ for I := 0 to MAX_EVENT_QUEUE - 1 do
     end;
  end;
 
-MSG_EndBitWriting;
+SB.EndBitWriting;
 end;
 
 procedure SV_ClearClientEvents(var C: TClient);

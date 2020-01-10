@@ -2,7 +2,7 @@ unit SVSend;
 
 interface
 
-uses Default, SDK, Client, SizeBuf;
+uses Default, SDK, Client, SizeBuf, MathLib;
 
 procedure SV_LinkNewUserMsgs;
 procedure SV_FreeAllUserMsgs;
@@ -180,23 +180,23 @@ if Index > 255 then
  Flags := Flags or SND_LONG_INDEX;
 
 SB.Write<UInt8>(SVC_SOUND);
-MSG_StartBitWriting(SB);
-MSG_WriteBits(Flags, 9);
+SB.StartBitWriting;
+SB.WriteBits(Flags, 9);
 if (Flags and SND_VOLUME) > 0 then
- MSG_WriteBits(Volume, 8);
+ SB.WriteBits(Volume, 8);
 if (Flags and SND_ATTN) > 0 then
- MSG_WriteBits(Trunc(Attn * 64), 8);
+ SB.WriteBits(Trunc(Attn * 64), 8);
 
-MSG_WriteBits(Channel, 3);
-MSG_WriteBits(NUM_FOR_EDICT(E), 11);
+SB.WriteBits(Channel, 3);
+SB.WriteBits(NUM_FOR_EDICT(E), 11);
 if (Flags and SND_LONG_INDEX) > 0 then
- MSG_WriteBits(Index, 16)
+ SB.WriteBits(Index, 16)
 else
- MSG_WriteBits(Index, 8);
-MSG_WriteBitVec3Coord(Origin);
+ SB.WriteBits(Index, 8);
+SB.WriteBitVec3Coord(Origin);
 if (Flags and SND_PITCH) > 0 then
- MSG_WriteBits(Pitch, 8);
-MSG_EndBitWriting;
+ SB.WriteBits(Pitch, 8);
+SB.EndBitWriting;
 Result := True;
 end;
 

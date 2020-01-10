@@ -2,7 +2,7 @@ unit SVEdict;
 
 interface
 
-uses Default, SDK, Client, SizeBuf;
+uses Default, SDK, Client, SizeBuf, MathLib;
 
 procedure SetMinMaxSize(var E: TEdict; const MinS, MaxS: TVec3);
 function SV_ModelIndex(Name: PLChar): UInt;
@@ -27,7 +27,7 @@ var
 
 implementation
 
-uses Common, Console, Delta, Edict, GameLib, Host, MathLib, Memory, MsgBuf,
+uses Common, Console, Delta, Edict, GameLib, Host,  Memory, MsgBuf,
   PMove, SVClient, SVDelta, SVEvent, SVMain, SVPhys, SVWorld, SysMain;
 
 var
@@ -147,17 +147,17 @@ DLLFunctions.CreateInstancedBaselines;
 
 MemSet(OS, SizeOf(OS), 0);
 SV.Signon.Write<UInt8>(SVC_SPAWNBASELINE);
-MSG_StartBitWriting(SV.Signon);
+SV.Signon.StartBitWriting;
 for I := 0 to SV.NumEdicts - 1 do
  begin
   E := @SV.Edicts[I];
   B := (I >= 1) and (UInt(I) <= SVS.MaxClients);
   if (E.Free = 0) and (B or (E.V.ModelIndex <> 0)) then
    begin
-    MSG_WriteBits(I, 11);
-    
+    SV.Signon.WriteBits(I, 11);
+
     NS := @SV.EntityState[I];
-    MSG_WriteBits(NS.EntityType, 2);
+    SV.Signon.WriteBits(NS.EntityType, 2);
 
     if NS.EntityType = ENTITY_BEAM then
      D := CustomEntityDelta
@@ -167,16 +167,16 @@ for I := 0 to SV.NumEdicts - 1 do
      else
       D := EntityDelta;
 
-    D.WriteDelta(@OS, NS, True, nil);
+    D.WriteDelta(SV.Signon, @OS, NS, True, nil);
    end;
  end;
 
-MSG_WriteBits(65535, 16);
-MSG_WriteBits(SV.Baseline.NumEnts, 6);
+SV.Signon.WriteBits(65535, 16);
+SV.Signon.WriteBits(SV.Baseline.NumEnts, 6);
 for I := 0 to SV.Baseline.NumEnts - 1 do
- EntityDelta.WriteDelta(@OS, @SV.Baseline.ES[I], True, nil);
+ EntityDelta.WriteDelta(SV.Signon, @OS, @SV.Baseline.ES[I], True, nil);
 
-MSG_EndBitWriting;
+SV.Signon.EndBitWriting;
 end;
 
 procedure SV_GetPlayerHulls;
@@ -230,7 +230,7 @@ DeltaCallback.HasES := True;
 DeltaCallback.ES := ES;
 end;
 
-procedure SV_WriteDeltaHeader(Index: UInt; NoDelta, Custom: Boolean; EntNumber: PUInt32; HasES: Boolean; ES: UInt; HasBestBaseline: Boolean; BaselineIndex: Int);
+procedure SV_WriteDeltaHeader(var SB: TSizeBuf; Index: UInt; NoDelta, Custom: Boolean; EntNumber: PUInt32; HasES: Boolean; ES: UInt; HasBestBaseline: Boolean; BaselineIndex: Int);
 var
  ID: Int;
  B: Boolean;
@@ -238,55 +238,55 @@ begin
 ID := Index - EntNumber^;
 B := False;
 if not HasBestBaseline then
- MSG_WriteBits(UInt(NoDelta), 1)
+ SB.WriteBits(UInt(NoDelta), 1)
 else
  if ID <> 1 then
-  MSG_WriteBits(0, 1)
+  SB.WriteBits(0, 1)
  else
   begin
-   MSG_WriteBits(1, 1);
+   SB.WriteBits(1, 1);
    B := True;
   end;
 
 if not B then
  if (ID > 0) and (ID < MAX_BASELINES) then
   begin
-   MSG_WriteBits(0, 1);
-   MSG_WriteBits(ID, 6);
+   SB.WriteBits(0, 1);
+   SB.WriteBits(ID, 6);
   end
  else
   begin
-   MSG_WriteBits(1, 1);
-   MSG_WriteBits(Index, 11);
+   SB.WriteBits(1, 1);
+   SB.WriteBits(Index, 11);
   end;
 
 EntNumber^ := Index;
 if not NoDelta then
  begin
-  MSG_WriteBits(UInt(Custom), 1);
+  SB.WriteBits(UInt(Custom), 1);
   if SV.Baseline.NumEnts > 0 then
    if HasES then
     begin
-     MSG_WriteBits(1, 1);
-     MSG_WriteBits(ES, 6);
+     SB.WriteBits(1, 1);
+     SB.WriteBits(ES, 6);
     end
    else
-    MSG_WriteBits(0, 1);
+    SB.WriteBits(0, 1);
 
   if not HasES and HasBestBaseline then
    if BaselineIndex <> 0 then
     begin
-     MSG_WriteBits(1, 1);
-     MSG_WriteBits(BaselineIndex, 6);
+     SB.WriteBits(1, 1);
+     SB.WriteBits(BaselineIndex, 6);
     end
    else
-    MSG_WriteBits(0, 1);
+    SB.WriteBits(0, 1);
  end;
 end;
 
-procedure SV_InvokeCallback;
+procedure SV_InvokeCallback(PSB: PSizeBuf);
 begin
-SV_WriteDeltaHeader(DeltaCallback.Index, DeltaCallback.NoDelta, DeltaCallback.Custom, DeltaCallback.EntNumber,
+SV_WriteDeltaHeader(PSB^, DeltaCallback.Index, DeltaCallback.NoDelta, DeltaCallback.Custom, DeltaCallback.EntNumber,
                     DeltaCallback.HasES, DeltaCallback.ES, DeltaCallback.HasBestBaseline, DeltaCallback.BaselineIndex);
 end;
 
@@ -343,7 +343,9 @@ var
  D: PDelta;
  DstEdict: PEdict;
  Best: PEntityState;
+ PSB: PSizeBuf;
 begin
+  PSB := @SB;
 if DeltaCompression then
  begin
   SrcPack := @C.Frames[SVUpdateMask and C.UpdateMask].Pack;
@@ -359,7 +361,7 @@ else
   SB.Write<UInt8>(SVC_PACKETENTITIES);
   SB.Write<Int16>(DstPack.NumEnts);
  end;
-MSG_StartBitWriting(SB);
+SB.StartBitWriting;
 
 I := 0;
 J := 0;
@@ -387,14 +389,14 @@ while (I < DstPack.NumEnts) or (J < SrcNumEnts) do
      else
       D := EntityDelta;
 
-    D.WriteDelta(@SrcPack.Ents[J], @DstPack.Ents[I], False, SV_InvokeCallback);
+    D.WriteDelta(SB, @SrcPack.Ents[J], @DstPack.Ents[I], False, procedure begin SV_InvokeCallback(PSB); end);
     Inc(J);
     Inc(I);
    end
   else
    if SrcEntNum < DstEntNum then
     begin
-     SV_WriteDeltaHeader(SrcEntNum, True, False, @ESIndex, False, 0, False, 0);
+     SV_WriteDeltaHeader(SB, SrcEntNum, True, False, @ESIndex, False, 0, False, 0);
      Inc(J);
      Continue;
     end
@@ -432,13 +434,13 @@ while (I < DstPack.NumEnts) or (J < SrcNumEnts) do
       else
        D := EntityDelta;
 
-     D.WriteDelta(Best, @DstPack.Ents[I], True, SV_InvokeCallback);
+     D.WriteDelta(SB, Best, @DstPack.Ents[I], True, procedure begin SV_InvokeCallback(PSB); end);
      Inc(I);
     end;
  end;
 
-MSG_WriteBits(0, 16);
-MSG_EndBitWriting;
+SB.WriteBits(0, 16);
+SB.EndBitWriting;
 end;
 
 procedure SV_EmitPacketEntities(var C: TClient; var Dst: TPacketEntities; var SB: TSizeBuf);

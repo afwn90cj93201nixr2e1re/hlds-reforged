@@ -2,7 +2,7 @@ unit Model;
 
 interface
 
-uses SysUtils, Default, SDK, Math;
+uses SysUtils, Default, SDK, Math, MathLib;
 
 procedure Mod_Init;
 
@@ -32,7 +32,7 @@ var
 
 implementation
 
-uses Common, Console, Decal, Encode, FileSys, Host, MathLib, Memory,
+uses Common, Console, Decal, Encode, FileSys, Host, Memory,
   Renderer, SVMain, SysArgs, SysClock, SysMain, Texture;
 
 const

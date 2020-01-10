@@ -2,7 +2,7 @@ unit Delta;
 
 interface
 
-uses SysUtils, Default;
+uses SysUtils, Default, SizeBuf;
 
 const
   DT_BYTE = 1 shl 0;
@@ -88,10 +88,10 @@ type
     function CountSendFields: UInt;
     procedure MarkSendFields(OS, NS: Pointer);
     procedure SetSendFlagBits(Dest: Pointer; out BytesWritten: UInt);
-    procedure WriteMarkedFields(OS, NS: Pointer);
+    procedure WriteMarkedFields(var Buffer: TSizeBuf; OS, NS: Pointer);
     function CheckDelta(OS, NS: Pointer): UInt;
-    procedure WriteMarkedDelta(OS, NS: Pointer; ForceUpdate: Boolean; Fields: UInt; Func: TProcedure);
-    procedure WriteDelta(OS, NS: Pointer; ForceUpdate: Boolean; Func: TProcedure);
+    procedure WriteMarkedDelta(var Buffer: TSizeBuf; OS, NS: Pointer; ForceUpdate: Boolean; Fields: UInt; Func: TProc);
+    procedure WriteDelta(var Buffer: TSizeBuf; OS, NS: Pointer; ForceUpdate: Boolean; Func: TProc);
     function ParseDelta(OS, NS: Pointer): Int;
 
   public
@@ -548,7 +548,7 @@ else
  BytesWritten := (UInt(ID) shr 3) + 1;
 end;
 
-procedure TDelta.WriteMarkedFields(OS, NS: Pointer);
+procedure TDelta.WriteMarkedFields(var Buffer: TSizeBuf; OS, NS: Pointer);
 var
  I: Int;
  F: PDeltaField;
@@ -564,43 +564,43 @@ for I := 0 to NumFields - 1 do
      DT_FLOAT:
       if Signed then
        if F.Scale <> 1 then
-        MSG_WriteSBits(Trunc(PSingle(UInt(NS) + F.Offset)^ * F.Scale), F.Bits)
+        Buffer.WriteSBits(Trunc(PSingle(UInt(NS) + F.Offset)^ * F.Scale), F.Bits)
        else
-        MSG_WriteSBits(Trunc(PSingle(UInt(NS) + F.Offset)^), F.Bits)
+        Buffer.WriteSBits(Trunc(PSingle(UInt(NS) + F.Offset)^), F.Bits)
       else
        if F.Scale <> 1 then
-        MSG_WriteBits(Trunc(PSingle(UInt(NS) + F.Offset)^ * F.Scale), F.Bits)
+        Buffer.WriteBits(Trunc(PSingle(UInt(NS) + F.Offset)^ * F.Scale), F.Bits)
        else
-        MSG_WriteBits(Trunc(PSingle(UInt(NS) + F.Offset)^), F.Bits);
+        Buffer.WriteBits(Trunc(PSingle(UInt(NS) + F.Offset)^), F.Bits);
      DT_ANGLE:
-      MSG_WriteBitAngle(PSingle(UInt(NS) + F.Offset)^, F.Bits);
+      Buffer.WriteBitAngle(PSingle(UInt(NS) + F.Offset)^, F.Bits);
      DT_TIMEWINDOW_8:
-      MSG_WriteSBits(Trunc(SV.Time * 100) - Trunc(PSingle(UInt(NS) + F.Offset)^ * 100), 8);
+      Buffer.WriteSBits(Trunc(SV.Time * 100) - Trunc(PSingle(UInt(NS) + F.Offset)^ * 100), 8);
      DT_TIMEWINDOW_BIG:
-      MSG_WriteSBits(Trunc(SV.Time * F.Scale) - Trunc(PSingle(UInt(NS) + F.Offset)^ * F.Scale), F.Bits);
+      Buffer.WriteSBits(Trunc(SV.Time * F.Scale) - Trunc(PSingle(UInt(NS) + F.Offset)^ * F.Scale), F.Bits);
      DT_BYTE:
       if Signed then
-       MSG_WriteSBits(Int8(Trunc(PInt8(UInt(NS) + F.Offset)^ * F.Scale)), F.Bits)
+       Buffer.WriteSBits(Int8(Trunc(PInt8(UInt(NS) + F.Offset)^ * F.Scale)), F.Bits)
       else
-       MSG_WriteBits(UInt8(Trunc(PUInt8(UInt(NS) + F.Offset)^ * F.Scale)), F.Bits);
+       Buffer.WriteBits(UInt8(Trunc(PUInt8(UInt(NS) + F.Offset)^ * F.Scale)), F.Bits);
      DT_SHORT:
       if Signed then
-       MSG_WriteSBits(Int16(Trunc(PInt16(UInt(NS) + F.Offset)^ * F.Scale)), F.Bits)
+       Buffer.WriteSBits(Int16(Trunc(PInt16(UInt(NS) + F.Offset)^ * F.Scale)), F.Bits)
       else
-       MSG_WriteBits(UInt16(Trunc(PUInt16(UInt(NS) + F.Offset)^ * F.Scale)), F.Bits);
+       Buffer.WriteBits(UInt16(Trunc(PUInt16(UInt(NS) + F.Offset)^ * F.Scale)), F.Bits);
      DT_INTEGER:
       if Signed then
        if F.Scale <> 1 then
-        MSG_WriteSBits(Trunc(PInt32(UInt(NS) + F.Offset)^ * F.Scale), F.Bits)
+        Buffer.WriteSBits(Trunc(PInt32(UInt(NS) + F.Offset)^ * F.Scale), F.Bits)
        else
-        MSG_WriteSBits(PInt32(UInt(NS) + F.Offset)^, F.Bits)
+        Buffer.WriteSBits(PInt32(UInt(NS) + F.Offset)^, F.Bits)
       else
        if F.Scale <> 1 then
-        MSG_WriteBits(Trunc(PUInt32(UInt(NS) + F.Offset)^ * F.Scale), F.Bits)
+        Buffer.WriteBits(Trunc(PUInt32(UInt(NS) + F.Offset)^ * F.Scale), F.Bits)
        else
-        MSG_WriteBits(PUInt32(UInt(NS) + F.Offset)^, F.Bits);
+        Buffer.WriteBits(PUInt32(UInt(NS) + F.Offset)^, F.Bits);
      DT_STRING:
-      MSG_WriteBitString(PLChar(UInt(NS) + F.Offset));
+      Buffer.WriteBitString(PLChar(UInt(NS) + F.Offset));
      else
       Print(['Delta_WriteMarkedFields: Bad field type "', F.FieldType and not DT_SIGNED, '".']);
     end;
@@ -615,7 +615,7 @@ MarkSendFields(OS, NS);
 Result := CountSendFields;
 end;
 
-procedure TDelta.WriteMarkedDelta(OS, NS: Pointer; ForceUpdate: Boolean; Fields: UInt; Func: TProcedure);
+procedure TDelta.WriteMarkedDelta(var Buffer: TSizeBuf; OS, NS: Pointer; ForceUpdate: Boolean; Fields: UInt; Func: TProc);
 var
  I: Int;
  BytesWritten: UInt;
@@ -624,18 +624,18 @@ begin
 if (Fields > 0) or ForceUpdate then
  begin
   SetSendFlagBits(@C, BytesWritten);
-  if @Func <> nil then
+  if Assigned(Func) then
    Func;
-  MSG_WriteBits(BytesWritten, 3);
+  Buffer.WriteBits(BytesWritten, 3);
   for I := 1 to BytesWritten do
-   MSG_WriteBits(C[I], 8);
-  WriteMarkedFields(OS, NS);
+   Buffer.WriteBits(C[I], 8);
+  WriteMarkedFields(Buffer, OS, NS);
  end;
 end;
 
-procedure TDelta.WriteDelta(OS, NS: Pointer; ForceUpdate: Boolean; Func: TProcedure);
+procedure TDelta.WriteDelta(var Buffer: TSizeBuf; OS, NS: Pointer; ForceUpdate: Boolean; Func: TProc);
 begin
-  WriteMarkedDelta(OS, NS, ForceUpdate, CheckDelta(OS, NS), Func);
+  WriteMarkedDelta(Buffer, OS, NS, ForceUpdate, CheckDelta(OS, NS), Func);
 end;
 
 function TDelta.ParseDelta(OS, NS: Pointer): Int;
