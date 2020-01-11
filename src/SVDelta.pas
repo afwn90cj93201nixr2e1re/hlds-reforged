@@ -14,7 +14,7 @@ var
 
 implementation
 
-uses Console, Host, Memory, MsgBuf, SysMain;
+uses Console, Host, Memory, MsgBuf, SysMain, Network;
 
 const
  MetaDeltaDescription: array[1..7] of TDeltaField =
@@ -73,7 +73,7 @@ end;
 procedure SV_ParseDelta(var C: TClient);
 begin
 C.UpdateMask := MSG_ReadByte;
-if MSG_BadRead then
+if gNetMessage.BadRead then
  C.UpdateMask := -1;
 end;
 

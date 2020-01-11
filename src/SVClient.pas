@@ -356,7 +356,7 @@ if TimePlaying > 0 then
  SV_RecordPlayingTime(TimePlaying);
 
 if @C = HostClient then
- MSG_ReadCount := gNetMessage.CurrentSize;
+ gNetMessage.ReadCount := gNetMessage.CurrentSize;
 
 MemSet(C.UserInfo, SizeOf(C.UserInfo), 0);
 
@@ -1295,7 +1295,7 @@ var
  Buf: array[1..128] of LChar;
 begin
 S := MSG_ReadString;
-if (S^ > #0) and not MSG_BadRead then
+if (S^ > #0) and not gNetMessage.BadRead then
  if SV_ValidateClientCommand(S) then
   Cmd_ExecuteString(S, csClient)
  else
@@ -1315,7 +1315,7 @@ var
 begin
 Index := (UInt(@C) - UInt(SVS.Clients)) div SizeOf(TClient);
 Size := MSG_ReadShort;
-if (Size > SizeOf(Buf)) or MSG_BadRead then
+if (Size > SizeOf(Buf)) or gNetMessage.BadRead then
  begin
   DPrint(['SV_ParseVoiceData: Invalid incoming packet from "', PLChar(@C.NetName), '".']);
   SV_DropClient(C, False, 'Invalid voice data.');
@@ -1324,7 +1324,7 @@ else
  if Size > 0 then
   begin
    MSG_ReadBuffer(Size, @Buf);
-   if not MSG_BadRead and (sv_voiceenable.Value <> 0) then
+   if not gNetMessage.BadRead and (sv_voiceenable.Value <> 0) then
     for I := 0 to SVS.MaxClients - 1 do
      begin
       P := @SVS.Clients[I];
@@ -1350,7 +1350,7 @@ var
  S: PLChar;
 begin
 S := MSG_ReadString;
-if not MSG_BadRead then
+if not gNetMessage.BadRead then
  begin
   if (@NewDLLFunctions.CVarValue <> nil) and (C.Entity <> nil) then
    NewDLLFunctions.CVarValue(C.Entity^, S);
@@ -1369,7 +1369,7 @@ ID := MSG_ReadLong;
 StrLCopy(@Buf, MSG_ReadString, SizeOf(Buf) - 1);
 S := MSG_ReadString;
 
-if not MSG_BadRead then
+if not gNetMessage.BadRead then
  begin
   if (@NewDLLFunctions.CVarValue2 <> nil) and (C.Entity <> nil) then
    NewDLLFunctions.CVarValue2(C.Entity^, ID, @Buf, S);
@@ -1397,7 +1397,7 @@ C.UpdateMask := -1;
 PM := @ServerMove;
 
 while True do
- if MSG_BadRead then
+ if gNetMessage.BadRead then
   begin
    Print(['SV_ExecuteClientMessage: badread on "', PLChar(@C.NetName), '".']);
    SV_DropClient(C, False, 'Bad client message.');

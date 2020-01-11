@@ -88,11 +88,11 @@ type
     function CountSendFields: UInt;
     procedure MarkSendFields(OS, NS: Pointer);
     procedure SetSendFlagBits(Dest: Pointer; out BytesWritten: UInt);
-    procedure WriteMarkedFields(var Buffer: TSizeBuf; OS, NS: Pointer);
+    procedure WriteMarkedFields(var SB: TSizeBuf; OS, NS: Pointer);
     function CheckDelta(OS, NS: Pointer): UInt;
-    procedure WriteMarkedDelta(var Buffer: TSizeBuf; OS, NS: Pointer; ForceUpdate: Boolean; Fields: UInt; Func: TProc);
-    procedure WriteDelta(var Buffer: TSizeBuf; OS, NS: Pointer; ForceUpdate: Boolean; Func: TProc);
-    function ParseDelta(OS, NS: Pointer): Int;
+    procedure WriteMarkedDelta(var SB: TSizeBuf; OS, NS: Pointer; ForceUpdate: Boolean; Fields: UInt; Func: TProc);
+    procedure WriteDelta(var SB: TSizeBuf; OS, NS: Pointer; ForceUpdate: Boolean; Func: TProc);
+    function ParseDelta(var SB: TSizeBuf; OS, NS: Pointer): Int;
 
   public
     class procedure FreeDescription(var D: PDelta); static;
@@ -548,7 +548,7 @@ else
  BytesWritten := (UInt(ID) shr 3) + 1;
 end;
 
-procedure TDelta.WriteMarkedFields(var Buffer: TSizeBuf; OS, NS: Pointer);
+procedure TDelta.WriteMarkedFields(var SB: TSizeBuf; OS, NS: Pointer);
 var
  I: Int;
  F: PDeltaField;
@@ -564,43 +564,43 @@ for I := 0 to NumFields - 1 do
      DT_FLOAT:
       if Signed then
        if F.Scale <> 1 then
-        Buffer.WriteSBits(Trunc(PSingle(UInt(NS) + F.Offset)^ * F.Scale), F.Bits)
+        SB.WriteSBits(Trunc(PSingle(UInt(NS) + F.Offset)^ * F.Scale), F.Bits)
        else
-        Buffer.WriteSBits(Trunc(PSingle(UInt(NS) + F.Offset)^), F.Bits)
+        SB.WriteSBits(Trunc(PSingle(UInt(NS) + F.Offset)^), F.Bits)
       else
        if F.Scale <> 1 then
-        Buffer.WriteBits(Trunc(PSingle(UInt(NS) + F.Offset)^ * F.Scale), F.Bits)
+        SB.WriteBits(Trunc(PSingle(UInt(NS) + F.Offset)^ * F.Scale), F.Bits)
        else
-        Buffer.WriteBits(Trunc(PSingle(UInt(NS) + F.Offset)^), F.Bits);
+        SB.WriteBits(Trunc(PSingle(UInt(NS) + F.Offset)^), F.Bits);
      DT_ANGLE:
-      Buffer.WriteBitAngle(PSingle(UInt(NS) + F.Offset)^, F.Bits);
+      SB.WriteBitAngle(PSingle(UInt(NS) + F.Offset)^, F.Bits);
      DT_TIMEWINDOW_8:
-      Buffer.WriteSBits(Trunc(SV.Time * 100) - Trunc(PSingle(UInt(NS) + F.Offset)^ * 100), 8);
+      SB.WriteSBits(Trunc(SV.Time * 100) - Trunc(PSingle(UInt(NS) + F.Offset)^ * 100), 8);
      DT_TIMEWINDOW_BIG:
-      Buffer.WriteSBits(Trunc(SV.Time * F.Scale) - Trunc(PSingle(UInt(NS) + F.Offset)^ * F.Scale), F.Bits);
+      SB.WriteSBits(Trunc(SV.Time * F.Scale) - Trunc(PSingle(UInt(NS) + F.Offset)^ * F.Scale), F.Bits);
      DT_BYTE:
       if Signed then
-       Buffer.WriteSBits(Int8(Trunc(PInt8(UInt(NS) + F.Offset)^ * F.Scale)), F.Bits)
+       SB.WriteSBits(Int8(Trunc(PInt8(UInt(NS) + F.Offset)^ * F.Scale)), F.Bits)
       else
-       Buffer.WriteBits(UInt8(Trunc(PUInt8(UInt(NS) + F.Offset)^ * F.Scale)), F.Bits);
+       SB.WriteBits(UInt8(Trunc(PUInt8(UInt(NS) + F.Offset)^ * F.Scale)), F.Bits);
      DT_SHORT:
       if Signed then
-       Buffer.WriteSBits(Int16(Trunc(PInt16(UInt(NS) + F.Offset)^ * F.Scale)), F.Bits)
+       SB.WriteSBits(Int16(Trunc(PInt16(UInt(NS) + F.Offset)^ * F.Scale)), F.Bits)
       else
-       Buffer.WriteBits(UInt16(Trunc(PUInt16(UInt(NS) + F.Offset)^ * F.Scale)), F.Bits);
+       SB.WriteBits(UInt16(Trunc(PUInt16(UInt(NS) + F.Offset)^ * F.Scale)), F.Bits);
      DT_INTEGER:
       if Signed then
        if F.Scale <> 1 then
-        Buffer.WriteSBits(Trunc(PInt32(UInt(NS) + F.Offset)^ * F.Scale), F.Bits)
+        SB.WriteSBits(Trunc(PInt32(UInt(NS) + F.Offset)^ * F.Scale), F.Bits)
        else
-        Buffer.WriteSBits(PInt32(UInt(NS) + F.Offset)^, F.Bits)
+        SB.WriteSBits(PInt32(UInt(NS) + F.Offset)^, F.Bits)
       else
        if F.Scale <> 1 then
-        Buffer.WriteBits(Trunc(PUInt32(UInt(NS) + F.Offset)^ * F.Scale), F.Bits)
+        SB.WriteBits(Trunc(PUInt32(UInt(NS) + F.Offset)^ * F.Scale), F.Bits)
        else
-        Buffer.WriteBits(PUInt32(UInt(NS) + F.Offset)^, F.Bits);
+        SB.WriteBits(PUInt32(UInt(NS) + F.Offset)^, F.Bits);
      DT_STRING:
-      Buffer.WriteBitString(PLChar(UInt(NS) + F.Offset));
+      SB.WriteBitString(PLChar(UInt(NS) + F.Offset));
      else
       Print(['Delta_WriteMarkedFields: Bad field type "', F.FieldType and not DT_SIGNED, '".']);
     end;
@@ -615,7 +615,7 @@ MarkSendFields(OS, NS);
 Result := CountSendFields;
 end;
 
-procedure TDelta.WriteMarkedDelta(var Buffer: TSizeBuf; OS, NS: Pointer; ForceUpdate: Boolean; Fields: UInt; Func: TProc);
+procedure TDelta.WriteMarkedDelta(var SB: TSizeBuf; OS, NS: Pointer; ForceUpdate: Boolean; Fields: UInt; Func: TProc);
 var
  I: Int;
  BytesWritten: UInt;
@@ -626,19 +626,19 @@ if (Fields > 0) or ForceUpdate then
   SetSendFlagBits(@C, BytesWritten);
   if Assigned(Func) then
    Func;
-  Buffer.WriteBits(BytesWritten, 3);
+  SB.WriteBits(BytesWritten, 3);
   for I := 1 to BytesWritten do
-   Buffer.WriteBits(C[I], 8);
-  WriteMarkedFields(Buffer, OS, NS);
+   SB.WriteBits(C[I], 8);
+  WriteMarkedFields(SB, OS, NS);
  end;
 end;
 
-procedure TDelta.WriteDelta(var Buffer: TSizeBuf; OS, NS: Pointer; ForceUpdate: Boolean; Func: TProc);
+procedure TDelta.WriteDelta(var SB: TSizeBuf; OS, NS: Pointer; ForceUpdate: Boolean; Func: TProc);
 begin
-  WriteMarkedDelta(Buffer, OS, NS, ForceUpdate, CheckDelta(OS, NS), Func);
+  WriteMarkedDelta(SB, OS, NS, ForceUpdate, CheckDelta(OS, NS), Func);
 end;
 
-function TDelta.ParseDelta(OS, NS: Pointer): Int;
+function TDelta.ParseDelta(var SB: TSizeBuf; OS, NS: Pointer): Int;
 var
  CB, ByteCount: UInt;
  I: Int;
@@ -649,12 +649,12 @@ var
  P: PLChar;
  FT: UInt32;
 begin
-CB := MSG_CurrentBit;
+CB := SB.CurrentBit;
 MemSet(C, SizeOf(C), 0);
 
-ByteCount := MSG_ReadBits(3);
+ByteCount := SB.ReadBits(3);
 for I := 1 to ByteCount do
- C[I] := MSG_ReadBits(8);
+ C[I] := SB.ReadBits(8);
 
 for I := 0 to NumFields - 1 do
  begin
@@ -667,41 +667,41 @@ for I := 0 to NumFields - 1 do
     case FT of
      DT_FLOAT:
       if Signed then
-       PSingle(UInt(NS) + F.Offset)^ := MSG_ReadSBits(F.Bits) * F.TotalScale
+       PSingle(UInt(NS) + F.Offset)^ := SB.ReadSBits(F.Bits) * F.TotalScale
       else
-       PSingle(UInt(NS) + F.Offset)^ := MSG_ReadBits(F.Bits) * F.TotalScale;
+       PSingle(UInt(NS) + F.Offset)^ := SB.ReadBits(F.Bits) * F.TotalScale;
      DT_ANGLE:
-      PSingle(UInt(NS) + F.Offset)^ := MSG_ReadBitAngle(F.Bits);
+      PSingle(UInt(NS) + F.Offset)^ := SB.ReadBitAngle(F.Bits);
      DT_TIMEWINDOW_8:
-      PSingle(UInt(NS) + F.Offset)^ := (SV.Time * 100 - MSG_ReadSBits(8)) * (1 / 100);
+      PSingle(UInt(NS) + F.Offset)^ := (SV.Time * 100 - SB.ReadSBits(8)) * (1 / 100);
      DT_TIMEWINDOW_BIG:
-      PSingle(UInt(NS) + F.Offset)^ := (SV.Time * F.Scale - MSG_ReadSBits(F.Bits)) / F.Scale;
+      PSingle(UInt(NS) + F.Offset)^ := (SV.Time * F.Scale - SB.ReadSBits(F.Bits)) / F.Scale;
      DT_BYTE:
       if Signed then
-       PInt8(UInt(NS) + F.Offset)^ := Trunc(Int8(MSG_ReadSBits(F.Bits)) * F.TotalScale)
+       PInt8(UInt(NS) + F.Offset)^ := Trunc(Int8(SB.ReadSBits(F.Bits)) * F.TotalScale)
       else
-       PUInt8(UInt(NS) + F.Offset)^ := Trunc(UInt8(MSG_ReadBits(F.Bits)) * F.TotalScale);
+       PUInt8(UInt(NS) + F.Offset)^ := Trunc(UInt8(SB.ReadBits(F.Bits)) * F.TotalScale);
      DT_SHORT:
       if Signed then
-       PInt16(UInt(NS) + F.Offset)^ := Trunc(Int16(MSG_ReadSBits(F.Bits)) * F.TotalScale)
+       PInt16(UInt(NS) + F.Offset)^ := Trunc(Int16(SB.ReadSBits(F.Bits)) * F.TotalScale)
       else
-       PUInt16(UInt(NS) + F.Offset)^ := Trunc(UInt16(MSG_ReadBits(F.Bits)) * F.TotalScale);
+       PUInt16(UInt(NS) + F.Offset)^ := Trunc(UInt16(SB.ReadBits(F.Bits)) * F.TotalScale);
      DT_INTEGER:
       if Signed then
        if F.TotalScale <> 1 then
-        PInt32(UInt(NS) + F.Offset)^ := Trunc(Int32(MSG_ReadSBits(F.Bits)) * F.TotalScale)
+        PInt32(UInt(NS) + F.Offset)^ := Trunc(Int32(SB.ReadSBits(F.Bits)) * F.TotalScale)
        else
-        PInt32(UInt(NS) + F.Offset)^ := Int32(MSG_ReadSBits(F.Bits))
+        PInt32(UInt(NS) + F.Offset)^ := Int32(SB.ReadSBits(F.Bits))
       else
        if F.TotalScale <> 1 then
-        PUInt32(UInt(NS) + F.Offset)^ := Trunc(UInt32(MSG_ReadBits(F.Bits)) * F.TotalScale)
+        PUInt32(UInt(NS) + F.Offset)^ := Trunc(UInt32(SB.ReadBits(F.Bits)) * F.TotalScale)
        else
-        PUInt32(UInt(NS) + F.Offset)^ := UInt32(MSG_ReadBits(F.Bits));
-     DT_STRING:
+        PUInt32(UInt(NS) + F.Offset)^ := UInt32(SB.ReadBits(F.Bits));
+     DT_STRING:  // TODO: SB.ReadBitString ?
       begin
        P := PLChar(UInt(NS) + F.Offset);
        repeat
-        CH := LChar(MSG_ReadBits(8));
+        CH := LChar(SB.ReadBits(8));
         P^ := CH;
         Inc(UInt(P));
        until CH = #0;
@@ -725,7 +725,7 @@ for I := 0 to NumFields - 1 do
    end;
  end;
 
-Result := MSG_CurrentBit - CB;
+Result := SB.CurrentBit - CB;
 end;
 
 class procedure TDelta.AddEncoder(Name: PLChar; Func: TDeltaEncoder);

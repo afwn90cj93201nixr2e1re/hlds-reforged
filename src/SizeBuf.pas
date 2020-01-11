@@ -15,6 +15,23 @@ type
       Active: Boolean;
     end;
 
+  type
+    TBFRead = record
+      CurrentSize: UInt;
+      ReadCount: UInt; // +8, not used
+      ByteCount: UInt; // +12
+      BitCount: UInt; // +16
+      Data: Pointer; // +20
+      Active: Boolean;
+    end;
+
+  public
+    BFRead: TBFRead;
+
+  public
+    ReadCount: UInt;
+    BadRead: Boolean;
+
   public
     Data: Pointer;
     MaxSize: UInt32;
@@ -46,6 +63,22 @@ type
     procedure WriteBitCoord(F: Single);
     procedure WriteBitVec3Coord(const P: TVec3);
     procedure WriteVec3Coord(const P: TVec3);
+
+  public
+    procedure StartBitReading;
+    procedure EndBitReading;
+    function ReadOneBit: Int32;
+    function ReadBits(Count: UInt): UInt32;
+    function ReadSBits(Count: UInt): Int32;
+    function ReadBitAngle(Count: UInt): Single;
+    function CurrentBit: UInt;
+    function IsBitReading: Boolean;
+    function PeekBits(Count: UInt): UInt32;
+    function ReadBitString: PLChar;
+    procedure ReadBitData(Buffer: Pointer; Size: UInt);
+    function ReadBitCoord: Single;
+    procedure ReadBitVec3Coord(out P: TVec3);
+    procedure ReadVec3Coord(out P: TVec3);
   end;
 
 implementation
@@ -361,6 +394,254 @@ else
  end;
 end;
 
+procedure TSizeBuf.StartBitReading;
+begin
+BFRead.Active := True;
+BFRead.CurrentSize := ReadCount + 1;
+BFRead.ReadCount := ReadCount;
+BFRead.ByteCount := 0;
+BFRead.BitCount := 0;
+BFRead.Data := Pointer(UInt(Data) + ReadCount);
 
+if BFRead.CurrentSize > CurrentSize then
+ BadRead := True;
+end;
+
+procedure TSizeBuf.EndBitReading;
+begin
+if BFRead.CurrentSize > CurrentSize then
+ BadRead := True;
+
+ReadCount := BFRead.CurrentSize;
+BFRead.Active := False;
+BFRead.ReadCount := 0;
+BFRead.ByteCount := 0;
+BFRead.BitCount := 0;
+BFRead.Data := nil;
+end;
+
+function TSizeBuf.ReadOneBit: Int32;
+begin
+if BadRead then
+ Result := 1
+else
+ begin
+  if BFRead.BitCount > 7 then
+   begin
+    Inc(BFRead.CurrentSize);
+    Inc(BFRead.ByteCount);
+    Inc(UInt(BFRead.Data));
+    BFRead.BitCount := 0;
+   end;
+
+  if BFRead.CurrentSize > CurrentSize then
+   begin
+    BadRead := True;
+    Result := 1;
+   end
+  else
+   begin
+    Result := UInt32((BitTable[BFRead.BitCount] and PByte(BFRead.Data)^) <> 0);
+    Inc(BFRead.BitCount);
+   end;
+ end;
+end;
+
+function TSizeBuf.ReadBits(Count: UInt): UInt32;
+var
+ BitCount, ByteCount: UInt;
+ B: UInt32;
+begin
+if BadRead then
+ Result := 1
+else
+ begin
+  if BFRead.BitCount > 7 then
+   begin
+    Inc(BFRead.CurrentSize);
+    Inc(BFRead.ByteCount);
+    Inc(UInt(BFRead.Data));
+    BFRead.BitCount := 0;
+   end;
+
+  BitCount := BFRead.BitCount + Count;
+  if BitCount <= 32 then
+   begin
+    Result := RowBitTable[Count] and (PUInt32(BFRead.Data)^ shr BFRead.BitCount);
+    if (BitCount and 7) > 0 then
+     begin
+      BFRead.BitCount := BitCount and 7;
+      ByteCount := BitCount shr 3;
+     end
+    else
+     begin
+      BFRead.BitCount := 8;
+      ByteCount := (BitCount shr 3) - 1;
+     end;
+
+    Inc(BFRead.CurrentSize, ByteCount);
+    Inc(BFRead.ByteCount, ByteCount);
+    Inc(UInt(BFRead.Data), ByteCount);
+   end
+  else
+   begin
+    B := PUInt32(BFRead.Data)^ shr BFRead.BitCount;
+    Inc(UInt(BFRead.Data), 4);
+    Result := ((RowBitTable[BitCount and 7] and PUInt32(BFRead.Data)^) shl (32 - BFRead.BitCount)) or B;
+
+    Inc(BFRead.CurrentSize, 4);
+    Inc(BFRead.ByteCount, 4);
+    BFRead.BitCount := BitCount and 7;
+   end;
+
+  if BFRead.CurrentSize > CurrentSize then
+   begin
+    BadRead := True;
+    Result := 1;
+   end;
+ end;
+end;
+
+function TSizeBuf.ReadSBits(Count: UInt): Int32;
+var
+ B: Int32;
+begin
+if Count = 0 then
+ Sys_Error('MSG_ReadSBits: Invalid bit count.');
+
+B := ReadOneBit;
+Result := ReadBits(Count - 1);
+if B >= 1 then
+ Result := -Result;
+end;
+
+function TSizeBuf.ReadBitAngle(Count: UInt): Single;
+var
+ X: UInt;
+begin
+X := 1 shl Count;
+if X > 0 then
+ Result := ReadBits(Count) * 360 / X
+else
+ begin
+  ReadBits(Count);
+  Result := 0;
+ end;
+end;
+
+function TSizeBuf.CurrentBit: UInt32;
+begin
+if BFRead.Active then
+ Result := BFRead.BitCount + (BFRead.ByteCount shl 3)
+else
+ Result := ReadCount shl 3;
+end;
+
+function TSizeBuf.IsBitReading: Boolean;
+begin
+Result := BFRead.Active;
+end;
+
+function TSizeBuf.PeekBits(Count: UInt): UInt32;
+var
+ Data: TBFRead;
+begin
+  Data := BFRead;
+  Result := ReadBits(Count);
+  BFRead := Data;
+end;
+
+function TSizeBuf.ReadBitString: PLChar;
+var
+ B: UInt32;
+ I: UInt;
+ BitReadBuffer: array[1..8192] of LChar;
+begin
+BitReadBuffer[Low(BitReadBuffer)] := #0;
+for I := Low(BitReadBuffer) to High(BitReadBuffer) - 1 do
+ begin
+  B := ReadBits(8);
+  if (B = 0) or BadRead then
+   begin
+    BitReadBuffer[I] := #0;
+    Result := @BitReadBuffer;
+    Exit;
+   end
+  else
+   BitReadBuffer[I] := LChar(B);
+ end;
+
+BitReadBuffer[High(BitReadBuffer)] := #0;
+Result := @BitReadBuffer;
+end;
+
+
+procedure TSizeBuf.ReadBitData(Buffer: Pointer; Size: UInt);
+var
+ I: Int;
+begin
+for I := 0 to Size - 1 do
+ PByte(UInt(Buffer) + UInt(I))^ := ReadBits(8);
+end;
+
+function TSizeBuf.ReadBitCoord: Single;
+var
+ IntData, FracData: Int32;
+ SignBit: Boolean;
+begin
+IntData := ReadOneBit;
+FracData := ReadOneBit;
+
+if (IntData <> 0) or (FracData <> 0) then
+ begin
+  SignBit := ReadOneBit <> 0;
+  if IntData <> 0 then
+   IntData := ReadBits(12);
+  if FracData <> 0 then
+   FracData := ReadBits(3);
+
+  Result := FracData * 0.125 + IntData;
+  if SignBit then
+   Result := -Result;
+ end
+else
+ Result := 0;
+end;
+
+procedure TSizeBuf.ReadBitVec3Coord(out P: TVec3);
+var
+ X, Y, Z: Boolean;
+begin
+X := ReadOneBit <> 0;
+Y := ReadOneBit <> 0;
+Z := ReadOneBit <> 0;
+
+if X then
+ P[0] := ReadBitCoord
+else
+ P[0] := 0;
+
+if Y then
+ P[1] := ReadBitCoord
+else
+ P[1] := 0;
+
+if Z then
+ P[2] := ReadBitCoord
+else
+ P[2] := 0;
+end;
+
+procedure TSizeBuf.ReadVec3Coord(out P: TVec3);
+begin
+if IsBitReading then
+ ReadBitVec3Coord(P)
+else
+ begin
+  StartBitReading;
+  ReadBitVec3Coord(P);
+  EndBitReading;
+ end;
+end;
 
 end.

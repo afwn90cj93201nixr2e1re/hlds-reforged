@@ -533,7 +533,7 @@ for I := 0 to NumRes - 1 do
   Exclude(Res.Flags, RES_WASMISSING);
   Exclude(Res.Flags, RES_PADDING);
 
-  if MSG_BadRead then
+  if gNetMessage.BadRead then
    begin
     DPrint(['SV_ParseResourceList: "', PLChar(@C.NetName), '" sent bad resource data.']);
     SV_DropClient(C, False, 'Bad resource list.');
@@ -622,7 +622,7 @@ var
  Buf: array[1..512] of LChar;
 begin
 Size := MSG_ReadShort;
-if MSG_ReadCount + Size > MAX_NETBUFLEN then // buffer overrun prevention
+if gNetMessage.ReadCount + Size > MAX_NETBUFLEN then // buffer overrun prevention
  begin
   SV_DropClient(C, False, 'Bad consistency response.');
   Exit;
@@ -633,13 +633,13 @@ MemSet(FailedRes, SizeOf(FailedRes), 0);
 Failed := False;
 NumConsistency := 0;
 
-TEncode.UnMunge1(Pointer(UInt(gNetMessage.Data) + MSG_ReadCount), Size, SVS.SpawnCount);
-MSG_StartBitReading(gNetMessage);
+TEncode.UnMunge1(Pointer(UInt(gNetMessage.Data) + gNetMessage.ReadCount), Size, SVS.SpawnCount);
+gNetMessage.StartBitReading;
 repeat
- if MSG_ReadBits(1) = 0 then
+ if gNetMessage.ReadBits(1) = 0 then
   Break;
 
- InResNum := MSG_ReadBits(12);
+ InResNum := gNetMessage.ReadBits(12);
  if InResNum >= SV.NumResources then
   Failed := True
  else
@@ -649,13 +649,13 @@ repeat
     Failed := True
    else
     if CompareMem(@Res.Reserved, @NoReserved, SizeOf(NoReserved)) then
-     if MSG_ReadBits(32) <> PUInt32(@Res.MD5Hash)^ then
+     if gNetMessage.ReadBits(32) <> PUInt32(@Res.MD5Hash)^ then
       FailedRes[InResNum] := True
      else
     else
      begin
-      MSG_ReadBitData(@InMinS, SizeOf(InMinS));
-      MSG_ReadBitData(@InMaxS, SizeOf(InMaxS));
+      gNetMessage.ReadBitData(@InMinS, SizeOf(InMinS));
+      gNetMessage.ReadBitData(@InMaxS, SizeOf(InMaxS));
       Move(Res.Reserved, Reserved, SizeOf(Reserved));
       TEncode.UnMunge1(@Reserved, SizeOf(Reserved), SVS.SpawnCount);
       P := @Reserved;
@@ -688,7 +688,7 @@ repeat
      end;
   end;
 
- if MSG_BadRead then
+ if gNetMessage.BadRead then
   Failed := True
  else
   if not Failed then
@@ -696,7 +696,7 @@ repeat
 
 until Failed;
 
-MSG_EndBitReading(gNetMessage);
+gNetMessage.EndBitReading;
 if Failed or (NumConsistency <> SV.NumConsistency) then
  SV_DropClient(C, False, 'Bad file data in consistency response.')
 else

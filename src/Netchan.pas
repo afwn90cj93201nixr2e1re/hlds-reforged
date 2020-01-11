@@ -583,7 +583,7 @@ if not Ready then
  Result := True
 else
  Result := (Count <= MAX_FRAGMENTS) and (Index <= Count) and (Size <= MAX_FRAGLEN) and (Offset < MAX_NETBUFLEN) and
-           (MSG_ReadCount + Offset + Size <= gNetMessage.CurrentSize);
+           (gNetMessage.ReadCount + Offset + Size <= gNetMessage.CurrentSize);
 end;
 
 function TNetchan.Process: Boolean;
@@ -616,7 +616,7 @@ Security := (Ack and $40000000) > 0;
 Seq := Seq and $3FFFFFFF;
 Ack := Ack and $3FFFFFFF;
 
-if MSG_BadRead or Security then
+if gNetMessage.BadRead or Security then
  Exit;
 
 TEncode.UnMunge2(Pointer(UInt(gNetMessage.Data) + 8), gNetMessage.CurrentSize - 8, Byte(Seq));
@@ -692,7 +692,7 @@ if Seq > IncomingSequence then
          else
           begin
            P.FragMessage.Clear;
-           P.FragMessage.Write(Pointer(UInt(gNetMessage.Data) + MSG_ReadCount + FragOffset[I]), FragSize[I]);
+           P.FragMessage.Write(Pointer(UInt(gNetMessage.Data) + gNetMessage.ReadCount + FragOffset[I]), FragSize[I]);
            if P.FragMessage.Overflowed then
             begin
              DPrint('Fragment buffer overflowed.');
@@ -704,9 +704,9 @@ if Seq > IncomingSequence then
          CheckForCompletion(I, FragSeq[I] and $FFFF);
         end;
 
-       Move(Pointer(UInt(gNetMessage.Data) + MSG_ReadCount + FragOffset[I] + FragSize[I])^,
-            Pointer(UInt(gNetMessage.Data) + MSG_ReadCount + FragOffset[I])^,
-            gNetMessage.CurrentSize - FragSize[I] - FragOffset[I] - MSG_ReadCount);
+       Move(Pointer(UInt(gNetMessage.Data) + gNetMessage.ReadCount + FragOffset[I] + FragSize[I])^,
+            Pointer(UInt(gNetMessage.Data) + gNetMessage.ReadCount + FragOffset[I])^,
+            gNetMessage.CurrentSize - FragSize[I] - FragOffset[I] - gNetMessage.ReadCount);
 
        Dec(gNetMessage.CurrentSize, FragSize[I]);
        if I = NS_NORMAL then
@@ -1136,7 +1136,7 @@ var
  P, P2: PFragBuf;
 begin
 gNetMessage.Clear;
-MSG_ReadCount := 0;
+gNetMessage.ReadCount := 0;
 
 P := IncomingBuf[Stream];
 while P <> nil do
@@ -1257,7 +1257,7 @@ if IncomingReady[NS_FILE] then
      Compressed := StrIComp(MSG_ReadString, 'bz2') = 0;
      IncomingSize := MSG_ReadLong;
 
-     if MSG_BadRead then
+     if gNetMessage.BadRead then
       DPrint('File fragment received with invalid header.')
      else
       if FileName[1] = #0 then
@@ -1299,8 +1299,8 @@ if IncomingReady[NS_FILE] then
             P := P.Next;
            end;
 
-          if TotalSize > MSG_ReadCount then
-           Dec(TotalSize, MSG_ReadCount)
+          if TotalSize > gNetMessage.ReadCount then
+           Dec(TotalSize, gNetMessage.ReadCount)
           else
            TotalSize := 0;
 
@@ -1317,8 +1317,8 @@ if IncomingReady[NS_FILE] then
               P2 := P.Next;
               if P = IncomingBuf[NS_FILE] then
                begin
-                Dec(P.FragMessage.CurrentSize, MSG_ReadCount);
-                Data := Pointer(UInt(P.FragMessage.Data) + MSG_ReadCount);
+                Dec(P.FragMessage.CurrentSize, gNetMessage.ReadCount);
+                Data := Pointer(UInt(P.FragMessage.Data) + gNetMessage.ReadCount);
                end
               else
                Data := P.FragMessage.Data;

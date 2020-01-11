@@ -1499,7 +1499,7 @@ var
  P, P2: PUserCmd;
 begin
 if AlreadyMoved then
- MSG_BadRead := True
+ gNetMessage.BadRead := True
 else
  begin
   AlreadyMoved := True;
@@ -1507,7 +1507,7 @@ else
   
   Size := MSG_ReadByte;
   Checksum := MSG_ReadByte;
-  RC := MSG_ReadCount;
+  RC := gNetMessage.ReadCount;
   TEncode.UnMunge1(Pointer(UInt(gNetMessage.Data) + RC), Size, C.Netchan.IncomingSequence);
 
   Flags := MSG_ReadByte;
@@ -1527,7 +1527,7 @@ else
    begin
     Print(['SV_ParseMove: Too many commands (', Total, ') sent for user "', PLChar(@C.NetName), '" (', NET_AdrToString(C.Netchan.Addr, AdrBuf, SizeOf(AdrBuf)), ').']);
     SV_DropClient(C, False, ['Sent ', Total, ' user commands, expected no more than CMD_MAXBACKUP (', CMD_MAXBACKUP, ').']);
-    MSG_BadRead := True;
+    gNetMessage.BadRead := True;
    end
   else
    begin
@@ -1541,13 +1541,13 @@ else
      end;
 
     if SV.Active and (C.Active or C.Spawned) then
-     if MSG_BadRead then
+     if gNetMessage.BadRead then
       Print(['SV_ParseMove: Client "', PLChar(@C.NetName), '" (', NET_AdrToString(C.Netchan.Addr, AdrBuf, SizeOf(AdrBuf)), ') sent a bogus command packet.'])
      else
-      if Byte(COM_BlockSequenceCRCByte(Pointer(UInt(gNetMessage.Data) + RC), MSG_ReadCount - RC, C.Netchan.IncomingSequence)) <> Checksum then
+      if Byte(COM_BlockSequenceCRCByte(Pointer(UInt(gNetMessage.Data) + RC), gNetMessage.ReadCount - RC, C.Netchan.IncomingSequence)) <> Checksum then
        begin
         Print(['SV_ParseMove: Failed command checksum for client "', PLChar(@C.NetName), '" (', NET_AdrToString(C.Netchan.Addr, AdrBuf, SizeOf(AdrBuf)), ').']);
-        MSG_BadRead := True;
+        gNetMessage.BadRead := True;
        end
       else     
        begin

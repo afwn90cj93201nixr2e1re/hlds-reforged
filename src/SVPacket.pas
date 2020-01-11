@@ -885,7 +885,7 @@ var
  Payload: PLChar;
 begin
 Payload := MSG_ReadString;
-if MSG_BadRead or (StrComp(Payload, 'Source Engine Query') <> 0) then
+if gNetMessage.BadRead or (StrComp(Payload, 'Source Engine Query') <> 0) then
  Exit;
 
 SB.AllowOverflow := True;
@@ -956,7 +956,7 @@ var
  C: LChar;
 begin
 C := MSG_ReadChar;
-if MSG_BadRead then
+if gNetMessage.BadRead then
  Result := False
 else
  case C of
@@ -973,8 +973,8 @@ else
   else Result := False;
  end;
 
-if not Result and not MSG_BadRead then
- Dec(MSG_ReadCount);
+if not Result and not gNetMessage.BadRead then
+ Dec(gNetMessage.ReadCount);
 end;
 
 procedure SV_ConnectionlessPacket;
@@ -986,7 +986,7 @@ begin
 if CheckIP(NetFrom) then
  begin
   MSG_BeginReading;
-  if (MSG_ReadLong <> OUTOFBAND_TAG) or MSG_BadRead then
+  if (MSG_ReadLong <> OUTOFBAND_TAG) or gNetMessage.BadRead then
    Exit;
 
   if SV_NewRequestQuery then
@@ -995,7 +995,7 @@ if CheckIP(NetFrom) then
   S2 := MSG_ReadStringLine;
   Cmd_TokenizeString(S2);
   S := Cmd_Argv(0);
-  if (S^ = #0) or MSG_BadRead then
+  if (S^ = #0) or gNetMessage.BadRead then
    Exit;
   C := PLChar(UInt(S) + 1)^;
 
@@ -1080,7 +1080,7 @@ begin
 if CheckIP(NetFrom) then
  begin
   MSG_BeginReading;
-  if (MSG_ReadLong <> OUTOFBAND_TAG) or MSG_BadRead then
+  if (MSG_ReadLong <> OUTOFBAND_TAG) or gNetMessage.BadRead then
    Exit;
 
   if SV_NewRequestQuery then
@@ -1088,7 +1088,7 @@ if CheckIP(NetFrom) then
 
   Cmd_TokenizeString(MSG_ReadStringLine);
   S := Cmd_Argv(0);
-  if (S = nil) or (S^ = #0) or MSG_BadRead then
+  if (S = nil) or (S^ = #0) or gNetMessage.BadRead then
    Exit;
 
   C := PLChar(UInt(S) + 1)^;
