@@ -605,7 +605,7 @@ if not NET_CompareAdr(NetFrom, Addr) then
 
 LastReceived := RealTime;
 
-gNetMessage.BeginReading;
+gNetMessage.ToStart;
 Seq := gNetMessage.Read<Int32>;
 Ack := gNetMessage.Read<Int32>;
 
@@ -1243,7 +1243,7 @@ if IncomingReady[NS_FILE] then
  if IncomingBuf[NS_FILE] <> nil then
   begin
    gNetMessage.Clear;
-   gNetMessage.BeginReading;
+   gNetMessage.ToStart;
 
    P := IncomingBuf[NS_FILE];
    if P.FragMessage.CurrentSize > gNetMessage.MaxSize then
@@ -1348,7 +1348,7 @@ if IncomingReady[NS_FILE] then
                end;
 
               gNetMessage.Clear;
-              gNetMessage.BeginReading;
+              gNetMessage.ToStart;
               IncomingBuf[NS_FILE] := nil;
               IncomingReady[NS_FILE] := False;
               Result := True;

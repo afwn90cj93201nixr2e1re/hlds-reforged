@@ -985,7 +985,7 @@ var
 begin
 if CheckIP(NetFrom) then
  begin
-  gNetMessage.BeginReading;
+  gNetMessage.ToStart;
   if (gNetMessage.Read<Int32> <> OUTOFBAND_TAG) or gNetMessage.BadRead then
    Exit;
 
@@ -1079,7 +1079,7 @@ var
 begin
 if CheckIP(NetFrom) then
  begin
-  gNetMessage.BeginReading;
+  gNetMessage.ToStart;
   if (gNetMessage.Read<Int32> <> OUTOFBAND_TAG) or gNetMessage.BadRead then
    Exit;
 
@@ -1157,7 +1157,7 @@ while NET_GetPacket(NS_SERVER) do
         begin
          if C.Netchan.CopyNormalFragments then
           begin
-           gNetMessage.BeginReading;
+           gNetMessage.ToStart;
            SV_ExecuteClientMessage(C^);
           end;
 

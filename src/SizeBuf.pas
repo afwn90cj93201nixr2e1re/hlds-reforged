@@ -63,7 +63,7 @@ type
   public
     procedure StartBitReading;
     procedure EndBitReading;
-    function ReadOneBit: Boolean;
+    function ReadBit: Boolean;
     function ReadBits(Count: UInt): UInt32;
     function ReadSBits(Count: UInt): Int32;
     function ReadBitAngle(Count: UInt): Single;
@@ -77,7 +77,7 @@ type
 
   public
     function ReadCoord: Single;
-    procedure BeginReading;
+    procedure ToStart;
     function Read(Buffer: Pointer; Size: UInt): Int32; overload;
     function Read<T>: T; overload;
     function ReadString: PLChar;
@@ -418,7 +418,7 @@ BFRead.BitCount := 0;
 BFRead.Data := nil;
 end;
 
-function TSizeBuf.ReadOneBit: Boolean;
+function TSizeBuf.ReadBit: Boolean;
 begin
   Result := ReadBits(1) > 0;
 end;
@@ -485,7 +485,7 @@ begin
 if Count = 0 then
  Sys_Error('MSG_ReadSBits: Invalid bit count.');
 
-B := ReadOneBit;
+B := ReadBit;
 Result := ReadBits(Count - 1);
 if B then
  Result := -Result;
@@ -555,12 +555,12 @@ var
  HasIntData, HasFracData, SignBit: Boolean;
   IntData, FracData: Int32;
 begin
-HasIntData := ReadOneBit;
-HasFracData := ReadOneBit;
+HasIntData := ReadBit;
+HasFracData := ReadBit;
 
 if HasIntData or HasFracData then
  begin
-  SignBit := ReadOneBit;
+  SignBit := ReadBit;
   if HasIntData then
    IntData := ReadBits(12);
   if HasFracData then
@@ -578,9 +578,9 @@ procedure TSizeBuf.ReadBitVec3Coord(out P: TVec3);
 var
  X, Y, Z: Boolean;
 begin
-X := ReadOneBit;
-Y := ReadOneBit;
-Z := ReadOneBit;
+X := ReadBit;
+Y := ReadBit;
+Z := ReadBit;
 
 if X then
  P[0] := ReadBitCoord
@@ -615,7 +615,7 @@ begin
 Result := Read<Int16> / 8;
 end;
 
-procedure TSizeBuf.BeginReading;
+procedure TSizeBuf.ToStart;
 begin
 ReadCount := 0;
 BadRead := False;
