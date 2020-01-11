@@ -518,15 +518,15 @@ DecalsOnly := sv_uploaddecalsonly.Value <> 0;
 MaxAllowed := Trunc(sv_uploadmaxnum.Value);
 J := 0;
 
-NumRes := gNetMessage.ReadShort;
+NumRes := gNetMessage.Read<Int16>;
 for I := 0 to NumRes - 1 do
  begin
   MemSet(Res, SizeOf(Res), 0);
   StrLCopy(@Res.Name, gNetMessage.ReadString, SizeOf(Res.Name) - 1);
-  PByte(@Res.ResourceType)^ := gNetMessage.ReadByte;
-  Res.Index := gNetMessage.ReadShort;
-  Res.DownloadSize := gNetMessage.ReadLong;
-  Byte(Res.Flags) := gNetMessage.ReadByte;
+  PByte(@Res.ResourceType)^ := gNetMessage.Read<UInt8>;
+  Res.Index := gNetMessage.Read<Int16>;
+  Res.DownloadSize := gNetMessage.Read<Int32>;
+  Byte(Res.Flags) := gNetMessage.Read<UInt8>;
   if RES_CUSTOM in Res.Flags then
    gNetMessage.ReadBuffer(SizeOf(Res.MD5Hash), @Res.MD5Hash);
 
@@ -621,7 +621,7 @@ var
  I, Size, InResNum, NumConsistency: UInt;
  Buf: array[1..512] of LChar;
 begin
-Size := gNetMessage.ReadShort;
+Size := gNetMessage.Read<Int16>;
 if gNetMessage.ReadCount + Size > MAX_NETBUFLEN then // buffer overrun prevention
  begin
   SV_DropClient(C, False, 'Bad consistency response.');

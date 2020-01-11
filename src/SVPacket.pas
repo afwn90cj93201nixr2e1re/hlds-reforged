@@ -933,7 +933,7 @@ procedure SVC_PlayerInfo_New;
 var
  Challenge: UInt32;
 begin
-Challenge := gNetMessage.ReadLong;
+Challenge := gNetMessage.Read<Int32>;
 if Challenge = $FFFFFFFF then
  SVC_GetChallenge_New
 else
@@ -944,7 +944,7 @@ procedure SVC_RuleInfo_New;
 var
  Challenge: UInt32;
 begin
-Challenge := gNetMessage.ReadLong;
+Challenge := gNetMessage.Read<Int32>;
 if Challenge = $FFFFFFFF then
  SVC_GetChallenge_New
 else
@@ -955,7 +955,7 @@ function SV_NewRequestQuery: Boolean;
 var
  C: LChar;
 begin
-C := gNetMessage.ReadChar;
+C := gNetMessage.Read<LChar>;
 if gNetMessage.BadRead then
  Result := False
 else
@@ -986,7 +986,7 @@ begin
 if CheckIP(NetFrom) then
  begin
   gNetMessage.BeginReading;
-  if (gNetMessage.ReadLong <> OUTOFBAND_TAG) or gNetMessage.BadRead then
+  if (gNetMessage.Read<Int32> <> OUTOFBAND_TAG) or gNetMessage.BadRead then
    Exit;
 
   if SV_NewRequestQuery then
@@ -1080,7 +1080,7 @@ begin
 if CheckIP(NetFrom) then
  begin
   gNetMessage.BeginReading;
-  if (gNetMessage.ReadLong <> OUTOFBAND_TAG) or gNetMessage.BadRead then
+  if (gNetMessage.Read<Int32> <> OUTOFBAND_TAG) or gNetMessage.BadRead then
    Exit;
 
   if SV_NewRequestQuery then

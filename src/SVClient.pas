@@ -1314,7 +1314,7 @@ var
  P: PClient;
 begin
 Index := (UInt(@C) - UInt(SVS.Clients)) div SizeOf(TClient);
-Size := gNetMessage.ReadShort;
+Size := gNetMessage.Read<Int16>;
 if (Size > SizeOf(Buf)) or gNetMessage.BadRead then
  begin
   DPrint(['SV_ParseVoiceData: Invalid incoming packet from "', PLChar(@C.NetName), '".']);
@@ -1365,7 +1365,7 @@ var
  Buf: array[1..256] of LChar;
  S: PLChar;
 begin
-ID := gNetMessage.ReadLong;
+ID := gNetMessage.Read<Int32>;
 StrLCopy(@Buf, gNetMessage.ReadString, SizeOf(Buf) - 1);
 S := gNetMessage.ReadString;
 
@@ -1405,8 +1405,8 @@ while True do
   end
  else
   begin
-   B := gNetMessage.ReadByte;
-   if B = $FF then
+   B := gNetMessage.Read<UInt8>;
+   if gNetMessage.BadRead then
     Break
    else
     if B > CLC_MESSAGE_END then

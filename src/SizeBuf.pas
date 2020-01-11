@@ -83,14 +83,7 @@ type
   public
     function ReadCoord: Single;
     procedure BeginReading;
-    function Read<T>(ExceptValue: T): T; overload;
     function Read<T>: T; overload;
-    function ReadChar: LChar;
-    function ReadByte: Byte;
-    function ReadShort: Int16;
-    function ReadWord: UInt16;
-    function ReadLong: Int32;
-    function ReadFloat: Single;
     function ReadBuffer(Size: UInt; Buffer: Pointer): Int32;
     function ReadString: PLChar;
     function ReadStringLine: PLChar;
@@ -667,7 +660,7 @@ end;
 
 function TSizeBuf.ReadCoord: Single;
 begin
-Result := ReadShort / 8;
+Result := Read<Int16> / 8;
 end;
 
 procedure TSizeBuf.BeginReading;
@@ -676,45 +669,10 @@ ReadCount := 0;
 BadRead := False;
 end;
 
-function TSizeBuf.Read<T>(ExceptValue: T): T;
-begin
-  Result := ExceptValue;
-  ReadBuffer(SizeOf(T), @Result);
-end;
-
 function TSizeBuf.Read<T>: T;
 begin
-  Result := Read<T>(System.Default(T));
-end;
-
-function TSizeBuf.ReadChar: LChar;
-begin
-  Result := Read<LChar>(LChar(-1));
-end;
-
-function TSizeBuf.ReadByte: Byte;
-begin
-  Result := Read<UInt8>(UInt8(-1));
-end;
-
-function TSizeBuf.ReadShort: Int16;
-begin
-  Result := Read<Int16>(-1);
-end;
-
-function TSizeBuf.ReadWord: UInt16;
-begin
-  Result := Read<UInt16>(UInt16(-1));
-end;
-
-function TSizeBuf.ReadLong: Int32;
-begin
-  Result := Read<Int32>(-1);
-end;
-
-function TSizeBuf.ReadFloat: Single;
-begin
-  Result := Read<Float>(-1);
+  Result := System.Default(T);
+  ReadBuffer(SizeOf(T), @Result);
 end;
 
 function TSizeBuf.ReadBuffer(Size: UInt; Buffer: Pointer): Int32;
@@ -739,7 +697,7 @@ var
 begin
 for I := Low(StringBuffer) to High(StringBuffer) - 1 do
  begin
-  C := ReadChar;
+  C := Read<LChar>;
   if (C = #0) or (C = #$FF) then
    begin
     StringBuffer[I] := #0;
@@ -763,7 +721,7 @@ Result := @StringLineBuffer;
 
 for I := Low(StringLineBuffer) to High(StringLineBuffer) - 1 do
  begin
-  C := ReadChar;
+  C := Read<LChar>;
   if (C = #0) or (C = #$A) or (C = #$FF) then
    begin
     BadRead := False;
@@ -779,12 +737,12 @@ end;
 
 function TSizeBuf.ReadAngle: Single;
 begin
-Result := ReadByte * (360 / 256);
+Result := Read<UInt8> * (360 / 256);
 end;
 
 function TSizeBuf.ReadHiResAngle: Single;
 begin
-Result := ReadShort * (360 / 65536);
+Result := Read<Int16> * (360 / 65536);
 end;
 
 end.

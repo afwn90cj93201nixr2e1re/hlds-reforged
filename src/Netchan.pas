@@ -606,8 +606,8 @@ if not NET_CompareAdr(NetFrom, Addr) then
 LastReceived := RealTime;
 
 gNetMessage.BeginReading;
-Seq := gNetMessage.ReadLong;
-Ack := gNetMessage.ReadLong;
+Seq := gNetMessage.Read<Int32>;
+Ack := gNetMessage.Read<Int32>;
 
 Rel := (Seq and $80000000) > 0;
 Fragmented := (Seq and $40000000) > 0;
@@ -623,12 +623,12 @@ TEncode.UnMunge2(Pointer(UInt(gNetMessage.Data) + 8), gNetMessage.CurrentSize - 
 if Fragmented then
  begin
   for I := Low(I) to High(I) do
-   if gNetMessage.ReadByte > 0 then
+   if gNetMessage.Read<UInt8> > 0 then
     begin
      FragReady[I] := True;
-     FragSeq[I] := gNetMessage.ReadLong;
-     FragOffset[I] := gNetMessage.ReadShort;
-     FragSize[I] := gNetMessage.ReadShort;
+     FragSeq[I] := gNetMessage.Read<Int32>;
+     FragOffset[I] := gNetMessage.Read<Int16>;
+     FragSize[I] := gNetMessage.Read<Int16>;
     end
    else
     begin
@@ -1255,7 +1255,7 @@ if IncomingReady[NS_FILE] then
 
      StrLCopy(@FileName, gNetMessage.ReadString, SizeOf(FileName) - 1);
      Compressed := StrIComp(gNetMessage.ReadString, 'bz2') = 0;
-     IncomingSize := gNetMessage.ReadLong;
+     IncomingSize := gNetMessage.Read<Int32>;
 
      if gNetMessage.BadRead then
       DPrint('File fragment received with invalid header.')
