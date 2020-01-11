@@ -48,7 +48,7 @@ type
 
   public
     procedure StartBitWriting;
-    procedure WriteOneBit(B: Byte);
+    procedure WriteBit(Value: Boolean);
     function IsBitWriting: Boolean;
     procedure EndBitWriting;
     procedure WriteBits(B: UInt32; Count: UInt);
@@ -63,7 +63,7 @@ type
   public
     procedure StartBitReading;
     procedure EndBitReading;
-    function ReadOneBit: Int32;
+    function ReadOneBit: Boolean;
     function ReadBits(Count: UInt): UInt32;
     function ReadSBits(Count: UInt): Int32;
     function ReadBitAngle(Count: UInt): Single;
@@ -218,24 +218,12 @@ begin
   BFWrite.Active := True;
 end;
 
-procedure TSizeBuf.WriteOneBit(B: Byte);
+procedure TSizeBuf.WriteBit(Value: Boolean);
 begin
-if BFWrite.Count >= 8 then
- begin
-  GetSpace(1);
-  BFWrite.Count := 0;
-  Inc(UInt(BFWrite.Data));
- end;
-
-if not Overflowed then
- begin
-  if B = 0 then
-   PByte(BFWrite.Data)^ := PByte(BFWrite.Data)^ and InvBitTable[BFWrite.Count]
+  if Value then
+    WriteBits(1, 1)
   else
-   PByte(BFWrite.Data)^ := PByte(BFWrite.Data)^ or BitTable[BFWrite.Count];
-
-  Inc(BFWrite.Count);
- end;
+    WriteBits(0, 1);
 end;
 
 function TSizeBuf.IsBitWriting: Boolean;
@@ -318,7 +306,7 @@ if Count < 32 then
     B := -I;
  end;
 
-WriteOneBit(UInt(B < 0));
+WriteBit(B < 0);
 WriteBits(Abs(B), Count - 1);
 end;
 
@@ -360,11 +348,11 @@ I := Trunc(F);
 IntData := Abs(I);
 FracData := Abs(8 * I) and 7;
 
-WriteOneBit(UInt(IntData <> 0));
-WriteOneBit(UInt(FracData <> 0));
+WriteBit(IntData <> 0);
+WriteBit(FracData <> 0);
 if (IntData <> 0) or (FracData <> 0) then
  begin
-  WriteOneBit(UInt(F <= -0.125));
+  WriteBit(F <= -0.125);
   if IntData <> 0 then
    WriteBits(IntData, 12);
   if FracData <> 0 then
@@ -380,9 +368,9 @@ X := (P[0] >= 0.125) or (P[0] <= -0.125);
 Y := (P[1] >= 0.125) or (P[1] <= -0.125);
 Z := (P[2] >= 0.125) or (P[2] <= -0.125);
 
-WriteOneBit(UInt(X));
-WriteOneBit(UInt(Y));
-WriteOneBit(UInt(Z));
+WriteBit(X);
+WriteBit(Y);
+WriteBit(Z);
 
 if X then
  WriteBitCoord(P[0]);
@@ -430,31 +418,9 @@ BFRead.BitCount := 0;
 BFRead.Data := nil;
 end;
 
-function TSizeBuf.ReadOneBit: Int32;
+function TSizeBuf.ReadOneBit: Boolean;
 begin
-if BadRead then
- Result := 1
-else
- begin
-  if BFRead.BitCount > 7 then
-   begin
-    Inc(BFRead.CurrentSize);
-    Inc(BFRead.ByteCount);
-    Inc(UInt(BFRead.Data));
-    BFRead.BitCount := 0;
-   end;
-
-  if BFRead.CurrentSize > CurrentSize then
-   begin
-    BadRead := True;
-    Result := 1;
-   end
-  else
-   begin
-    Result := UInt32((BitTable[BFRead.BitCount] and PByte(BFRead.Data)^) <> 0);
-    Inc(BFRead.BitCount);
-   end;
- end;
+  Result := ReadBits(1) > 0;
 end;
 
 function TSizeBuf.ReadBits(Count: UInt): UInt32;
@@ -514,14 +480,14 @@ end;
 
 function TSizeBuf.ReadSBits(Count: UInt): Int32;
 var
- B: Int32;
+ B: Boolean;
 begin
 if Count = 0 then
  Sys_Error('MSG_ReadSBits: Invalid bit count.');
 
 B := ReadOneBit;
 Result := ReadBits(Count - 1);
-if B >= 1 then
+if B then
  Result := -Result;
 end;
 
@@ -586,18 +552,18 @@ end;
 
 function TSizeBuf.ReadBitCoord: Single;
 var
- IntData, FracData: Int32;
- SignBit: Boolean;
+ HasIntData, HasFracData, SignBit: Boolean;
+  IntData, FracData: Int32;
 begin
-IntData := ReadOneBit;
-FracData := ReadOneBit;
+HasIntData := ReadOneBit;
+HasFracData := ReadOneBit;
 
-if (IntData <> 0) or (FracData <> 0) then
+if HasIntData or HasFracData then
  begin
-  SignBit := ReadOneBit <> 0;
-  if IntData <> 0 then
+  SignBit := ReadOneBit;
+  if HasIntData then
    IntData := ReadBits(12);
-  if FracData <> 0 then
+  if HasFracData then
    FracData := ReadBits(3);
 
   Result := FracData * 0.125 + IntData;
@@ -612,9 +578,9 @@ procedure TSizeBuf.ReadBitVec3Coord(out P: TVec3);
 var
  X, Y, Z: Boolean;
 begin
-X := ReadOneBit <> 0;
-Y := ReadOneBit <> 0;
-Z := ReadOneBit <> 0;
+X := ReadOneBit;
+Y := ReadOneBit;
+Z := ReadOneBit;
 
 if X then
  P[0] := ReadBitCoord
