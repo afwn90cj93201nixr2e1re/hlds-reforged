@@ -884,7 +884,7 @@ var
  SB: TSizeBuf;
  Payload: PLChar;
 begin
-Payload := MSG_ReadString;
+Payload := gNetMessage.ReadString;
 if gNetMessage.BadRead or (StrComp(Payload, 'Source Engine Query') <> 0) then
  Exit;
 
@@ -933,7 +933,7 @@ procedure SVC_PlayerInfo_New;
 var
  Challenge: UInt32;
 begin
-Challenge := MSG_ReadLong;
+Challenge := gNetMessage.ReadLong;
 if Challenge = $FFFFFFFF then
  SVC_GetChallenge_New
 else
@@ -944,7 +944,7 @@ procedure SVC_RuleInfo_New;
 var
  Challenge: UInt32;
 begin
-Challenge := MSG_ReadLong;
+Challenge := gNetMessage.ReadLong;
 if Challenge = $FFFFFFFF then
  SVC_GetChallenge_New
 else
@@ -955,7 +955,7 @@ function SV_NewRequestQuery: Boolean;
 var
  C: LChar;
 begin
-C := MSG_ReadChar;
+C := gNetMessage.ReadChar;
 if gNetMessage.BadRead then
  Result := False
 else
@@ -985,14 +985,14 @@ var
 begin
 if CheckIP(NetFrom) then
  begin
-  MSG_BeginReading;
-  if (MSG_ReadLong <> OUTOFBAND_TAG) or gNetMessage.BadRead then
+  gNetMessage.BeginReading;
+  if (gNetMessage.ReadLong <> OUTOFBAND_TAG) or gNetMessage.BadRead then
    Exit;
 
   if SV_NewRequestQuery then
    Exit;
 
-  S2 := MSG_ReadStringLine;
+  S2 := gNetMessage.ReadStringLine;
   Cmd_TokenizeString(S2);
   S := Cmd_Argv(0);
   if (S^ = #0) or gNetMessage.BadRead then
@@ -1079,14 +1079,14 @@ var
 begin
 if CheckIP(NetFrom) then
  begin
-  MSG_BeginReading;
-  if (MSG_ReadLong <> OUTOFBAND_TAG) or gNetMessage.BadRead then
+  gNetMessage.BeginReading;
+  if (gNetMessage.ReadLong <> OUTOFBAND_TAG) or gNetMessage.BadRead then
    Exit;
 
   if SV_NewRequestQuery then
    Exit;
 
-  Cmd_TokenizeString(MSG_ReadStringLine);
+  Cmd_TokenizeString(gNetMessage.ReadStringLine);
   S := Cmd_Argv(0);
   if (S = nil) or (S^ = #0) or gNetMessage.BadRead then
    Exit;
@@ -1157,7 +1157,7 @@ while NET_GetPacket(NS_SERVER) do
         begin
          if C.Netchan.CopyNormalFragments then
           begin
-           MSG_BeginReading;
+           gNetMessage.BeginReading;
            SV_ExecuteClientMessage(C^);
           end;
 

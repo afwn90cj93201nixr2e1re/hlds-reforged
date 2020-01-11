@@ -1294,7 +1294,7 @@ var
  S: PLChar;
  Buf: array[1..128] of LChar;
 begin
-S := MSG_ReadString;
+S := gNetMessage.ReadString;
 if (S^ > #0) and not gNetMessage.BadRead then
  if SV_ValidateClientCommand(S) then
   Cmd_ExecuteString(S, csClient)
@@ -1314,7 +1314,7 @@ var
  P: PClient;
 begin
 Index := (UInt(@C) - UInt(SVS.Clients)) div SizeOf(TClient);
-Size := MSG_ReadShort;
+Size := gNetMessage.ReadShort;
 if (Size > SizeOf(Buf)) or gNetMessage.BadRead then
  begin
   DPrint(['SV_ParseVoiceData: Invalid incoming packet from "', PLChar(@C.NetName), '".']);
@@ -1323,7 +1323,7 @@ if (Size > SizeOf(Buf)) or gNetMessage.BadRead then
 else
  if Size > 0 then
   begin
-   MSG_ReadBuffer(Size, @Buf);
+   gNetMessage.ReadBuffer(Size, @Buf);
    if not gNetMessage.BadRead and (sv_voiceenable.Value <> 0) then
     for I := 0 to SVS.MaxClients - 1 do
      begin
@@ -1349,7 +1349,7 @@ procedure SV_ParseCVarValue(var C: TClient);
 var
  S: PLChar;
 begin
-S := MSG_ReadString;
+S := gNetMessage.ReadString;
 if not gNetMessage.BadRead then
  begin
   if (@NewDLLFunctions.CVarValue <> nil) and (C.Entity <> nil) then
@@ -1365,9 +1365,9 @@ var
  Buf: array[1..256] of LChar;
  S: PLChar;
 begin
-ID := MSG_ReadLong;
-StrLCopy(@Buf, MSG_ReadString, SizeOf(Buf) - 1);
-S := MSG_ReadString;
+ID := gNetMessage.ReadLong;
+StrLCopy(@Buf, gNetMessage.ReadString, SizeOf(Buf) - 1);
+S := gNetMessage.ReadString;
 
 if not gNetMessage.BadRead then
  begin
@@ -1405,7 +1405,7 @@ while True do
   end
  else
   begin
-   B := MSG_ReadByte;
+   B := gNetMessage.ReadByte;
    if B = $FF then
     Break
    else

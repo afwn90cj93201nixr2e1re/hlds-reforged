@@ -79,6 +79,23 @@ type
     function ReadBitCoord: Single;
     procedure ReadBitVec3Coord(out P: TVec3);
     procedure ReadVec3Coord(out P: TVec3);
+
+  public
+    function ReadCoord: Single;
+    procedure BeginReading;
+    function Read<T>(ExceptValue: T): T; overload;
+    function Read<T>: T; overload;
+    function ReadChar: LChar;
+    function ReadByte: Byte;
+    function ReadShort: Int16;
+    function ReadWord: UInt16;
+    function ReadLong: Int32;
+    function ReadFloat: Single;
+    function ReadBuffer(Size: UInt; Buffer: Pointer): Int32;
+    function ReadString: PLChar;
+    function ReadStringLine: PLChar;
+    function ReadAngle: Single;
+    function ReadHiResAngle: Single;
   end;
 
 implementation
@@ -119,6 +136,11 @@ RowBitTable: array[0..32] of UInt32 =
    1 shl 24 - 1, 1 shl 25 - 1, 1 shl 26 - 1, 1 shl 27 - 1,
    1 shl 28 - 1, 1 shl 29 - 1, 1 shl 30 - 1, $80000000 - 1,
    $FFFFFFFF);
+
+var
+ BitReadBuffer: array[1..8192] of LChar;
+ StringBuffer: array[1..8192] of LChar;
+ StringLineBuffer: array[1..2048] of LChar;
 
 procedure TSizeBuf.Alloc(AName: PLChar; ASize: UInt);
 begin
@@ -555,7 +577,6 @@ function TSizeBuf.ReadBitString: PLChar;
 var
  B: UInt32;
  I: UInt;
- BitReadBuffer: array[1..8192] of LChar;
 begin
 BitReadBuffer[Low(BitReadBuffer)] := #0;
 for I := Low(BitReadBuffer) to High(BitReadBuffer) - 1 do
@@ -642,6 +663,128 @@ else
   ReadBitVec3Coord(P);
   EndBitReading;
  end;
+end;
+
+function TSizeBuf.ReadCoord: Single;
+begin
+Result := ReadShort / 8;
+end;
+
+procedure TSizeBuf.BeginReading;
+begin
+ReadCount := 0;
+BadRead := False;
+end;
+
+function TSizeBuf.Read<T>(ExceptValue: T): T;
+begin
+  Result := ExceptValue;
+  ReadBuffer(SizeOf(T), @Result);
+end;
+
+function TSizeBuf.Read<T>: T;
+begin
+  Result := Read<T>(System.Default(T));
+end;
+
+function TSizeBuf.ReadChar: LChar;
+begin
+  Result := Read<LChar>(LChar(-1));
+end;
+
+function TSizeBuf.ReadByte: Byte;
+begin
+  Result := Read<UInt8>(UInt8(-1));
+end;
+
+function TSizeBuf.ReadShort: Int16;
+begin
+  Result := Read<Int16>(-1);
+end;
+
+function TSizeBuf.ReadWord: UInt16;
+begin
+  Result := Read<UInt16>(UInt16(-1));
+end;
+
+function TSizeBuf.ReadLong: Int32;
+begin
+  Result := Read<Int32>(-1);
+end;
+
+function TSizeBuf.ReadFloat: Single;
+begin
+  Result := Read<Float>(-1);
+end;
+
+function TSizeBuf.ReadBuffer(Size: UInt; Buffer: Pointer): Int32;
+begin
+if ReadCount + Size > CurrentSize then
+ begin
+  BadRead := True;
+  Result := -1;
+ end
+else
+ begin
+  Move(Pointer(UInt(Data) + ReadCount)^, Buffer^, Size);
+  Inc(ReadCount, Size);
+  Result := 1;
+ end;
+end;
+
+function TSizeBuf.ReadString: PLChar;
+var
+ I: UInt;
+ C: LChar;
+begin
+for I := Low(StringBuffer) to High(StringBuffer) - 1 do
+ begin
+  C := ReadChar;
+  if (C = #0) or (C = #$FF) then
+   begin
+    StringBuffer[I] := #0;
+    Result := @StringBuffer;
+    Exit;
+   end
+  else
+   StringBuffer[I] := C;
+ end;
+
+StringBuffer[High(StringBuffer)] := #0;
+Result := @StringBuffer;
+end;
+
+function TSizeBuf.ReadStringLine: PLChar;
+var
+ I: UInt;
+ C: LChar;
+begin
+Result := @StringLineBuffer;
+
+for I := Low(StringLineBuffer) to High(StringLineBuffer) - 1 do
+ begin
+  C := ReadChar;
+  if (C = #0) or (C = #$A) or (C = #$FF) then
+   begin
+    BadRead := False;
+    StringLineBuffer[I] := #0;
+    Exit;
+   end
+  else
+   StringLineBuffer[I] := C;
+ end;
+
+StringLineBuffer[High(StringLineBuffer)] := #0;
+end;
+
+function TSizeBuf.ReadAngle: Single;
+begin
+Result := ReadByte * (360 / 256);
+end;
+
+function TSizeBuf.ReadHiResAngle: Single;
+begin
+Result := ReadShort * (360 / 65536);
 end;
 
 end.

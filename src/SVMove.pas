@@ -1505,17 +1505,17 @@ else
   AlreadyMoved := True;
   Frame := @C.Frames[SVUpdateMask and C.Netchan.IncomingAcknowledged];
   
-  Size := MSG_ReadByte;
-  Checksum := MSG_ReadByte;
+  Size := gNetMessage.ReadByte;
+  Checksum := gNetMessage.ReadByte;
   RC := gNetMessage.ReadCount;
   TEncode.UnMunge1(Pointer(UInt(gNetMessage.Data) + RC), Size, C.Netchan.IncomingSequence);
 
-  Flags := MSG_ReadByte;
+  Flags := gNetMessage.ReadByte;
   Loss := Flags and $7F;
   C.VoiceLoopback := (Flags shr 7) = 1;
 
-  Backup := MSG_ReadByte;
-  Cmds := MSG_ReadByte;
+  Backup := gNetMessage.ReadByte;
+  Cmds := gNetMessage.ReadByte;
   Total := Backup + Cmds;
 
   if (Cmds > 1) and (NetDrop > Cmds) then
@@ -1536,7 +1536,7 @@ else
     for I := Total - 1 downto 0 do
      begin
       P2 := @UserCmds[I];
-      MSG_ReadUserCmd(P2, P);
+      MSG_ReadUserCmd(gNetMessage, P2, P);
       P := P2;
      end;
 

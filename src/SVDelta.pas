@@ -72,7 +72,7 @@ end;
 
 procedure SV_ParseDelta(var C: TClient);
 begin
-C.UpdateMask := MSG_ReadByte;
+C.UpdateMask := gNetMessage.ReadByte;
 if gNetMessage.BadRead then
  C.UpdateMask := -1;
 end;

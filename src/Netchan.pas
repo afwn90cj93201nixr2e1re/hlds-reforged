@@ -605,9 +605,9 @@ if not NET_CompareAdr(NetFrom, Addr) then
 
 LastReceived := RealTime;
 
-MSG_BeginReading;
-Seq := MSG_ReadLong;
-Ack := MSG_ReadLong;
+gNetMessage.BeginReading;
+Seq := gNetMessage.ReadLong;
+Ack := gNetMessage.ReadLong;
 
 Rel := (Seq and $80000000) > 0;
 Fragmented := (Seq and $40000000) > 0;
@@ -623,12 +623,12 @@ TEncode.UnMunge2(Pointer(UInt(gNetMessage.Data) + 8), gNetMessage.CurrentSize - 
 if Fragmented then
  begin
   for I := Low(I) to High(I) do
-   if MSG_ReadByte > 0 then
+   if gNetMessage.ReadByte > 0 then
     begin
      FragReady[I] := True;
-     FragSeq[I] := MSG_ReadLong;
-     FragOffset[I] := MSG_ReadShort;
-     FragSize[I] := MSG_ReadShort;
+     FragSeq[I] := gNetMessage.ReadLong;
+     FragOffset[I] := gNetMessage.ReadShort;
+     FragSize[I] := gNetMessage.ReadShort;
     end
    else
     begin
@@ -1243,7 +1243,7 @@ if IncomingReady[NS_FILE] then
  if IncomingBuf[NS_FILE] <> nil then
   begin
    gNetMessage.Clear;
-   MSG_BeginReading;
+   gNetMessage.BeginReading;
 
    P := IncomingBuf[NS_FILE];
    if P.FragMessage.CurrentSize > gNetMessage.MaxSize then
@@ -1253,9 +1253,9 @@ if IncomingReady[NS_FILE] then
      if P.FragMessage.CurrentSize > 0 then
       gNetMessage.Write(P.FragMessage.Data, P.FragMessage.CurrentSize);
 
-     StrLCopy(@FileName, MSG_ReadString, SizeOf(FileName) - 1);
-     Compressed := StrIComp(MSG_ReadString, 'bz2') = 0;
-     IncomingSize := MSG_ReadLong;
+     StrLCopy(@FileName, gNetMessage.ReadString, SizeOf(FileName) - 1);
+     Compressed := StrIComp(gNetMessage.ReadString, 'bz2') = 0;
+     IncomingSize := gNetMessage.ReadLong;
 
      if gNetMessage.BadRead then
       DPrint('File fragment received with invalid header.')
@@ -1348,7 +1348,7 @@ if IncomingReady[NS_FILE] then
                end;
 
               gNetMessage.Clear;
-              MSG_BeginReading;
+              gNetMessage.BeginReading;
               IncomingBuf[NS_FILE] := nil;
               IncomingReady[NS_FILE] := False;
               Result := True;
