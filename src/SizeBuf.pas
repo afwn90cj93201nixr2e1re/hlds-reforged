@@ -15,8 +15,7 @@ type
       Active: Boolean;
     end;
 
-  type
-    TBFRead = record
+    BFRead: record
       CurrentSize: UInt;
       ReadCount: UInt; // +8, not used
       ByteCount: UInt; // +12
@@ -24,9 +23,6 @@ type
       Data: Pointer; // +20
       Active: Boolean;
     end;
-
-  public
-    BFRead: TBFRead;
 
   public
     ReadCount: UInt;
@@ -73,7 +69,6 @@ type
     function ReadBitAngle(Count: UInt): Single;
     function CurrentBit: UInt;
     function IsBitReading: Boolean;
-    function PeekBits(Count: UInt): UInt32;
     function ReadBitString: PLChar;
     procedure ReadBitData(Buffer: Pointer; Size: UInt);
     function ReadBitCoord: Single;
@@ -83,8 +78,8 @@ type
   public
     function ReadCoord: Single;
     procedure BeginReading;
+    function Read(Buffer: Pointer; Size: UInt): Int32; overload;
     function Read<T>: T; overload;
-    function ReadBuffer(Size: UInt; Buffer: Pointer): Int32;
     function ReadString: PLChar;
     function ReadStringLine: PLChar;
     function ReadAngle: Single;
@@ -557,15 +552,6 @@ begin
 Result := BFRead.Active;
 end;
 
-function TSizeBuf.PeekBits(Count: UInt): UInt32;
-var
- Data: TBFRead;
-begin
-  Data := BFRead;
-  Result := ReadBits(Count);
-  BFRead := Data;
-end;
-
 function TSizeBuf.ReadBitString: PLChar;
 var
  B: UInt32;
@@ -669,13 +655,7 @@ ReadCount := 0;
 BadRead := False;
 end;
 
-function TSizeBuf.Read<T>: T;
-begin
-  Result := System.Default(T);
-  ReadBuffer(SizeOf(T), @Result);
-end;
-
-function TSizeBuf.ReadBuffer(Size: UInt; Buffer: Pointer): Int32;
+function TSizeBuf.Read(Buffer: Pointer; Size: UInt): Int32;
 begin
 if ReadCount + Size > CurrentSize then
  begin
@@ -688,6 +668,12 @@ else
   Inc(ReadCount, Size);
   Result := 1;
  end;
+end;
+
+function TSizeBuf.Read<T>: T;
+begin
+  Result := System.Default(T);
+  Read(@Result, SizeOf(T));
 end;
 
 function TSizeBuf.ReadString: PLChar;

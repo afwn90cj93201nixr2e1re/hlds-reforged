@@ -528,7 +528,7 @@ for I := 0 to NumRes - 1 do
   Res.DownloadSize := gNetMessage.Read<Int32>;
   Byte(Res.Flags) := gNetMessage.Read<UInt8>;
   if RES_CUSTOM in Res.Flags then
-   gNetMessage.ReadBuffer(SizeOf(Res.MD5Hash), @Res.MD5Hash);
+   gNetMessage.Read(@Res.MD5Hash, SizeOf(Res.MD5Hash));
 
   Exclude(Res.Flags, RES_WASMISSING);
   Exclude(Res.Flags, RES_PADDING);

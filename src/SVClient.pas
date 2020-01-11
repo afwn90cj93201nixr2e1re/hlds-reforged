@@ -1323,7 +1323,7 @@ if (Size > SizeOf(Buf)) or gNetMessage.BadRead then
 else
  if Size > 0 then
   begin
-   gNetMessage.ReadBuffer(Size, @Buf);
+   gNetMessage.Read(@Buf, Size);
    if not gNetMessage.BadRead and (sv_voiceenable.Value <> 0) then
     for I := 0 to SVS.MaxClients - 1 do
      begin
