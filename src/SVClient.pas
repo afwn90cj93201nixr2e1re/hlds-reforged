@@ -1406,7 +1406,7 @@ while True do
  else
   begin
    B := gNetMessage.Read<UInt8>;
-   if gNetMessage.BadRead then
+   if (B = $FF) or gNetMessage.BadRead then
     Break
    else
     if B > CLC_MESSAGE_END then
